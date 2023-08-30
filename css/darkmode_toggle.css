@@ -22,55 +22,63 @@
     -webkit-font-smoothing: antialiased;
 } */
 
+.btn-group {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 5px;
+    z-index: 1005;
+}
+
 input[type="checkbox"] {
     display: none;
 }
 
-.switch-btn {
-    width: 30px;
-    height: 30px;
-    background-color: var(--lightMode_color);
-    border-radius: 30px;
-    padding: 4px;
-    transition: var(--darkMode_animation);
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    z-index: 1005;
-}
-
-label {
-    width: 30px;
-    height: 30px;
+.btn-icon {
+    width: 2rem;
+    height: 2rem;
+    border: 0.3rem var(--lightMode_color) solid;
+    border-radius:2rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--bgColor);
-    border-radius: 30px;
     overflow: hidden;
     cursor: pointer;
     transition: var(--darkMode_animation);
 }
-
-svg {
-    width: 24px;
-    height: 24px;
-    fill: none;
-    stroke: var(--mainColor_focused);
+[data-theme="dark"] .btn-icon {
+    border: 0.3rem var(--darkMode_color) solid;
 }
 
-svg.moon {
-    width: 24px;
-    height: 24px;
-    fill: none;
+svg.icon {
+	width: 2rem;
+	height: 2rem;
+    stroke: var(--mainColor_focused);
+    fill: var(--mainColor_focused);
+}
+[data-theme="dark"] svg.icon {
     stroke: var(--mainColor);
+    fill: var(--mainColor);
+}
+
+#switch-btn label {
+    width: 2rem;
+    height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* background: var(--bgColor); */
+    /* border-radius: 30px; */
+    overflow: hidden;
+    /* cursor: pointer; */
+    transition: var(--darkMode_animation);
 }
 
 .icons {
     display: flex;
     align-items: center;
-    gap: 20px;
-    transform: translate(-11px, 19px) rotate(120deg);
+    gap: 2rem;
+    transform: translateY(2rem) rotate(90deg);
     user-select: none;
     color: var(--mainColor_focused);
     transition: var(--darkMode_animation);
@@ -79,15 +87,15 @@ svg.moon {
     overflow-y: unset;
 }
 
-input[type="checkbox"]:checked ~ .switch-btn {
-    background-color: var(--darkMode_color);
+input[type="checkbox"]:checked ~ #switch-btn {
+    /* background-color: var(--darkMode_color); */
     transition: var(--darkMode_animation);
 }
 
-input[type="checkbox"]:checked ~ .switch-btn label {
+input[type="checkbox"]:checked ~ #switch-btn label {
     box-shadow: 0px 3px 5px 0px rgba(0, 0, 0, 0.2);
 }
 
-input[type="checkbox"]:checked ~ .switch-btn label .icons {
-    transform: translateX(-22px);
+input[type="checkbox"]:checked ~ #switch-btn label .icons {
+    transform: translateX(-2rem);
 }

@@ -1,5 +1,7 @@
 # SimpleTextReader - 易笺
 
+> `个人需求定制版`，具体见 [README-enhance.md](README-enhance.md)
+
 SimpleTextReader is the online text reader that simulates the result of SimpleEpub2, providing a web-based reading experience.
 
 Official site: [https://reader.yijian.app](https://reader.yijian.app)
