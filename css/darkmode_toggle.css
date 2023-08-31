@@ -22,44 +22,22 @@
     -webkit-font-smoothing: antialiased;
 } */
 
-.btn-group {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    padding: 5px;
-    z-index: 1005;
-}
-
 input[type="checkbox"] {
     display: none;
 }
 
-.btn-icon {
-    width: 2rem;
-    height: 2rem;
-    border: 0.3rem var(--lightMode_color) solid;
-    border-radius:2rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    cursor: pointer;
+/* .switch-btn {
+    width: 30px;
+    height: 30px;
+    background-color: var(--lightMode_color);
+    border-radius: 30px;
+    padding: 4px;
     transition: var(--darkMode_animation);
-}
-[data-theme="dark"] .btn-icon {
-    border: 0.3rem var(--darkMode_color) solid;
-}
-
-svg.icon {
-	width: 2rem;
-	height: 2rem;
-    stroke: var(--mainColor_focused);
-    fill: var(--mainColor_focused);
-}
-[data-theme="dark"] svg.icon {
-    stroke: var(--mainColor);
-    fill: var(--mainColor);
-}
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1005;
+} */
 
 #switch-btn label {
     width: 2rem;
@@ -73,6 +51,20 @@ svg.icon {
     /* cursor: pointer; */
     transition: var(--darkMode_animation);
 }
+
+/* svg {
+    width: 24px;
+    height: 24px;
+    fill: none;
+    stroke: var(--mainColor_focused);
+}
+
+svg.moon {
+    width: 24px;
+    height: 24px;
+    fill: none;
+    stroke: var(--mainColor);
+} */
 
 .icons {
     display: flex;
