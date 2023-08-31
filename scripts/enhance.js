@@ -275,9 +275,9 @@ const __STRS_VER__ = "0.3.0";
 			console.log(e);
 		}
 		fname_list.sort((a, b) =>
-			((a[1] && b[1]) || (!a[1] && !b[1]))
-				? (a[0].localeCompare(b[0], "zh"))
-				: (a[1] ? -1 : 1));
+				(!!a[1] == !!b[1]) // 判断阅读状态是否相同？（已读 or 未读） // ((a[1] && b[1]) || (!a[1] && !b[1]))
+				? (a[0].localeCompare(b[0], "zh")) // 相同，按拼音序
+				: (a[1] ? -1 : 1)); // 不同，已读排前面
 		// console.log(fname_list);
 		let booklist = $("#openFileOnServerDlgBooklist");
 		booklist.html("");
@@ -365,4 +365,34 @@ const __STRS_VER__ = "0.3.0";
 
 	$("#cloud-btn").click(showOpenFileOnServerDlg);
 
+	// replace_func(window, "handleSelectedFile", "handleSelectedFile____copy", function(fileList){
+	// 	if (fileList.length > 0 && fileList[0].type === "text/plain") {
+	// 		let fileReader = new FileReader();
+
+	// 		fileReader.onload = function (event) {
+	// 			console.log(event.target);
+	// 			// Detect encoding
+	// 			let tempBuffer = new Uint8Array(fileReader.result.slice(0, encodingLookupByteLength));
+	// 			while (tempBuffer.byteLength < encodingLookupByteLength) {
+	// 				// make copies of tempBuffer till it is more than 1000 bytes
+	// 				tempBuffer = new Uint8Array([...tempBuffer, ...tempBuffer]);
+	// 			}
+	// 			const text = String.fromCharCode.apply(null, tempBuffer);
+	// 			const detectedEncoding = jschardet.detect(text).encoding || "utf-8";
+	// 			console.log('Encoding:', detectedEncoding);
+		
+	// 			// Get file content
+	// 			const decoderOptions = { stream: true, fatal: true };
+	// 			const decoder = new TextDecoder(detectedEncoding);
+	// 			var contents = decoder.decode(event.target.result, decoderOptions);
+	// 			contents.name = fileList[0].name;
+	// 			contents.type = fileList[0].type;
+	// 			console.log(contents);
+	// 			handleSelectedFile____copy([contents]);
+	// 		};
+	// 		fileReader.readAsArrayBuffer(fileList[0]);
+	// 	} else {
+	// 		resetUI();
+    // 	}
+	// });
 })();

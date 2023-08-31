@@ -3,15 +3,15 @@
     flex-flow: column;
     gap: 1rem;
     position: fixed;
-    bottom: 2rem;
-    right: 2rem;
+    bottom: 1rem;
+    right: 1rem;
     z-index: 1005;
 }
 
 .btn-icon {
     width: 2rem;
     height: 2rem;
-    border: 0.3rem var(--lightMode_color) solid;
+    border: 0.2rem var(--lightMode_color) solid;
     border-radius: 2rem;
     display: flex;
     align-items: center;
@@ -94,8 +94,12 @@ dialog::backdrop {
 }
 
 .dlg-body .book-read {
-    background: no-repeat left / 1rem 1rem url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 -960 960 960" opacity="0.3"><path d="M480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-60q68 0 130.62-25.806Q673.239-191.613 721-240L480-480v-340q-142 0-241 98.812Q140-622.375 140-480t98.812 241.188Q337.625-140 480-140Z"/></svg>'),
-                      linear-gradient(to right, transparent 1rem, 0%, rgba(0,0,0,0.1) var(--book-progress), transparent 0);
+    background: no-repeat left / 1rem 1rem url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 -960 960 960" stroke="gray" fill="gray"><path d="M480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-60q68 0 130.62-25.806Q673.239-191.613 721-240L480-480v-340q-142 0-241 98.812Q140-622.375 140-480t98.812 241.188Q337.625-140 480-140Z"/></svg>'),
+                linear-gradient(to right, rgba(0,0,0,0.2) var(--book-progress), transparent 0);
+}
+[data-theme="dark"] .dlg-body .book-read {
+    background: no-repeat left / 1rem 1rem url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 -960 960 960" stroke="gray" fill="gray"><path d="M480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-60q68 0 130.62-25.806Q673.239-191.613 721-240L480-480v-340q-142 0-241 98.812Q140-622.375 140-480t98.812 241.188Q337.625-140 480-140Z"/></svg>'),
+                linear-gradient(to right, rgba(255,255,255,0.2) var(--book-progress), transparent 0);
 }
 
 #pagination:hover {

@@ -428,6 +428,7 @@ function processTOC() {
         tempText.classList.add("toc-text");
         // tempText.innerHTML = allTitles[i][0];
         tempText.innerText = allTitles[i][0];
+        tempText.title =  allTitles[i][0];
         tempText.addEventListener('click', function(event) {
             event.preventDefault();
             // console.log("gotoLine: ", parseInt(event.target.id.replace(/(a)/g, '')));
