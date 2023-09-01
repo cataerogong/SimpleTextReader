@@ -89,7 +89,10 @@ dialog::backdrop {
 }
 
 .dlg-body .book-item {
-    padding-left: 1.2rem;
+    cursor:pointer;
+    border:1px gray dotted;
+    margin:5px 0px;
+    padding: 2px 2px 2px 1.2rem;
     display: flex;
 }
 

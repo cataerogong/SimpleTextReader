@@ -1,4 +1,4 @@
-const __STRS_VER__ = "0.3.0";
+const __STRe_ver__ = "0.1.0";
 
 (function () {
 	const FUNC_KEYDOWN_ = document.onkeydown; // 保存页面原来的 onkeydown 函数，下面会临时屏蔽 onkeydown
@@ -198,41 +198,56 @@ const __STRS_VER__ = "0.3.0";
 	// ------------------------------------------------
 	// Open file on server
 	// ------------------------------------------------
-	const strs_server = ""; // "http://localhost:8001";
-	const strs_tag = "☁|";
-	const strs_file_item = "STRS_FILE";
-	const strs_progress_re = /^(\d+)(\/(\d+))?$/i;
+	const STRe_server = ""; // "http://localhost:8001";
+	const STRe_tag = "☁|";
+	const STRe_file_item = "STRe_FILE";
+	const STRe_progress_re = /^(\d+)(\/(\d+))?$/i;
 
-	let strs_file = localStorage.getItem(strs_file_item);
-	let strs_file_line = ""; // strs_tag + filename + ":" + line
-	let strs_progress_on_server = false; // 服务端阅读进度
+	let STRe_file = localStorage.getItem(STRe_file_item);
+	let STRe_file_line = ""; // STRe_tag + filename + ":" + line
+	let STRe_progress_on_server = false; // 服务端阅读进度
 
 	// 检查服务端 '/progress' 目录是否存在
 	try {
-		WebDAV.Fs(strs_server).dir("/progress").children();
-		strs_progress_on_server = true;
+		WebDAV.Fs(STRe_server).dir("/progress").children();
+		STRe_progress_on_server = true;
 	} catch (e) {
-		strs_progress_on_server = false;
+		console.log("Can't access '/progress' on server. Turn off progress-on-server function.");
+		STRe_progress_on_server = false;
 	}
 
-	function openFileOnServer(fname) { // fname: 不带 strs_tag 的文件名
-		let link = strs_server + "/books/" + fname;
-		let xhr = new XMLHttpRequest();
-		xhr.open("get", link, true);
-		// 实际使用中，小说文件没必要强制刷新，使用缓存更节省时间和流量
-		// xhr.setRequestHeader("If-Modified-Since", "0"); // 强制刷新，不使用缓存
-		xhr.responseType = "blob";
-		xhr.onload = function () {
-			// console.log(this.response);
+	async function openFileOnServer(fname) { // fname: 不带 STRe_tag 的文件名
+		let cache = await bc.GetBook(fname);
+		if (cache) {
+			console.log("Load book from cache.");
+			let resp = cache.response;
 			loadProgressFromServer(fname, () => {
 				resetVars();
-				localStorage.setItem(strs_file_item, fname);
-				this.response.name = strs_tag + fname;
-				handleSelectedFile([this.response]);
+				localStorage.setItem(STRe_file_item, fname);
+				resp.name = STRe_tag + fname;
+				handleSelectedFile([resp]);
 			});
+		} else {
+			let link = STRe_server + "/books/" + fname;
+			let xhr = new XMLHttpRequest();
+			xhr.open("get", link, true);
+			// 实际使用中，小说文件没必要强制刷新，使用缓存更节省时间和流量
+			// xhr.setRequestHeader("If-Modified-Since", "0"); // 强制刷新，不使用缓存
+			xhr.responseType = "blob";
+			xhr.onload = function () {
+				console.log("Save book to cache.");
+				bc.PutBook({filename: fname, response: this.response});
+				// console.log(this.response);
+				loadProgressFromServer(fname, () => {
+					resetVars();
+					localStorage.setItem(STRe_file_item, fname);
+					this.response.name = STRe_tag + fname;
+					handleSelectedFile([this.response]);
+				});
+			}
+			xhr.send();
+			showLoadingScreen();
 		}
-		xhr.send();
-		showLoadingScreen();
 	}
 
 	function showOpenFileOnServerDlg() {
@@ -247,7 +262,7 @@ const __STRS_VER__ = "0.3.0";
 		freezeContent();
 		document.getElementById("openFileOnServerDlg").showModal();
 
-		let fs = WebDAV.Fs(strs_server);
+		let fs = WebDAV.Fs(STRe_server);
 		let fname_list = [];
 		try {
 			for (const f of fs.dir("/books").children()) {
@@ -255,14 +270,14 @@ const __STRS_VER__ = "0.3.0";
 				if (fname.substring(fname.length - 4).toLowerCase() == ".txt")
 					fname_list.push([fname, "", "", ""]); // "filename", "read/total", "percent%"
 			}
-			if (strs_progress_on_server) {
+			if (STRe_progress_on_server) {
 				for (const fp of fs.dir("/progress").children()) {
 					let fname = decodeURIComponent(fp.name);
 					if (fname.substring(fname.length - 9).toLowerCase() == ".progress") {
 						fname = fname.substring(0, fname.length - 9);
 						let fn = fname_list.find((e) => e[0].toLowerCase() == fname.toLowerCase());
 						if (fn) {
-							let m = fp.read().match(strs_progress_re);
+							let m = fp.read().match(STRe_progress_re);
 							if (m) {
 								fn[1] = m[1] + "/" + (m[3]||"?");
 								fn[2] = m[3]?(eval(m[0])*100).toFixed(1).replace(".0", "")+"%":"";
@@ -282,11 +297,10 @@ const __STRS_VER__ = "0.3.0";
 		let booklist = $("#openFileOnServerDlgBooklist");
 		booklist.html("");
 		for (const fn of fname_list) {
-			booklist.append(`<div class="strs-book" style="cursor:pointer;border:1px gray dotted;padding:2px 3px;margin:5px 0px;" data-book-filename="${fn[0]}">
-                <span class="book-item ${fn[1]?"book-read":""}" title="${"进度："+(fn[1]?(fn[2]+" ("+fn[1]+")"):"无")}" style="--book-progress:${fn[2]};">${fn[0]}</span>
-                </div>`);
+			booklist.append(`<div class="book-item ${fn[1]?"book-read":""}" style="--book-progress:${fn[2]};"
+                title="${"进度："+(fn[1]?(fn[2]+" ("+fn[1]+")"):"无")}" data-book-filename="${fn[0]}">${fn[0]}</div>`);
 		}
-		$(".strs-book").click((evt) => {
+		$(".book-item").click((evt) => {
 			openFileOnServer(evt.currentTarget.attributes["data-book-filename"].value);
 			hideOpenFileOnServerDlg();
 		});
@@ -299,44 +313,44 @@ const __STRS_VER__ = "0.3.0";
 	}
 
 	function saveProgressToServer() {
-		if (!strs_progress_on_server) // 不开启云端进度
+		if (!STRe_progress_on_server) // 不开启云端进度
 			return;
-		if ((filename) && (filename.substring(0, strs_tag.length) == strs_tag)) { // file on server
+		if ((filename) && (filename.substring(0, STRe_tag.length) == STRe_tag)) { // file on server
 			if (contentContainer.style.display == "none") { // 阅读区域不可见，说明可能正在drag，getTopLineNumber()会取到错误行数，应该跳过
 				// console.log("skip");
 				return;
 			}
 			let line = getTopLineNumber(filename);
-			if ((filename + ":" + line) != strs_file_line) {
+			if ((filename + ":" + line) != STRe_file_line) {
 				console.log("saveProgressToServer: " + filename + ":" + line + "/" + fileContentChunks.length);
-				localStorage.setItem(strs_file_item, filename.substring(strs_tag.length));
-				let prog_file = WebDAV.Fs(strs_server).file("/progress/" + filename.substring(strs_tag.length) + ".progress");
+				localStorage.setItem(STRe_file_item, filename.substring(STRe_tag.length));
+				let prog_file = WebDAV.Fs(STRe_server).file("/progress/" + filename.substring(STRe_tag.length) + ".progress");
 				prog_file.write(line + "/" + fileContentChunks.length);
-				strs_file_line = filename + ":" + line;
+				STRe_file_line = filename + ":" + line;
 			}
 		} else { // local file
-			localStorage.removeItem(strs_file_item);
-			strs_file_line = "";
+			localStorage.removeItem(STRe_file_item);
+			STRe_file_line = "";
 		}
 	}
 
-	function loadProgressFromServer(fname, onload) { // fname: 不带 strs_tag 的文件名
-		if (!strs_progress_on_server) { // 不开启云端进度
+	function loadProgressFromServer(fname, onload) { // fname: 不带 STRe_tag 的文件名
+		if (!STRe_progress_on_server) { // 不开启云端进度
 			if (onload) {
 				// console.log('loadProgressFromServer.onload');
 				onload();
 			}
 			return;
 		}
-		WebDAV.Fs(strs_server).file("/progress/" + fname + ".progress").read((data) => {
-			let m = data.match(strs_progress_re);
+		WebDAV.Fs(STRe_server).file("/progress/" + fname + ".progress").read((data) => {
+			let m = data.match(STRe_progress_re);
 			if (m) { // 取到服务端进度，同步到 localStorage
 				let line = parseInt(m[1]);
 				console.log("loadProgressFromServer: " + fname + ":" + line);
-				setHistory(strs_tag + fname, line);
-				strs_file_line = strs_tag + fname + ":" + line;
+				setHistory(STRe_tag + fname, line);
+				STRe_file_line = STRe_tag + fname + ":" + line;
 			} else {
-				strs_file_line = strs_tag + fname + ":" + (localStorage.getItem(strs_tag + fname)||0);
+				STRe_file_line = STRe_tag + fname + ":" + (localStorage.getItem(STRe_tag + fname)||0);
 			}
 			if (onload) { // 进度已同步，继续处理
 				// console.log('loadProgressFromServer.onload');
@@ -345,10 +359,10 @@ const __STRS_VER__ = "0.3.0";
 		});
 	}
 
-	function strs_worker() { // 定时将当前书在 localStorage 里的进度保存到服务器上
+	function STRe_worker() { // 定时将当前书在 localStorage 里的进度保存到服务器上
 		saveProgressToServer();
 		window.parent.document.title = document.title;
-		setTimeout(strs_worker, 1000);
+		setTimeout(STRe_worker, 1000);
 	}
 
 	// hack WebDAV.js functions
@@ -358,41 +372,11 @@ const __STRS_VER__ = "0.3.0";
 		return this.request____copy(verb, url, headers, data, type, callback);
 	});
 
-	if (strs_file) {
-		openFileOnServer(strs_file);
+	if (STRe_file) {
+		openFileOnServer(STRe_file);
 	}
-	strs_worker();
+	STRe_worker();
 
 	$("#cloud-btn").click(showOpenFileOnServerDlg);
 
-	// replace_func(window, "handleSelectedFile", "handleSelectedFile____copy", function(fileList){
-	// 	if (fileList.length > 0 && fileList[0].type === "text/plain") {
-	// 		let fileReader = new FileReader();
-
-	// 		fileReader.onload = function (event) {
-	// 			console.log(event.target);
-	// 			// Detect encoding
-	// 			let tempBuffer = new Uint8Array(fileReader.result.slice(0, encodingLookupByteLength));
-	// 			while (tempBuffer.byteLength < encodingLookupByteLength) {
-	// 				// make copies of tempBuffer till it is more than 1000 bytes
-	// 				tempBuffer = new Uint8Array([...tempBuffer, ...tempBuffer]);
-	// 			}
-	// 			const text = String.fromCharCode.apply(null, tempBuffer);
-	// 			const detectedEncoding = jschardet.detect(text).encoding || "utf-8";
-	// 			console.log('Encoding:', detectedEncoding);
-		
-	// 			// Get file content
-	// 			const decoderOptions = { stream: true, fatal: true };
-	// 			const decoder = new TextDecoder(detectedEncoding);
-	// 			var contents = decoder.decode(event.target.result, decoderOptions);
-	// 			contents.name = fileList[0].name;
-	// 			contents.type = fileList[0].type;
-	// 			console.log(contents);
-	// 			handleSelectedFile____copy([contents]);
-	// 		};
-	// 		fileReader.readAsArrayBuffer(fileList[0]);
-	// 	} else {
-	// 		resetUI();
-    // 	}
-	// });
 })();
