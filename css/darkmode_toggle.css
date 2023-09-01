@@ -91,3 +91,42 @@ input[type="checkbox"]:checked ~ #switch-btn label {
 input[type="checkbox"]:checked ~ #switch-btn label .icons {
     transform: translateX(-2rem);
 }
+
+.btn-group {
+    display: flex;
+    flex-flow: column;
+    gap: 1rem;
+    position: fixed;
+    bottom: 1rem;
+    right: 1rem;
+    z-index: 1005;
+}
+
+.btn-icon {
+    width: 2rem;
+    height: 2rem;
+    border: 0.2rem var(--lightMode_color) solid;
+    border-radius: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    cursor: pointer;
+    transition: var(--darkMode_animation);
+}
+
+[data-theme="dark"] .btn-icon {
+    border: 0.3rem var(--darkMode_color) solid;
+}
+
+svg.icon {
+    width: 2rem;
+    height: 2rem;
+    stroke: var(--mainColor_focused);
+    fill: var(--mainColor_focused);
+}
+
+[data-theme="dark"] svg.icon {
+    stroke: var(--mainColor);
+    fill: var(--mainColor);
+}

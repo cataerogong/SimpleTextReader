@@ -1,7 +1,7 @@
 class BookCache {
     #db = null;
 
-    ConnectDB() {
+    connectDB() {
         return new Promise((resolve, reject) => {
             const req = window.indexedDB.open('SimpleTextReader-enhance', 1);
             req.onupgradeneeded = function (evt) {
@@ -26,7 +26,7 @@ class BookCache {
         });
     }
 
-    GetObjectStore(name, mode = "readonly") {
+    getObjectStore(name, mode = "readonly") {
         let trans = this.#db.transaction(name, mode);
         // trans.oncomplete = function (evt) {
         //     console.log("trans.onComplete");
@@ -39,7 +39,7 @@ class BookCache {
         return trans.objectStore(name);
     }
 
-    Execute(request) {
+    exec(request) {
         return new Promise((resolve, reject) => {
             request.onsuccess = (evt) => {
                 console.log("exec.onSuccess: ");
@@ -54,33 +54,33 @@ class BookCache {
         });
     }
 
-    async PutBook(bookdata) {
-        await this.Init();
+    async putBook(bookdata) {
+        await this.init();
         if (!this.#db) {
             return null;
         }
-        let tbl = this.GetObjectStore("books", "readwrite");
-        console.log("PutBook: " + bookdata.filename);
-        return await this.Execute(tbl.put(bookdata));
+        let tbl = this.getObjectStore("books", "readwrite");
+        console.log("putBook: " + bookdata.filename);
+        return await this.exec(tbl.put(bookdata));
     }
 
-    async GetBook(filename) {
-        await this.Init();
-        console.log("BookCache.GetBook: " + filename);
+    async getBook(filename) {
+        await this.init();
+        console.log("BookCache.getBook: " + filename);
         if (!this.#db) {
             return null;
         }
-        let tbl = this.GetObjectStore("books");
-        console.log("GetBook: " + filename);
-        let result = await this.Execute(tbl.get(filename));
-        console.log("GetBook: " + result);
+        let tbl = this.getObjectStore("books");
+        console.log("getBook: " + filename);
+        let result = await this.exec(tbl.get(filename));
+        console.log("getBook: " + result);
         return result;
     }
 
-    async Init() {
+    async init() {
         try {
             if (!this.#db) {
-                this.#db = await this.ConnectDB();
+                this.#db = await this.connectDB();
             }
             return true;
         } catch (e) {
@@ -93,7 +93,7 @@ class BookCache {
 let bc = new BookCache();
 
 // setTimeout(async function() {
-//     // let res = await bc.PutBook({filename: "book-1.txt", bookName: "Book 1", author: "Author 1", content: "Book 1<br>Author 1", size: 200});
-//     let res = await bc.GetBook("book-2.txt");
+//     // let res = await bc.putBook({filename: "book-1.txt", bookName: "Book 1", author: "Author 1", content: "Book 1<br>Author 1", size: 200});
+//     let res = await bc.getBook("book-2.txt");
 //     console.log(res?res:"NULL");
 // }, 1000);
