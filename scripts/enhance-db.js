@@ -1,22 +1,19 @@
-class BookCache {
+class STReLocalDB {
     #db = null;
 
     connectDB() {
         return new Promise((resolve, reject) => {
             const req = window.indexedDB.open('SimpleTextReader-enhance', 1);
             req.onupgradeneeded = function (evt) {
-                console.log("openDB.onUpgradeNeeded");
                 let db = evt.target.result;
                 console.log(`Upgrading to version ${db.version}`);
 
                 // Create an objectStore for this database
-                if (!db.objectStoreNames.contains("books")) {
-                    console.log("Initial DB");
-                    db.createObjectStore("books", { keyPath: "filename" });
+                if (!db.objectStoreNames.contains("bookfiles")) {
+                    db.createObjectStore("bookfiles", { keyPath: "name" });
                 }
             };
             req.onsuccess = function (evt) {
-                console.log("openDB.onSuccess");
                 resolve(evt.target.result);
             };
             req.onerror = function (evt) {
@@ -42,8 +39,6 @@ class BookCache {
     exec(request) {
         return new Promise((resolve, reject) => {
             request.onsuccess = (evt) => {
-                console.log("exec.onSuccess: ");
-                console.log(evt.target);
                 resolve(evt.target.result);
             };
             request.onerror = (evt) => {
@@ -52,29 +47,6 @@ class BookCache {
                 reject(evt.target.error);
             };
         });
-    }
-
-    async putBook(bookdata) {
-        await this.init();
-        if (!this.#db) {
-            return null;
-        }
-        let tbl = this.getObjectStore("books", "readwrite");
-        console.log("putBook: " + bookdata.filename);
-        return await this.exec(tbl.put(bookdata));
-    }
-
-    async getBook(filename) {
-        await this.init();
-        console.log("BookCache.getBook: " + filename);
-        if (!this.#db) {
-            return null;
-        }
-        let tbl = this.getObjectStore("books");
-        console.log("getBook: " + filename);
-        let result = await this.exec(tbl.get(filename));
-        console.log("getBook: " + result);
-        return result;
     }
 
     async init() {
@@ -88,12 +60,51 @@ class BookCache {
             return false;
         }
     }
+
+    async putBook(name, data) {
+        if (!await this.init()) {
+            throw new Error("Init local db error!");
+        }
+        let tbl = this.getObjectStore("bookfiles", "readwrite");
+        return await this.exec(tbl.put({name: name, data: data}));
+    }
+
+    async getBook(name) {
+        if (!await this.init()) {
+            throw new Error("Init local db error!");
+        }
+        let tbl = this.getObjectStore("bookfiles");
+        let result = await this.exec(tbl.get(name));
+        if (result) {
+            return result.data;
+        } else {
+            return null;
+        }
+    }
+
+    async getAllBooks() {
+        if (!await this.init()) {
+            throw new Error("Init local db error!");
+        }
+        let tbl = this.getObjectStore("bookfiles");
+        let result = await this.exec(tbl.getAll());
+        return result;
+    }
+
+    async isBookExist(name) {
+        if (!await this.init()) {
+            throw new Error("Init local db error!");
+        }
+        let tbl = this.getObjectStore("bookfiles");
+        let result = await this.exec(tbl.getKey(name));
+        return !!result;
+    }
+
+    async deleteBook(name) {
+        if (!await this.init()) {
+            throw new Error("Init local db error!");
+        }
+        let tbl = this.getObjectStore("bookfiles", "readwrite");
+        await this.exec(tbl.delete(name));
+    }
 }
-
-let bc = new BookCache();
-
-// setTimeout(async function() {
-//     // let res = await bc.putBook({filename: "book-1.txt", bookName: "Book 1", author: "Author 1", content: "Book 1<br>Author 1", size: 200});
-//     let res = await bc.getBook("book-2.txt");
-//     console.log(res?res:"NULL");
-// }, 1000);

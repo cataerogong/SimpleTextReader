@@ -13,13 +13,27 @@ dialog::backdrop {
     background-color: rgba(0, 0, 0, 0.5);
 }
 
-.dlg-title-line {
+.dlg-cap {
     height: 2rem;
+    font-size: 1.6rem;
+    font-family: title;
+    text-align: left;
+    overflow: hidden;
+    border-bottom: 2px solid var(--borderColor);
 }
 
 .dlg-close-btn {
-    cursor: pointer;
+    display: block;
     float: right;
+    cursor: pointer;
+    text-align: center;
+    font-size: 2rem;
+    color: var(--fontColor);
+    border: 1px solid var(--borderColor);
+    border-radius: 20%;
+    width: 1.6rem;
+    height: 1.6rem;
+    line-height: 1.6rem;
 }
 
 .dlg-body {
@@ -45,7 +59,7 @@ dialog::backdrop {
     border: 1px solid;
     border-radius: 5px;
     font-size: 1.2rem;
-    background: var(--bgColor);
+    background: var(--mainColor);
     color: var(--fontColor);
 }
 
@@ -53,7 +67,7 @@ dialog::backdrop {
     cursor:pointer;
     border:1px gray dotted;
     margin:5px 0px;
-    padding: 2px 2px 2px 1.2rem;
+    padding: 2px 1.2rem;
     display: flex;
 }
 
@@ -68,4 +82,91 @@ dialog::backdrop {
 
 #pagination:hover {
     opacity: 1;
+}
+
+#bookshelf {
+    padding: 1rem;
+    font-size: 1.2rem;
+    overflow-x: hidden;
+    overflow-y: scroll;
+    background: var(--bgColor);
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: 0.5em dashed var(--mainColor);
+    border-radius: 16px;
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    display: flex;
+    flex-flow: column;
+    color: var(--fontColor);
+    z-index: 2000;
+}
+
+#bookshelf .caption {
+    font-size: 2rem;
+    font-family: title;
+    text-align: center;
+    border-bottom: 2px solid var(--borderColor);
+}
+
+#bookshelf .close-btn {
+    display: block;
+    float: right;
+    cursor: pointer;
+    font-size: 2rem;
+    color: var(--fontColor);
+    border: 1px solid var(--borderColor);
+    border-radius: 20%;
+    width: 1.6rem;
+    height: 1.6rem;
+    line-height: 1.6rem;
+}
+
+#bookshelf .container {
+    overflow-y:scroll;
+    flex: 1;
+    display: block;
+    text-align: center;
+}
+
+#bookshelf .book {
+    display: inline-flex;
+    flex-flow: column;
+    font-size: 1.2rem;
+    width: 10rem;
+    height: 15rem;
+    color: var(--fontColor);
+    border: 2px var(--borderColor) solid;
+    background-color: var(--mainColor);
+    margin: 1vw;
+    padding: 5px;
+}
+
+#bookshelf .book .delete-btn {
+    font-family: title;
+    display: block;
+    float: right;
+    cursor: pointer;
+    font-size: 1.5rem;
+    line-height: 1.2rem;
+}
+
+#bookshelf .book .cover {
+    font-family: ui;
+    text-align: left;
+    flex: 1;
+    background-color: var(--bgColor);
+    cursor: pointer;
+}
+
+#btnWrapper[data-src="db"] #STRe-bookshelf-btn .icon {
+    stroke: var(--fontColor);
+}
+
+#btnWrapper[data-src="svr"] #STRe-FOS-btn .icon {
+    fill: var(--fontColor);
 }

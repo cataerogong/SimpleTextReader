@@ -1,4 +1,5 @@
-var __STRe_ver__ = "0.1.0";
+let _STRe_VER_ = "1.0.0";
+let _STRe_SERVER_ = ""; // "http://localhost:8001";
 
 var STReHelper = {
 	// hack helper
@@ -48,7 +49,7 @@ var STReHelper = {
 		}
 	},
 
-	getServerFile(link, loadFunc = null) {
+	getLink(link, loadFunc = null) {
 		let xhr = new XMLHttpRequest();
 		xhr.open("get", link, !!loadFunc);
 		// 实际使用中，小说文件没必要强制刷新，使用缓存更节省时间和流量
@@ -61,6 +62,34 @@ var STReHelper = {
 		if (!loadFunc) return xhr.response;
 	},
 
+	getServerFile(fname, loadFunc = null) {
+		return this.getLink(_STRe_SERVER_ + "/books/" + fname, loadFunc);
+	},
+
+	getProgress(fname, callback=null) {
+		if (callback) {
+			return WebDAV.Fs(_STRe_SERVER_).file("/progress/" + fname + ".progress").read(callback);
+		} else {
+			try {
+				return WebDAV.Fs(_STRe_SERVER_).file("/progress/" + fname + ".progress").read();
+			} catch (e) {
+				console.log(e);
+				return "";
+			}
+		}
+	},
+
+	putProgress(fname, data, callback=null) {
+		if (callback) {
+			WebDAV.Fs(_STRe_SERVER_).file("/progress/" + fname + ".progress").write(data, callback);
+		} else {
+			try {
+				WebDAV.Fs(_STRe_SERVER_).file("/progress/" + fname + ".progress").write(data);
+			} catch (e) {
+				console.log(e);
+			}
+		}
+	},
 };
 
 // 夹带点私货，我的小说命名规则是：书名.[作者]
@@ -112,7 +141,7 @@ var STRe_Settings = {
 
 	show() {
 		$(`<dialog id="settingDlg">
-<div><span id="settingDlgCloseBtn" class="dlg-close-btn">&times;</span></div>
+<div class="dlg-cap">设置<span id="settingDlgCloseBtn" class="dlg-close-btn">&times;</span></div>
 <span class="dlg-body">
 <div>
 	<span>行高：</span>
@@ -151,7 +180,7 @@ var STRe_Settings = {
 	<button id="settingDlgOkBtn" style="float:right;">应用</button>
 </div>
 </span>
-</dialog>`).bind("cancel", () => this.hide()).insertAfter("#switch-btn");
+</dialog>`).bind("cancel", () => this.hide()).appendTo("body");
 		$("#settingDlgCloseBtn").click(() => this.hide());
 		$("#settingDlgClrBtn").click(() => this.reset().load().apply().hide());
 		$("#settingDlgOkBtn").click(() => this.save().apply().hide());
@@ -223,6 +252,7 @@ var STRe_Settings = {
 	},
 
 	enable() {
+		if (this.enabled) return this;
 		this.load().apply();
 
 		$(`<div id="STRe-setting-btn" class="btn-icon">
@@ -236,54 +266,47 @@ var STRe_Settings = {
 	},
 
 	disable() {
+		if (!this.enabled) return this;
 		this.hide().reset().load().apply();
 		$("#STRe-setting-btn").remove();
-		console.log("Module <Settings> disabled.");
 		this.enabled = false;
+		console.log("Module <Settings> disabled.");
 		return this;
 	},
 }
 
 
 // ------------------------------------------------
-// Module <Files On Server>
+// Module <Files on Server>
 // ------------------------------------------------
 var STRe_FilesOnServer = {
 
 	enabled: false,
 
-	STRe_SERVER: "", // "http://localhost:8001";
-	STRe_TAG: "☁|",
-
-	openServerFile(fname) {
+	openFile(fname, onSucc = null) {
+		console.log("STRe_FilesOnServer.openFile: " + fname);
 		showLoadingScreen();
-		this.hide();
-		let link = this.STRe_SERVER + "/books/" + fname;
-		STReHelper.getServerFile(link, (e) => {
-			// localStorage.setItem(this.STReFile_ITEM, fname);
-			e.target.response.name = this.STRe_TAG + fname;
-			this.handleServerFile(e);
+		STReHelper.getServerFile(fname, (e) => {
+			e.target.response.name = fname;
+			resetVars();
+			handleSelectedFile([e.target.response]);
+			$("#btnWrapper").attr("data-src", "svr");
+			if (onSucc) onSucc();
 		});
-	},
-
-	handleServerFile: function (evt) { // 把获取服务端文件后的处理步骤抽象出来，以便将来替换这个处理步骤
-		// console.log(this.response);
-		resetVars();
-		handleSelectedFile([evt.target.response]);
 	},
 
 	show() {
 		$(`<dialog id="serverFilesDlg" style="height:100vh;min-width:50vw;">
-			<div class="dlg-title-line"><span id="serverFilesDlgClose" class="dlg-close-btn">&times;</span></div>
+			<div class="dlg-cap">云端书库<span id="serverFilesDlgClose" class="dlg-close-btn">&times;</span></div>
 			<span id="serverFilesDlgList" class="dlg-body" style="overflow-y:scroll;justify-content:center;">
 				<img src="./images/loading_geometry.gif" style="display:block;width:30vw;filter:var(--mainColor_filter); "/>
 			</span>
-			</dialog>`).bind("cancel", () => this.hide()).insertAfter("#switch-btn");
+			</dialog>`).bind("cancel", () => this.hide()).appendTo("body");
 		$("#serverFilesDlgClose").click(() => this.hide());
 		STReHelper.freezeContent();
 		document.getElementById("serverFilesDlg").showModal();
 
-		let fs = WebDAV.Fs(this.STRe_SERVER);
+		let fs = WebDAV.Fs(_STRe_SERVER_);
 		let fname_list = [];
 		try {
 			for (const f of fs.dir("/books").children()) {
@@ -295,15 +318,17 @@ var STRe_FilesOnServer = {
 			console.log(e);
 		}
 		fname_list.sort((a, b) => (a[0].localeCompare(b[0], "zh"))); // 拼音序
-		// console.log(fname_list);
 		let booklist = $("#serverFilesDlgList");
 		booklist.html("");
 		for (const fn of fname_list) {
 			// booklist.append(`<div class="book-item ${fn[1] ? "book-read" : ""}" style="--book-progress:${fn[2]};"
 			// title="${"进度：" + (fn[1] ? (fn[2] + " (" + fn[1] + ")") : "无")}" data-book-filename="${fn[0]}">${fn[0]}</div>`);
-			booklist.append(`<div class="book-item" data-book-filename="${fn}">${fn}</div>`);
+			booklist.append(`<div class="book-item" data-filename="${fn}">${fn}</div>`);
 		}
-		$(".book-item").click((evt) => this.openServerFile( evt.currentTarget.attributes["data-book-filename"].value));
+		$(".book-item").click((evt) => {
+			this.hide();
+			this.openFile(evt.currentTarget.attributes["data-filename"].value);
+		});
 		return this;
 	},
 
@@ -314,185 +339,334 @@ var STRe_FilesOnServer = {
 	},
 
 	enable() {
-		$(`<div id="STRe-FOS-btn" class="btn-icon">
-		<svg class="icon" viewBox="0 -960 960 960" xmlns="http://www.w3.org/2000/svg">
-			<path d="M251-160q-88 0-149.5-61.5T40-371q0-78 50-137t127-71q20-97 94-158.5T482-799q112 0 189 81.5T748-522v24q72-2 122 46.5T920-329q0 69-50 119t-119 50H251Zm0-60h500q45 0 77-32t32-77q0-45-32-77t-77-32h-63v-84q0-91-61-154t-149-63q-88 0-149.5 63T267-522h-19q-62 0-105 43.5T100-371q0 63 44 107t107 44Zm229-260Z"/>
-		</svg></div>`).click(() => this.show()).prependTo($("#btnWrapper"));
-
-		this.enabled = true;
-		console.log("Module <Files On Server> enabled.");
+		if (this.enabled) return this;
+		// 检查服务端 '/books' 目录是否存在
+		try {
+			WebDAV.Fs(_STRe_SERVER_).dir("/books").children();
+			$(`<div id="STRe-FOS-btn" class="btn-icon">
+				<svg class="icon" viewBox="0 -960 960 960" xmlns="http://www.w3.org/2000/svg">
+					<path d="M251-160q-88 0-149.5-61.5T40-371q0-78 50-137t127-71q20-97 94-158.5T482-799q112 0 189 81.5T748-522v24q72-2 122 46.5T920-329q0 69-50 119t-119 50H251Zm0-60h500q45 0 77-32t32-77q0-45-32-77t-77-32h-63v-84q0-91-61-154t-149-63q-88 0-149.5 63T267-522h-19q-62 0-105 43.5T100-371q0 63 44 107t107 44Zm229-260Z"/>
+				</svg></div>`).click(() => this.show()).prependTo($("#btnWrapper"));
+			this.enabled = true;
+			console.log("Module <Files on Server> enabled.");
+		} catch (e) {
+			console.log("Module <Files on Server> not enabled, because can't access '/books' on server.");
+			this.enabled = false;
+		}
 		return this;
 	},
 
 	disable() {
+		if (!this.enabled) return this;
 		this.hide();
 		$("#STRe-FOS-btn").remove();
-		console.log("Module <Files On Server> disabled.");
 		this.enabled = false;
+		console.log("Module <Files on Server> disabled.");
 		return this;
 	},
 };
 
+// ------------------------------------------------
+// Module <Progress on Server>
+// ------------------------------------------------
+var STRe_ProgressOnServer = {
+
+	enabled: false,
+	pauseSave: false,
+
+	STRe_PROGRESS_RE: /^(\d+)(\/(\d+))?$/i, // 格式：line/total，match() 的结果：[full, line, /total, total]
+	STReFileLine: "", // STRe_TAG + filename + ":" + line
+	STReFile: "",
+
+	saveProgress() {
+		if (!this.enabled) return; // 不开启云端进度
+		if (this.pauseSave) return; // 正在等用户决定是否同步
+		if (filename) { // file on server
+			if (contentContainer.style.display == "none") { // 阅读区域不可见，说明可能正在drag，getTopLineNumber()会取到错误行数，应该跳过
+				return;
+			}
+			let line = getTopLineNumber(filename);
+			if ((filename + ":" + line) != this.STReFileLine) {
+				console.log("Save progress on server: " + filename + ":" + line + "/" + fileContentChunks.length);
+				STReHelper.putProgress(filename, line + "/" + fileContentChunks.length);
+				this.STReFileLine = filename + ":" + line;
+			}
+		// } else { // local file
+		// 	this.STReFileLine = "";
+		}
+	},
+
+	syncProgress(data) {
+		let m = data.match(this.STRe_PROGRESS_RE);
+		if (m) { // 取到服务端进度
+			let line = parseInt(m[1]);
+			if (line == getTopLineNumber()) { // 进度一致，无需同步
+				this.STReFileLine = filename + ":" + line;
+			} else { // 进度不一致
+				function hide() {
+					$('#syncProgressDlg').remove();
+					STReHelper.unfreezeContent();
+					STRe_ProgressOnServer.pauseSave = false;
+				}
+				$(`<dialog id="syncProgressDlg">
+					<div class="dlg-title-line"><span id="syncProgressDlgClose" class="dlg-close-btn">&times;</span></div>
+					<div class="dlg-body" style="padding: 0rem 2rem;">
+						<div style="padding-bottom: 1rem;">发现云端阅读进度：${data}</div>
+						<div style="padding-bottom: 1rem;">是否跳转到云端进度？</div>
+						<button id="syngProgressDlgOk">是</button>
+						<button id="syngProgressDlgCancel">否</button>
+					</div>
+					</dialog>`).bind("cancel", hide).appendTo("body");
+				$("#syncProgressDlgClose").click(hide);
+				$("#syngProgressDlgCancel").click(hide);
+				$("#syngProgressDlgOk").click(() => {
+					console.log("Load progress on server: " + filename + ":" + data);
+					hide();
+					setHistory(filename, line);
+					getHistory(filename);
+					this.STReFileLine = filename + ":" + line;
+				});
+				STReHelper.freezeContent();
+				document.getElementById("syncProgressDlg").showModal();
+				this.pauseSave = true;
+			}
+		}
+	},
+
+	loadProgress() {
+		if (!this.enabled) return;
+		if (filename) {
+			if (contentContainer.style.display == "none") { // 阅读区域不可见，说明可能正在drag，getTopLineNumber()会取到错误行数，应该跳过
+				return;
+			}
+			if (this.STReFile != filename) { // 只在更换文件时同步进度
+				console.log("Check progress on server: " + filename);
+				this.syncProgress(STReHelper.getProgress(filename));
+			}
+		}
+		this.STReFile = filename;
+	},
+
+	loop() { // 定时同步进度
+		this.loadProgress();
+		this.saveProgress();
+		setTimeout(() => this.loop(), 1000);
+	},
+
+	enable() {
+		if (this.enabled) return this;
+		// 检查服务端 '/progress' 目录是否存在且可写
+		try {
+			let test = "TEST TIMESTAMP: " + new Date().getTime();
+			let f = WebDAV.Fs(_STRe_SERVER_).file("/progress/!STRe!.txt");
+			f.write(test);
+			if (f.read() == test) {
+				this.enabled = true;
+				console.log("Module <Progress on Server> enabled.");
+			} else {
+				this.enabled = false;
+				console.log("Module <Progress on Server> not enabled, because can't access '/progress' on server.");
+			}
+		} catch (e) {
+			this.enabled = false;
+			console.log("Module <Progress on Server> not enabled, because can't access '/progress' on server.");
+		}
+		setTimeout(() => this.loop(), 1000);
+		return this;
+	},
+
+	disable() {
+		if (!this.enabled) return this;
+		this.enabled = false;
+		console.log("Module <Files on Server> disabled.");
+		return this;
+	},
+};
+
+
+// ------------------------------------------------
+// Module <Bookshelf>
+// ------------------------------------------------
+var STRe_Bookshelf = {
+
+	enabled: false,
+	db: null,
+
+	openFile(fname, onSucc = null) {
+		if (this.enabled) {
+			console.log("STRe_Bookshelf.openFile: " + fname);
+			showLoadingScreen();
+			this.db.getBook(fname).then((book) => {
+				if (book) {
+					book.name = fname;
+					resetVars();
+					handleSelectedFile([book]);
+					$("#btnWrapper").attr("data-src", "db");
+					if (onSucc) onSucc();
+				} else {
+					alert("发生错误！");
+				}
+			});
+		}
+	},
+
+	async saveFile(file) {
+		if (this.enabled) {
+			await this.db.putBook(file.name, file);
+		}
+	},
+
+	async isFileExist(fname) {
+		if (this.enabled) {
+			return await this.db.isBookExist(fname);
+		} else {
+			return false;
+		}
+	},
+
+	async deleteFile(fname, onSucc = null) {
+		if (this.enabled) {
+			this.db.deleteBook(fname).then(() => {
+				if (onSucc) onSucc();
+			});
+		}
+	},
+
+	async show() {
+		$(`<div id="bookshelf">
+			<div class="caption">本地书架 <span id="bookshelfClose" class="close-btn">&times;</span></div>
+			<span id="bookshelfContainer" class="container"></span>
+			</div>`).appendTo($("body"));
+		$("#bookshelfClose").click(() => this.hide());
+		$("#bookshelf").attr("tabindex", 1).focus().keydown((evt) => {
+			evt.stopPropagation();
+			if (evt.which == 27) { //Escape
+				this.hide();
+			}
+		});
+		STReHelper.freezeContent();
+		let booklist = [];
+		for (const book of await this.db.getAllBooks()) {
+			booklist.push(book.name);
+		}
+		booklist.sort((a, b) => (a.localeCompare(b, "zh")));
+		let books = "";
+		for (const name of booklist) {
+			books += `<div class="book">
+				<div><span class="delete-btn" data-filename="${name}">&times;</span></div>
+				<div class="cover" data-filename="${name}">${name}</div>
+				</div>`;
+		}
+		$("#bookshelfContainer").append(books);
+		$("#bookshelf .cover").click((evt) => {
+			this.openFile(evt.currentTarget.attributes["data-filename"].value, () => this.hide());
+		});
+		$("#bookshelf .delete-btn").click((evt) => {
+			this.deleteFile(evt.currentTarget.attributes["data-filename"].value, () => $(evt.currentTarget).parents("#bookshelf .book").remove());
+		})
+	},
+
+	hide() {
+		$("#bookshelf").remove();
+		STReHelper.unfreezeContent();
+	},
+
+	enable() {
+		if (this.enabled) return this;
+		this.db = new STReLocalDB();
+		STReHelper.replaceFunc(window, "handleSelectedFile", "handleSelectedFile__STRe_Bookshelf", function (fileList) {
+			if (fileList.length > 0 && fileList[0].type === "text/plain") {
+				STRe_Bookshelf.saveFile(fileList[0]).then(() => handleSelectedFile__STRe_Bookshelf(fileList));
+			}
+		});
+
+		$(`<div id="STRe-bookshelf-btn" class="btn-icon">
+			<svg class="icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="fill:none;">
+				<rect width="18" height="40" rx="5" ry="5" stroke-width="6" transform="translate(15,35)" />
+				<rect width="20" height="60" rx="5" ry="5" stroke-width="6" transform="translate(40,15)" />
+				<rect width="18" height="50" rx="5" ry="5" stroke-width="6" transform="translate(65,25),rotate(-10)" />
+			</svg></div>`).click(() => this.show()).prependTo($("#btnWrapper"));
+		// this.show();
+		this.enabled = true;
+		console.log("Module <Bookshelf> enabled.");
+		return this;
+	},
+
+	disable() {
+		if (!this.enabled) return this;
+		STReHelper.replaceFunc(window, "handleSelectedFile", "abandon__STRe_Bookshelf", handleSelectedFile__STRe_Bookshelf);
+		this.db = null;
+		$("#STRe-bookshelf-btn").remove();
+		this.enabled = false;
+		console.log("Module <Bookshelf> disabled.");
+		return this;
+	},
+};
+
+
+// ------------------------------------------------
+// Module <Reopen File on Start>
+// ------------------------------------------------
 var STRe_ReopenFile = {
 
 	enabled: false,
 
-	STRe_FILE_ITEM: "STReFile",
-	STReFile: "",
+	STRe_FILE: "STReFile",
+	// STRe_POS:  "STReFilePos",
+	// STRe_POS_CLOUD: "WebDAV",
+	// STRe_POS_LOCAL: "indexedDB",
+	STRe_TAG_CLOUD: "☁",
+	STRe_TAG_LOCAL: "💻",
 
-	handleServerFileBak: null,
+	async reopenFile() {
+		// 获取之前的文件名，重新打开
+		let fname = localStorage.getItem(this.STRe_FILE);
+		if (fname) {
+			if (await STRe_Bookshelf.isFileExist(fname)) {
+				STRe_Bookshelf.openFile(fname);
+			} else {
+				STRe_FilesOnServer.openFile(fname);
+			}
+		}
+	},
+
+	saveCurFilename() {
+		if (!this.enabled) return;
+		localStorage.setItem(this.STRe_FILE, filename);
+	},
+
+	loop() {
+		this.saveCurFilename();
+		setTimeout(() => this.loop(), 1000);
+	},
 
 	enable() {
-		if (STRe_FilesOnServer.enabled) {
-			// 替换获取服务器文件后的处理步骤，先记录当前文件名，以备下次重新打开
-			this.handleServerFileBak = STRe_FilesOnServer.handleServerFile;
-			STRe_FilesOnServer.handleServerFile = function (evt) {
-				STRe_ReopenFile.handleServerFileBak(evt);
-				localStorage.setItem(STRe_ReopenFile.STRe_FILE_ITEM, evt.target.response.name.substring(STRe_FilesOnServer.STRe_TAG.length));
-			};
-			// 获取之前的文件名，重新打开
-			this.STReFile = localStorage.getItem(this.STRe_FILE_ITEM);
-			if (this.STReFile) {
-				STRe_FilesOnServer.openServerFile(this.STReFile);
-			}
+		if (this.enabled) return this;
+		if (STRe_FilesOnServer.enabled || STRe_Bookshelf.enabled) {
+			this.reopenFile();
 			this.enabled = true;
 			console.log("Module <Reopen File on Start> enabled.");
 		} else {
 			this.enabled = false;
-			console.log("Module <Reopen File on Start> not enabled, because <Files On Server> not enabled.");
+			console.log("Module <Reopen File on Start> not enabled, because <Files On Server> and <Bookshelf> not enabled.");
 		}
+		setTimeout(() => this.loop(), 1000);
 		return this;
 	},
 
 	disable() {
-		if (this.handleServerFileBak) {
-			STRe_FilesOnServer.handleServerFile = this.handleServerFileBak;
-			this.handleServerFileBak = null;
-		}
-		console.log("Module <Reopen File on Start> disabled.");
+		if (!this.enabled) return this;
 		this.enabled = false;
+		console.log("Module <Reopen File on Start> disabled.");
 		return this;
 	},
 };
 
-// 	// ------------------------------------------------
-// 	// Module <Progress On Server>
-// 	// ------------------------------------------------
-// 	addProgressOnServer() {
-// 		const STRe_PROGRESS_RE = /^(\d+)(\/(\d+))?$/i;
-// 		let STReProgressOnServer = false; // 服务端阅读进度
-
-// 		let STReFileLine = ""; // STRe_TAG + filename + ":" + line
-
-// 		// 检查服务端 '/progress' 目录是否存在
-// 		try {
-// 			WebDAV.Fs(STRe_SERVER).dir("/progress").children();
-// 			STReProgressOnServer = true;
-// 		} catch (e) {
-// 			console.log("Can't access '/progress' on server. Turn off progress-on-server function.");
-// 			STReProgressOnServer = false;
-// 		}
-
-// 		if (STReProgressOnServer) {
-// 			for (const fp of fs.dir("/progress").children()) {
-// 				let fname = decodeURIComponent(fp.name);
-// 				if (fname.substring(fname.length - 9).toLowerCase() == ".progress") {
-// 					fname = fname.substring(0, fname.length - 9);
-// 					let fn = fname_list.find((e) => e[0].toLowerCase() == fname.toLowerCase());
-// 					if (fn) {
-// 						let m = fp.read().match(STRe_PROGRESS_RE);
-// 						if (m) {
-// 							fn[1] = m[1] + "/" + (m[3] || "?");
-// 							fn[2] = m[3] ? (eval(m[0]) * 100).toFixed(1).replace(".0", "") + "%" : "";
-// 						}
-// 					}
-// 				}
-// 			}
-// 		}
-// 		function saveProgressToServer() {
-// 			if (!STReProgressOnServer) // 不开启云端进度
-// 				return;
-// 			if ((filename) && (filename.substring(0, STRe_TAG.length) == STRe_TAG)) { // file on server
-// 				if (contentContainer.style.display == "none") { // 阅读区域不可见，说明可能正在drag，getTopLineNumber()会取到错误行数，应该跳过
-// 					// console.log("skip");
-// 					return;
-// 				}
-// 				let line = getTopLineNumber(filename);
-// 				if ((filename + ":" + line) != STReFileLine) {
-// 					console.log("saveProgressToServer: " + filename + ":" + line + "/" + fileContentChunks.length);
-// 					localStorage.setItem(STReFile_ITEM, filename.substring(STRe_TAG.length));
-// 					let prog_file = WebDAV.Fs(STRe_SERVER).file("/progress/" + filename.substring(STRe_TAG.length) + ".progress");
-// 					prog_file.write(line + "/" + fileContentChunks.length);
-// 					STReFileLine = filename + ":" + line;
-// 				}
-// 			} else { // local file
-// 				localStorage.removeItem(STReFile_ITEM);
-// 				STReFileLine = "";
-// 			}
-// 		}
-
-// 		function loadProgressFromServer(fname, onload) { // fname: 不带 STRe_TAG 的文件名
-// 			if (!STReProgressOnServer) { // 不开启云端进度
-// 				if (onload) {
-// 					// console.log('loadProgressFromServer.onload');
-// 					onload();
-// 				}
-// 				return;
-// 			}
-// 			WebDAV.Fs(STRe_SERVER).file("/progress/" + fname + ".progress").read((data) => {
-// 				let m = data.match(STRe_PROGRESS_RE);
-// 				if (m) { // 取到服务端进度，同步到 localStorage
-// 					let line = parseInt(m[1]);
-// 					console.log("loadProgressFromServer: " + fname + ":" + line);
-// 					setHistory(STRe_TAG + fname, line);
-// 					STReFileLine = STRe_TAG + fname + ":" + line;
-// 				} else {
-// 					STReFileLine = STRe_TAG + fname + ":" + (localStorage.getItem(STRe_TAG + fname) || 0);
-// 				}
-// 				if (onload) { // 进度已同步，继续处理
-// 					// console.log('loadProgressFromServer.onload');
-// 					onload();
-// 				}
-// 			});
-// 		}
-
-// 		function STReWorker() { // 定时将当前书在 localStorage 里的进度保存到服务器上
-// 			saveProgressToServer();
-// 			window.parent.document.title = document.title;
-// 			setTimeout(STReWorker, 1000);
-// 		}
-// 		STReWorker();
-
-// 		fname_list.sort((a, b) =>
-// 		(!!a[1] == !!b[1]) // 判断阅读状态是否相同？（已读 or 未读） // ((a[1] && b[1]) || (!a[1] && !b[1]))
-// 			? (a[0].localeCompare(b[0], "zh")) // 相同，按拼音序
-// 			: (a[1] ? -1 : 1)); // 不同，已读排前面
-
-// 	},
-
-// 	// ------------------------------------------------
-// 	// Book cache and shelf
-// 	// ------------------------------------------------
-// 	addBookShelf() {
-// 		// let cache = await bc.GetBook(fname);
-// 		// if (cache) {
-// 		// 	console.log("Load book from cache.");
-// 		// 	let resp = cache.response;
-// 		// 	loadProgressFromServer(fname, () => {
-// 		// 		resetVars();
-// 		// 		localStorage.setItem(STReFile_ITEM, fname);
-// 		// 		resp.name = STRe_TAG + fname;
-// 		// 		handleSelectedFile([resp]);
-// 		// 	});
-// 		// } else {
-
-// 		// }
-// 		// 		console.log("Save book to cache.");
-// 		// 		bc.PutBook({ filename: fname, response: this.response });
-
-// 	}
-// }
 
 STRe_Settings.enable();
+
+STRe_Bookshelf.enable();
+
 STRe_FilesOnServer.enable();
+STRe_ProgressOnServer.enable();
 STRe_ReopenFile.enable();

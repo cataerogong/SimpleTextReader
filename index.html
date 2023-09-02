@@ -85,5 +85,13 @@
         <script type="text/javascript" src="./scripts/webdav.js"></script>
         <script type="text/javascript" src="./scripts/enhance-db.js"></script>
         <script type="text/javascript" src="./scripts/enhance.js"></script>
+        <script>
+            if (navigator.serviceWorker != null) {
+                navigator.serviceWorker.register('./scripts/service_worker.js')
+                    .then(function (registration) {
+                        console.log('Registered events at scope: ', registration.scope);
+                    });
+            }
+        </script>
     </body>
 </html>

@@ -48,7 +48,7 @@ input[type="checkbox"] {
     /* background: var(--bgColor); */
     /* border-radius: 30px; */
     overflow: hidden;
-    /* cursor: pointer; */
+    cursor: pointer;
     transition: var(--darkMode_animation);
 }
 
@@ -69,8 +69,8 @@ svg.moon {
 .icons {
     display: flex;
     align-items: center;
-    gap: 2rem;
-    transform: translateY(2rem) rotate(90deg);
+    gap: 1.5rem;
+    transform: translateY(1.5rem) rotate(90deg);
     user-select: none;
     color: var(--mainColor_focused);
     transition: var(--darkMode_animation);
@@ -89,7 +89,7 @@ input[type="checkbox"]:checked ~ #switch-btn label {
 }
 
 input[type="checkbox"]:checked ~ #switch-btn label .icons {
-    transform: translateX(-2rem);
+    transform: translateX(-1.5rem);
 }
 
 .btn-group {
@@ -105,7 +105,8 @@ input[type="checkbox"]:checked ~ #switch-btn label .icons {
 .btn-icon {
     width: 2rem;
     height: 2rem;
-    border: 0.2rem var(--lightMode_color) solid;
+    border: 0.2rem solid;
+    border-color: var(--lightMode_color);
     border-radius: 2rem;
     display: flex;
     align-items: center;
@@ -116,12 +117,12 @@ input[type="checkbox"]:checked ~ #switch-btn label .icons {
 }
 
 [data-theme="dark"] .btn-icon {
-    border: 0.3rem var(--darkMode_color) solid;
+    border-color: var(--darkMode_color);
 }
 
 svg.icon {
-    width: 2rem;
-    height: 2rem;
+    width: 1.5rem;
+    height: 1.5rem;
     stroke: var(--mainColor_focused);
     fill: var(--mainColor_focused);
 }
