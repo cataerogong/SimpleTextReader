@@ -22,7 +22,7 @@
     -webkit-font-smoothing: antialiased;
 } */
 
-input[type="checkbox"] {
+#btnWrapper input[type="checkbox"] {
     display: none;
 }
 
@@ -79,16 +79,16 @@ svg.moon {
     overflow-y: unset;
 }
 
-input[type="checkbox"]:checked ~ #switch-btn {
+#btnWrapper input[type="checkbox"]:checked ~ #switch-btn {
     /* background-color: var(--darkMode_color); */
     transition: var(--darkMode_animation);
 }
 
-input[type="checkbox"]:checked ~ #switch-btn label {
+#btnWrapper input[type="checkbox"]:checked ~ #switch-btn label {
     box-shadow: 0px 3px 5px 0px rgba(0, 0, 0, 0.2);
 }
 
-input[type="checkbox"]:checked ~ #switch-btn label .icons {
+#btnWrapper input[type="checkbox"]:checked ~ #switch-btn label .icons {
     transform: translateX(-1.5rem);
 }
 

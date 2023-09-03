@@ -53,6 +53,15 @@ dialog::backdrop {
     color: var(--fontColor);
 }
 
+.dlg-body select {
+    margin: 1px;
+    border: 1px solid var(--fontColor);
+    font-family: ui;
+    font-size: 1.2rem;
+    background: var(--bgColor);
+    color: var(--fontColor);
+}
+
 .dlg-body button {
     font-family: ui;
     padding: 2px 10px;
@@ -85,7 +94,7 @@ dialog::backdrop {
 }
 
 #bookshelf {
-    padding: 1rem;
+    padding: 1rem 4rem;
     font-size: 1.2rem;
     overflow-x: hidden;
     overflow-y: scroll;
