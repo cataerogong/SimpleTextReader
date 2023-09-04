@@ -85,23 +85,14 @@ dialog::backdrop {
 .files-on-server-dlg {
     height: 90vh;
     min-width: 50vw;
+    max-width: 90vw;
 }
 
-.files-on-server-dlg .book-item {
-    cursor:pointer;
-    border:1px gray dotted;
-    margin:5px 0px;
-    padding: 2px 1.2rem;
-    display: flex;
-}
-
-.files-on-server-dlg .book-read {
-    background: no-repeat left / 1rem 1rem url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 -960 960 960" stroke="gray" fill="gray"><path d="M480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-60q68 0 130.62-25.806Q673.239-191.613 721-240L480-480v-340q-142 0-241 98.812Q140-622.375 140-480t98.812 241.188Q337.625-140 480-140Z"/></svg>'),
-                linear-gradient(to right, rgba(0,0,0,0.2) var(--book-progress), transparent 0);
-}
-[data-theme="dark"] .files-on-server-dlg .book-read {
-    background: no-repeat left / 1rem 1rem url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 -960 960 960" stroke="gray" fill="gray"><path d="M480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-60q68 0 130.62-25.806Q673.239-191.613 721-240L480-480v-340q-142 0-241 98.812Q140-622.375 140-480t98.812 241.188Q337.625-140 480-140Z"/></svg>'),
-                linear-gradient(to right, rgba(255,255,255,0.2) var(--book-progress), transparent 0);
+.files-on-server-dlg .book {
+    cursor: pointer;
+    border: 1px gray dotted;
+    margin: 5px 0px;
+    padding: 2px 1.5rem;
 }
 
 #pagination:hover {
@@ -109,7 +100,8 @@ dialog::backdrop {
 }
 
 .bookshelf-dlg {
-    width: calc(100vw - 8rem); /* 避开 btn-group */
+    width: calc(100vw - 8rem);
+    /* 避开 btn-group */
     height: 90vh;
 }
 
@@ -118,9 +110,11 @@ dialog::backdrop {
     top: 5vh;
     bottom: 5vh;
     left: 4rem;
-    right: 4rem; /* 避开 btn-group */
+    right: 4rem;
+    /* 避开 btn-group */
     z-index: 2000;
-    border: 3px solid black;
+    border: 3px solid var(--fontColor);
+    box-shadow: 0px 0px 10px gray;
 }
 
 .bookshelf {
@@ -137,6 +131,7 @@ dialog::backdrop {
 
 .bookshelf .dlg-body {
     text-align: center;
+    border: 1px solid gray;
 }
 
 .bookshelf .book {
@@ -169,9 +164,23 @@ dialog::backdrop {
     cursor: pointer;
 }
 
-.bookshelf .book-read {
-    background-image: linear-gradient(to top, rgba(0,0,0,0.2) var(--read-progress), transparent 0);
+.bookshelf .book .progress {
+    font-size: 1rem;
+    text-align: center;
+    border-top: 1px solid var(--borderColor);
+    background-color: var(--bgColor);
 }
-[data-theme="dark"] .bookshelf .book-read {
-    background-image: linear-gradient(to top, rgba(255,255,255,0.2) var(--read-progress), transparent 0);
+
+.files-on-server-dlg .book.read,
+.bookshelf .book.read .progress {
+    background: no-repeat left / 1rem 1rem url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 -960 960 960" stroke="gray" fill="gray"><path d="M480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-60q68 0 130.62-25.806Q673.239-191.613 721-240L480-480v-340q-142 0-241 98.812Q140-622.375 140-480t98.812 241.188Q337.625-140 480-140Z"/></svg>'),
+        linear-gradient(to right, rgba(0, 0, 0, 0.2) var(--read-progress), transparent 0),
+        var(--bgColor);
+}
+
+[data-theme="dark"] .files-on-server-dlg .book.read,
+[data-theme="dark"] .bookshelf .book.read .progress {
+    background: no-repeat left / 1rem 1rem url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 -960 960 960" stroke="gray" fill="gray"><path d="M480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-60q68 0 130.62-25.806Q673.239-191.613 721-240L480-480v-340q-142 0-241 98.812Q140-622.375 140-480t98.812 241.188Q337.625-140 480-140Z"/></svg>'),
+        linear-gradient(to right, rgba(255, 255, 255, 0.2) var(--read-progress), transparent 0),
+        var(--bgColor);
 }

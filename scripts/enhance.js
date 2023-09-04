@@ -405,11 +405,23 @@ var STRe_FilesOnServer = {
 			for (const fn of fname_list) {
 				// booklist.append(`<div class="book-item ${fn[1] ? "book-read" : ""}" style="--book-progress:${fn[2]};"
 				// title="${"进度：" + (fn[1] ? (fn[2] + " (" + fn[1] + ")") : "无")}" data-book-filename="${fn[0]}">${fn[0]}</div>`);
-				$(`<div class="book-item" data-filename="${fn}">${fn}</div>`).click(() => {
+				let book = $(`<div class="book" data-filename="${fn}">${fn}</div>`).click(() => {
 					this.hide();
 					this.openFile(fn);
 				}).appendTo(booklist);
-			}
+				let progress = localStorage.getItem(fn);
+				let pct = "?%";
+				if (progress) {
+					let m = progress.match(/^(?<line>\d+)\/(?<total>\d+)?$/i);
+					if (m) {
+						pct = (eval(progress)*100).toFixed(0)+"%";
+						book.addClass("read").css("--read-progress", pct);
+					}
+					book.attr("title", "阅读进度："+pct+" ("+progress+")");
+				} else {
+					book.attr("title", "阅读进度：无");
+				}
+					}
 		}
 		return this;
 	},
@@ -643,8 +655,10 @@ var STRe_Bookshelf = {
 	},
 
 	genBookItem(name) {
-		let book = $(`<div class="book"><div><span class="delete-btn" data-filename="${name}">&times;</span></div>
-			<div class="cover" data-filename="${name}">${name}</div></div>`);
+	let book = $(`<div class="book property" data-filename="${name}">
+			<div style="height:1.5rem;line-height:1.5rem;"><span class="delete-btn" title="删除">&times;</span></div>
+			<div class="cover">${name}</div>
+			<div class="progress"></div></div>`);
 		book.find(".cover").click((evt) => {
 			evt.originalEvent.stopPropagation();
 			this.hide();
@@ -656,16 +670,17 @@ var STRe_Bookshelf = {
 		});
 		let progress = localStorage.getItem(name);
 		let pct = "?%";
-		let cover = book.find(".cover")
 		if (progress) {
 			let m = progress.match(/^(?<line>\d+)\/(?<total>\d+)?$/i);
 			if (m) {
 				pct = (eval(progress)*100).toFixed(1)+"%";
-				cover.addClass("book-read").css("--read-progress", pct);
+				book.addClass("read").css("--read-progress", pct);
 			}
-			cover.attr("title", "阅读进度："+pct+" ("+progress+")");
+			// book.attr("title", "阅读进度："+pct+" ("+progress+")");
+			book.find(".progress").html("进度："+pct).attr("title", progress);
 		} else {
-			cover.attr("title", "阅读进度：无");
+			// book.attr("title", "阅读进度：无");
+			book.find(".progress").html("进度：无");
 		}
 		return book;
 	},
