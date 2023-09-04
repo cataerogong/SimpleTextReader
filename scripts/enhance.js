@@ -6,11 +6,11 @@ var STReHelper = {
 	FUNC_RE: /^\s*(function)?\s*(?<name>\w*)\s*\((?<args>[^\)]*)\)[\s\r\n]*{(?<body>.*)}\s*$/si, // function F(a) {b}
 	FUNC_RE2: /^\s*\((?<args>[^\)]*)\)[\s\r\n]*=>[\s\r\n]*{?(?<body>.*)}?\s*$/is, // (a) => {b}
 	getFuncArgs(func) {
-		let r = this.FUNC_RE.exec(func.toString())||this.FUNC_RE2.exec(func.toString());
+		let r = this.FUNC_RE.exec(func.toString()) || this.FUNC_RE2.exec(func.toString());
 		return r ? r.groups["args"] : "";
 	},
 	getFuncBody(func) {
-		let r = this.FUNC_RE.exec(func.toString())||this.FUNC_RE2.exec(func.toString());
+		let r = this.FUNC_RE.exec(func.toString()) || this.FUNC_RE2.exec(func.toString());
 		return r ? r.groups["body"] : "";
 	},
 	replaceFunc(funcOwner, funcName, funcCopyName, newFunc) {
@@ -48,6 +48,11 @@ var STReHelper = {
 		}
 	},
 
+	isElmVisible(elm, pseudoElt = null) {
+		let styles = window.getComputedStyle(elm, pseudoElt);
+		return (styles["display"] != "none") && (styles["visibility"] != "hidden") && (styles["visibility"] != "collapse");
+	},
+
 	getLink(link, loadFunc = null) {
 		let xhr = new XMLHttpRequest();
 		xhr.open("get", link, !!loadFunc);
@@ -64,7 +69,7 @@ var STReHelper = {
 		return this.getLink(_STRe_SERVER_ + "/books/" + fname, loadFunc);
 	},
 
-	getProgress(fname, callback=null) {
+	getProgress(fname, callback = null) {
 		if (callback) {
 			return WebDAV.Fs(_STRe_SERVER_).file("/progress/" + fname + ".progress").read(callback);
 		} else {
@@ -76,7 +81,7 @@ var STReHelper = {
 			}
 		}
 	},
-	putProgress(fname, data, callback=null) {
+	putProgress(fname, data, callback = null) {
 		if (callback) {
 			WebDAV.Fs(_STRe_SERVER_).file("/progress/" + fname + ".progress").write(data, callback);
 		} else {
@@ -117,6 +122,7 @@ STReHelper.replaceFunc(WebDAV, "request", "request____copy", function () {
 var STRe_Settings = {
 
 	enabled: false,
+	STRe_SETTINGS: "STReSettings",
 
 	settings: {
 		p_lineHeight: {
@@ -185,35 +191,35 @@ var STRe_Settings = {
 		},
 		enableFos: {
 			val: "",
-			def: "false",
+			def: false,
 			type: "checkbox",
 			desc: "云端书库",
 			options: {},
-			apply() { (this.val == "true") ? STRe_FilesOnServer.enable() : STRe_FilesOnServer.disable(); },
+			apply() { this.val ? STRe_FilesOnServer.enable() : STRe_FilesOnServer.disable(); },
 		},
 		enablePos: {
 			val: "",
-			def: "false",
+			def: false,
 			type: "checkbox",
 			desc: "云端进度同步",
 			options: {},
-			apply() { (this.val == "true") ? STRe_ProgressOnServer.enable() : STRe_ProgressOnServer.disable(); },
-		},
-		enableRos: {
-			val: "",
-			def: "false",
-			type: "checkbox",
-			desc: "启动时打开上次阅读书籍",
-			options: {},
-			apply() { (this.val == "true") ? STRe_ReopenFile.enable() : STRe_ReopenFile.disable(); },
+			apply() { this.val ? STRe_ProgressOnServer.enable() : STRe_ProgressOnServer.disable(); },
 		},
 		enableBookshelf: {
 			val: "",
-			def: "false",
+			def: true,
 			type: "checkbox",
 			desc: "本地缓存书架",
 			options: {},
-			apply() { (this.val == "true") ? STRe_Bookshelf.enable() : STRe_Bookshelf.disable(); },
+			apply() { this.val ? STRe_Bookshelf.enable() : STRe_Bookshelf.disable(); },
+		},
+		enableRos: {
+			val: "",
+			def: true,
+			type: "checkbox",
+			desc: "启动时打开上次阅读书籍",
+			options: {},
+			apply() { },
 		},
 	},
 
@@ -223,7 +229,7 @@ var STRe_Settings = {
 		let str = "";
 		switch (s.type) {
 			case "checkbox":
-				str = `<input type="checkbox" id="setting_${key}" ${(s.val == "true") ? "checked" : ""} />
+				str = `<input type="checkbox" id="setting_${key}" ${s.val ? "checked" : ""} />
 				<label for="setting_${key}">${s.desc}</label>`
 				break;
 			case "select":
@@ -243,14 +249,15 @@ var STRe_Settings = {
 
 	show() {
 		if (this.enabled) {
-			$(`<dialog id="settingDlg">
-				<div class="dlg-cap">设置<span id="settingDlgCloseBtn" class="dlg-close-btn">&times;</span></div>
+			let dlg = $(`<dialog id="settingDlg">
+				<div class="dlg-cap">设置</div>
 				<span class="dlg-body">
+				<div style="font-size:125%;background-color:var(--mainColor);margin-bottom:1rem;">增强功能</div>
 				<div>${this.genElmStr("enableFos")}</div>
 				<div>${this.genElmStr("enablePos")}</div>
-				<div>${this.genElmStr("enableRos")}</div>
 				<div>${this.genElmStr("enableBookshelf")}</div>
-				<hr />
+				<div>${this.genElmStr("enableRos")}</div>
+				<div style="font-size:125%;background-color:var(--mainColor);margin:1rem 0;">阅读界面</div>
 				<div>${this.genElmStr("p_lineHeight")}</div>
 				<div>${this.genElmStr("p_fontSize")}</div>
 				<div>${this.genElmStr("fontColor")}</div>
@@ -260,17 +267,16 @@ var STRe_Settings = {
 				<div>${this.genElmStr("pagination_bottom")}</div>
 				<div>${this.genElmStr("pagination_opacity")}</div>
 				<hr />
-				<div style="padding:4px;margin-top:10px;">
-					<button id="settingDlgClrBtn">恢复默认</button>
-					<button id="settingDlgOkBtn" style="float:right;">应用</button>
-				</div>
+				<div class="dlg-btn-grp"></div>
 				</span>
-				</dialog>`).bind("cancel", () => this.hide()).appendTo("body");
-			$("#settingDlgCloseBtn").click(() => this.hide());
-			$("#settingDlgClrBtn").click(() => this.reset().load().apply().hide());
-			$("#settingDlgOkBtn").click(() => this.save().apply().hide());
+				</dialog>`).bind("cancel", () => this.hide());
+			dlg.find(".dlg-cap").append($(`<span class="dlg-close">&times;</span>`).click(() => this.hide()));
+			dlg.find(".dlg-btn-grp").append($(`<button>恢复默认</button>`).click(() => this.reset().load().apply().hide()));
+			dlg.find(".dlg-btn-grp").append($(`<button style="float:right;">应用</button>`).click(() => this.save().apply().hide()))
 			STReHelper.freezeContent();
-			document.getElementById("settingDlg").showModal();
+			dlg.appendTo("body");
+			// document.getElementById("settingDlg").showModal();
+			dlg[0].showModal();
 		}
 		return this;
 	},
@@ -285,8 +291,9 @@ var STRe_Settings = {
 
 	load() {
 		if (this.enabled) {
+			let st = JSON.parse(localStorage.getItem(this.STRe_SETTINGS)) || {};
 			for (key in this.settings) {
-				this.settings[key].val = localStorage.getItem(key) || this.settings[key].def;
+				this.settings[key].val = (key in st) ? st[key] : this.settings[key].def;
 			}
 		}
 		return this;
@@ -294,15 +301,17 @@ var STRe_Settings = {
 
 	save() {
 		if (this.enabled) {
+			let st = {};
 			for (key in this.settings) {
 				let s = this.settings[key];
 				if (s.type == "checkbox") {
-					s.val = document.getElementById("setting_" + key).checked.toString();
+					s.val = document.getElementById("setting_" + key).checked;
 				} else {
 					s.val = $("#setting_" + key).val() || s.def;
 				}
-				localStorage.setItem(key, s.val);
+				st[key] = s.val;
 			}
+			localStorage.setItem(this.STRe_SETTINGS, JSON.stringify(st));
 		}
 		return this;
 	},
@@ -318,9 +327,7 @@ var STRe_Settings = {
 
 	reset() {
 		if (this.enabled) {
-			for (key in this.settings) {
-				localStorage.removeItem(key);
-			}
+			localStorage.removeItem(this.STRe_SETTINGS);
 		}
 		return this;
 	},
@@ -363,22 +370,23 @@ var STRe_FilesOnServer = {
 			e.target.response.name = fname;
 			resetVars();
 			handleSelectedFile([e.target.response]);
-			$("#btnWrapper").attr("data-src", "svr");
 			if (onSucc) onSucc();
 		});
 	},
 
 	show() {
 		if (this.enabled) {
-			$(`<dialog id="serverFilesDlg" style="height:100vh;min-width:50vw;">
-				<div class="dlg-cap">云端书库<span id="serverFilesDlgClose" class="dlg-close-btn">&times;</span></div>
-				<span id="serverFilesDlgList" class="dlg-body" style="overflow-y:scroll;justify-content:center;">
+			let dlg = $(`<dialog id="serverFilesDlg" class="files-on-server-dlg">
+				<div class="dlg-cap">云端书库</div>
+				<span class="dlg-body">
 					<img src="./images/loading_geometry.gif" style="display:block;width:30vw;filter:var(--mainColor_filter); "/>
 				</span>
-				</dialog>`).bind("cancel", () => this.hide()).appendTo("body");
-			$("#serverFilesDlgClose").click(() => this.hide());
+				</dialog>`).bind("cancel", () => this.hide());
+			dlg.find(".dlg-cap").append($(`<span class="dlg-close">&times;</span>`).click(() => this.hide()));
 			STReHelper.freezeContent();
-			document.getElementById("serverFilesDlg").showModal();
+			// document.getElementById("serverFilesDlg").showModal();
+			dlg.appendTo("body");
+			dlg[0].showModal();
 
 			let fs = WebDAV.Fs(_STRe_SERVER_);
 			let fname_list = [];
@@ -392,17 +400,16 @@ var STRe_FilesOnServer = {
 				console.log(e);
 			}
 			fname_list.sort((a, b) => (a[0].localeCompare(b[0], "zh"))); // 拼音序
-			let booklist = $("#serverFilesDlgList");
+			let booklist = dlg.find(".dlg-body");
 			booklist.html("");
 			for (const fn of fname_list) {
 				// booklist.append(`<div class="book-item ${fn[1] ? "book-read" : ""}" style="--book-progress:${fn[2]};"
 				// title="${"进度：" + (fn[1] ? (fn[2] + " (" + fn[1] + ")") : "无")}" data-book-filename="${fn[0]}">${fn[0]}</div>`);
-				booklist.append(`<div class="book-item" data-filename="${fn}">${fn}</div>`);
+				$(`<div class="book-item" data-filename="${fn}">${fn}</div>`).click(() => {
+					this.hide();
+					this.openFile(fn);
+				}).appendTo(booklist);
 			}
-			$(".book-item").click((evt) => {
-				this.hide();
-				this.openFile(evt.currentTarget.attributes["data-filename"].value);
-			});
 		}
 		return this;
 	},
@@ -453,7 +460,7 @@ var STRe_ProgressOnServer = {
 	enabled: false,
 	pauseSave: false,
 
-	STRe_PROGRESS_RE: /^(\d+)(\/(\d+))?$/i, // 格式：line/total，match() 的结果：[full, line, /total, total]
+	STRe_PROGRESS_RE: /^(?<line>\d+)(\/(?<total>\d+))?$/i, // 格式：line/total，match() 的结果：[full, line, /total, total]
 	STReFileLine: "", // STRe_TAG + filename + ":" + line
 	STReFile: "",
 
@@ -476,36 +483,40 @@ var STRe_ProgressOnServer = {
 	syncProgress(data) {
 		let m = data.match(this.STRe_PROGRESS_RE);
 		if (m) { // 取到服务端进度
-			let line = parseInt(m[1]);
+			// let line = parseInt(m[1]);
+			let line = parseInt(m.groups["line"]);
 			if (line == getTopLineNumber()) { // 进度一致，无需同步
 				this.STReFileLine = filename + ":" + line;
 			} else { // 进度不一致
+
 				function hide() {
 					$('#syncProgressDlg').remove();
 					STReHelper.unfreezeContent();
 					STRe_ProgressOnServer.pauseSave = false;
 				}
-				$(`<dialog id="syncProgressDlg">
-					<div class="dlg-title-line"><span id="syncProgressDlgClose" class="dlg-close-btn">&times;</span></div>
-					<div class="dlg-body" style="padding: 0rem 2rem;">
-						<div style="padding-bottom: 1rem;">当前阅读进度：${getTopLineNumber()}/${fileContentChunks.length}</div>
-						<div style="padding-bottom: 1rem;">发现云端进度：${data}</div>
-						<div style="padding-bottom: 1rem;">是否跳转到云端进度？</div>
-						<button id="syngProgressDlgOk">是</button>
-						<button id="syngProgressDlgCancel">否</button>
+
+				let dlg = $(`<dialog id="syncProgressDlg">
+					<div class="dlg-cap">云端进度同步</div>
+					<div class="dlg-body" style="line-height:2em;">
+						<div>当前阅读进度：${getTopLineNumber()}/${fileContentChunks.length}</div>
+						<div>发现云端进度：${data}</div>
+						<div>是否跳转到云端进度？</div>
+						<hr />
+						<div class="dlg-btn-grp"></div>
 					</div>
-					</dialog>`).bind("cancel", hide).appendTo("body");
-				$("#syncProgressDlgClose").click(hide);
-				$("#syngProgressDlgCancel").click(hide);
-				$("#syngProgressDlgOk").click(() => {
+					</dialog>`).bind("cancel", hide);
+				dlg.find(".dlg-cap").append($(`<span class="dlg-close">&times;</span>`).click(hide));
+				dlg.find(".dlg-btn-grp").append($(`<button style="float:left;">是</button>`).click(() => {
 					console.log("Load progress on server: " + filename + ":" + data);
 					hide();
 					setHistory(filename, line);
 					getHistory(filename);
 					this.STReFileLine = filename + ":" + line;
-				});
+				}));
+				dlg.find(".dlg-btn-grp").append($(`<button style="float:right;">否</button>`).click(hide));
 				STReHelper.freezeContent();
-				document.getElementById("syncProgressDlg").showModal();
+				dlg.appendTo("body");
+				dlg[0].showModal();
 				this.pauseSave = true;
 			}
 		}
@@ -526,9 +537,11 @@ var STRe_ProgressOnServer = {
 	},
 
 	loop() { // 定时同步进度
-		this.loadProgress();
-		this.saveProgress();
-		setTimeout(() => this.loop(), 1000);
+		if (this.enabled) {
+			this.loadProgress();
+			this.saveProgress();
+			setTimeout(() => this.loop(), 1000);
+		}
 	},
 
 	enable() {
@@ -572,6 +585,24 @@ var STRe_Bookshelf = {
 	enabled: false,
 	db: null,
 
+	STRe_FILE: "STReFile",
+	// STRe_POS_CLOUD: "WebDAV",
+	// STRe_POS_LOCAL: "indexedDB",
+	STRe_TAG_CLOUD: "☁",
+	STRe_TAG_LOCAL: "💻",
+
+	async reopenFile() {
+		if (this.enabled) {
+			// 获取之前的文件名，重新打开
+			let fname = localStorage.getItem(this.STRe_FILE);
+			if (fname) {
+				if (await STRe_Bookshelf.isFileExist(fname)) {
+					STRe_Bookshelf.openFile(fname);
+				}
+			}
+		}
+	},
+
 	openFile(fname, onSucc = null) {
 		if (this.enabled) {
 			console.log("STRe_Bookshelf.openFile: " + fname);
@@ -581,7 +612,6 @@ var STRe_Bookshelf = {
 					book.name = fname;
 					resetVars();
 					handleSelectedFile([book]);
-					$("#btnWrapper").attr("data-src", "db");
 					if (onSucc) onSucc();
 				} else {
 					alert("发生错误！");
@@ -617,33 +647,81 @@ var STRe_Bookshelf = {
 			<div class="cover" data-filename="${name}">${name}</div></div>`);
 		book.find(".cover").click((evt) => {
 			evt.originalEvent.stopPropagation();
-			this.openFile(evt.currentTarget.attributes["data-filename"].value, () => this.hide());
+			this.hide();
+			this.openFile(name);
 		});
 		book.find(".delete-btn").click((evt) => {
 			evt.originalEvent.stopPropagation();
-			this.deleteFile(evt.currentTarget.attributes["data-filename"].value, () => $(evt.currentTarget).parents("#bookshelf .book").remove());
+			this.deleteFile(name, () => this.freshBookList());
 		});
+		let progress = localStorage.getItem(name);
+		let pct = "?%";
+		let cover = book.find(".cover")
+		if (progress) {
+			let m = progress.match(/^(?<line>\d+)\/(?<total>\d+)?$/i);
+			if (m) {
+				pct = (eval(progress)*100).toFixed(1)+"%";
+				cover.addClass("book-read").css("--read-progress", pct);
+			}
+			cover.attr("title", "阅读进度："+pct+" ("+progress+")");
+		} else {
+			cover.attr("title", "阅读进度：无");
+		}
 		return book;
 	},
 
-	async show() {
+	async freshBookList() {
 		if (this.enabled) {
+			let container = $(".bookshelf .dlg-body");
+			container.html("");
 			let booklist = [];
 			for (const book of await this.db.getAllBooks()) {
 				booklist.push(book.name);
 			}
-			let bookshelf = $(`<div id="bookshelf">
-			<div class="caption">本地缓存书架<div style="font-size:1rem;font-family:ui;">本页面仍保留原有拖入和双击功能</div></div>
-			<span id="bookshelfContainer" class="container"></span>
-			</div>`)
 			booklist.sort((a, b) => (a.localeCompare(b, "zh")));
-			let bookshelfContainer = bookshelf.find("#bookshelfContainer");
 			for (const name of booklist) {
-				bookshelfContainer.append(this.genBookItem(name));
+				container.append(this.genBookItem(name));
 			}
-			bookshelf.appendTo($("#dropZone"));
+		}
+	},
+
+	async show(inDropZone = true) {
+		if (this.enabled) {
+			let bookshelf = $(`<div class="bookshelf">
+				<div class="dlg-cap">本地缓存书架</div>
+				<span class="dlg-body"></span>
+				</div>`);
+			if (inDropZone) {
+				let frm = $(`<div class="dlg bookshelf-dz"></div>`);
+				bookshelf.find(".dlg-cap").after($(`<div style="font-size:1rem;font-family:ui;text-align:center;">添加书籍：拖入文件 / 空白处双击${STRe_Settings.settings.enableFos.val ? " / 云端书库" : ""}</div>`));
+				frm.append(bookshelf);
+				frm.appendTo("#dropZone");
+			} else if (!STReHelper.isElmVisible(document.getElementById("dropZone"))) {
+				let frm = $(`<dialog id="bookshelfDlg" class="bookshelf-dlg"></dialog>`).bind("cancel", () => this.hide());
+				bookshelf.find(".dlg-cap").append($(`<span class="dlg-close">&times;</span>`).click(() => this.hide()));
+				frm.append(bookshelf);
+				STReHelper.freezeContent();
+				frm.appendTo("body");
+				frm[0].showModal();
+			}
+			this.freshBookList();
 		}
 		return this;
+	},
+
+	hide() {
+		if (this.enabled) {
+			$("#bookshelfDlg").remove();
+			STReHelper.unfreezeContent();
+		}
+		return this;
+	},
+
+	loop() {
+		if (this.enabled) {
+			localStorage.setItem(this.STRe_FILE, filename);
+			setTimeout(() => this.loop(), 1000);
+		}
 	},
 
 	enable() {
@@ -653,15 +731,8 @@ var STRe_Bookshelf = {
 				// 先把文件保存到缓存db中
 				STRe_Bookshelf.saveFile(fileList[0])
 					.then(() => {
-						// 刷新 Bookshelf
-						let bookshelfElm = document.getElementById("bookshelf");
-						if (bookshelfElm) {
-							let bookshelf = $(bookshelfElm);
-							let fname = fileList[0].name;
-							if (bookshelf.find(`.cover[data-filename="${fname}"]`).length <= 0) {
-								bookshelf.find("#bookshelfContainer").prepend(STRe_Bookshelf.genBookItem(fname));
-							}
-						}
+						// 刷新 Bookshelf in DropZone
+						STRe_Bookshelf.freshBookList();
 					})
 					.finally(() => {
 						handSelectedFile__ORIGIN(fileList);
@@ -677,10 +748,11 @@ var STRe_Bookshelf = {
 				<rect width="18" height="40" rx="5" ry="5" stroke-width="6" transform="translate(15,35)" />
 				<rect width="20" height="60" rx="5" ry="5" stroke-width="6" transform="translate(40,15)" />
 				<rect width="18" height="50" rx="5" ry="5" stroke-width="6" transform="translate(65,25),rotate(-10)" />
-			</svg></div>`).click(() => showDropZone()).prependTo($("#btnWrapper"));
+			</svg></div>`).click(() => this.show(false)).prependTo($("#btnWrapper"));
 			this.enabled = true;
-			this.show();
+			this.show(true);
 			console.log("Module <Bookshelf> enabled.");
+			setTimeout(() => this.loop(), 1000);
 		}
 		return this;
 	},
@@ -688,7 +760,8 @@ var STRe_Bookshelf = {
 	disable() {
 		if (this.enabled) {
 			STReHelper.replaceFunc(window, "handleSelectedFile", "abandonFunc__STRe_Bookshelf", handSelectedFile__ORIGIN);
-			$("#bookshelf").remove();
+			$(".bookshelf-dz").remove();
+			$("#bookshelfDlg").remove();
 			$("#STRe-bookshelf-btn").remove();
 			this.db = null;
 			this.enabled = false;
@@ -699,70 +772,14 @@ var STRe_Bookshelf = {
 };
 
 
-// ------------------------------------------------
-// Module <Reopen File on Start>
-// ------------------------------------------------
-var STRe_ReopenFile = {
-
-	enabled: false,
-
-	STRe_FILE: "STReFile",
-	// STRe_POS:  "STReFilePos",
-	// STRe_POS_CLOUD: "WebDAV",
-	// STRe_POS_LOCAL: "indexedDB",
-	STRe_TAG_CLOUD: "☁",
-	STRe_TAG_LOCAL: "💻",
-
-	async reopenFile() {
-		// 获取之前的文件名，重新打开
-		let fname = localStorage.getItem(this.STRe_FILE);
-		if (fname) {
-			if (await STRe_Bookshelf.isFileExist(fname)) {
-				STRe_Bookshelf.openFile(fname);
-			} else {
-				STRe_FilesOnServer.openFile(fname);
-			}
-		}
-	},
-
-	saveCurFilename() {
-		if (!this.enabled) return;
-		localStorage.setItem(this.STRe_FILE, filename);
-	},
-
-	loop() {
-		this.saveCurFilename();
-		setTimeout(() => this.loop(), 1000);
-	},
-
-	enable() {
-		if (this.enabled) return this;
-		if (STRe_FilesOnServer.enabled || STRe_Bookshelf.enabled) {
-			this.reopenFile();
-			this.enabled = true;
-			console.log("Module <Reopen File on Start> enabled.");
-		} else {
-			this.enabled = false;
-			console.log("Module <Reopen File on Start> not enabled, because <Files On Server> and <Bookshelf> not enabled.");
-		}
-		setTimeout(() => this.loop(), 1000);
-		return this;
-	},
-
-	disable() {
-		if (!this.enabled) return this;
-		this.enabled = false;
-		console.log("Module <Reopen File on Start> disabled.");
-		return this;
-	},
-};
-
-
 STRe_Settings.enable().load().apply();
+
+// 启动时打开上次阅读书籍
+if (STRe_Settings.settings.enableRos.val) {
+	STRe_Bookshelf.reopenFile();
+}
 
 // STRe_Bookshelf.enable().setMode(true);
 
 // STRe_FilesOnServer.enable();
 // STRe_ProgressOnServer.enable();
-
-// STRe_ReopenFile.enable();

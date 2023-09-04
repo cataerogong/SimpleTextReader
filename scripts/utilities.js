@@ -1,6 +1,7 @@
 function setHistory(filename, lineNumber) {
     // console.log("History set to line: ", lineNumber);
-    localStorage.setItem(filename, lineNumber);
+    // localStorage.setItem(filename, lineNumber);
+    localStorage.setItem(filename, lineNumber + "/" + fileContentChunks.length);
     if (lineNumber === 0) {
         // Don't save history if line number is 0
         localStorage.removeItem(filename);
@@ -9,12 +10,14 @@ function setHistory(filename, lineNumber) {
 
 function getHistory(filename) {
     if (localStorage.getItem(filename)) {
-        let tempLine = localStorage.getItem(filename);
-        try {
-            tempLine = parseInt(tempLine) || 0;
-        } catch (error) {
-            tempLine = 0;
-        }
+        // let tempLine = localStorage.getItem(filename);
+        // try {
+        //     tempLine = parseInt(tempLine) || 0;
+        // } catch (error) {
+        //     tempLine = 0;
+        // }
+        let m = localStorage.getItem(filename).match(/^(\d+)(\/(\d+))?$/i); // 格式：line/total，match() 的结果：[full, line, /total, total]
+        let tempLine = (m ? parseInt(m[1]) : 0);
         console.log("History found! Go to line: ", tempLine);
         let success = gotoLine(tempLine, false);
         if (success === -1) {
