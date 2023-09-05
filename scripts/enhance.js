@@ -180,8 +180,8 @@ var STRe_Settings = {
 		posInterval: {
 			val: 1,
 			def: 1,
-			type: "+int",
-			desc: "同步间隔（秒）",
+			type: "int",
+			desc: "自动同步间隔",
 			options: {},
 			apply() { STRe_ProgressOnServer.syncInterval = this.val; },
 		},
@@ -189,7 +189,7 @@ var STRe_Settings = {
 			val: null,
 			def: false,
 			type: "bool",
-			desc: "云端进度同步",
+			desc: "云端进度",
 			options: {},
 			apply() { this.val ? STRe_ProgressOnServer.enable() : STRe_ProgressOnServer.disable(); },
 		},
@@ -264,7 +264,7 @@ var STRe_Settings = {
 				${this.getLabel("fosWebDAV", "", "lv-2")} ${this.genInput("fosWebDAV", "width:20rem;")}
 				<div class="row">${this.genInput("enablePos")} ${this.getLabel("enablePos")}</div>
 				${this.getLabel("posWebDAV", "", "lv-2")} ${this.genInput("posWebDAV", "width:20rem;")}
-				${this.getLabel("posInterval", "", "lv-2")} ${this.genInput("posInterval", "width:2rem;")}
+				${this.getLabel("posInterval", "", "lv-2")} <span>${this.genInput("posInterval", "width:2rem;")}秒（0 表示关闭自动同步）</span>
 				<div class="row">${this.genInput("enableBookshelf")} ${this.getLabel("enableBookshelf")}</div>
 				<div class="row lv-2">${this.genInput("enableRos")} ${this.getLabel("enableRos")}</div>
 				</div>
@@ -483,6 +483,7 @@ var STRe_FilesOnServer = {
 				this.enabled = true;
 				console.log("Module <Files on Server> enabled.");
 			} catch (e) {
+				console.log(e);
 				console.log("Module <Files on Server> not enabled, because can't access '/books' on server.");
 				this.enabled = false;
 			}
@@ -604,9 +605,13 @@ var STRe_ProgressOnServer = {
 
 	loop() { // 定时同步进度
 		if (this.enabled) {
-			this.loadProgress();
-			this.saveProgress();
-			setTimeout(() => this.loop(), this.syncInterval * 1000);
+			if (this.syncInterval > 0) {
+				this.loadProgress();
+				this.saveProgress();
+				setTimeout(() => this.loop(), this.syncInterval * 1000);
+			} else {
+				setTimeout(() => this.loop(), 1000);
+			}
 		}
 	},
 
@@ -625,10 +630,17 @@ var STRe_ProgressOnServer = {
 					console.log("Module <Progress on Server> not enabled, because can't access '/progress' on server.");
 				}
 			} catch (e) {
-				this.enabled = false;
+				console.log(e);
 				console.log("Module <Progress on Server> not enabled, because can't access '/progress' on server.");
+				this.enabled = false;
 			}
-			setTimeout(() => this.loop(), this.syncInterval * 1000);
+			if (this.syncInterval > 0) {
+				setTimeout(() => this.loop(), this.syncInterval * 1000);
+				console.log("Module <Progress on Server> - <Auto Sync> enabled.");
+			} else {
+				setTimeout(() => this.loop(), 1000);
+				console.log("Module <Progress on Server> - <Auto Sync> not enabled.");
+			}
 		}
 		return this;
 	},
