@@ -1,147 +1,125 @@
 // A raw WebDAV interface
 var WebDAV = {
-  GET: function(url, callback) {
-    return this.request('GET', url, {}, null, 'text', callback);
-  },
+    GET: async function (url, force = false) {
+        return await this.request('GET', url, (force ? { "If-Modified-Since": "0" } : {}), null, 'text');
+    },
 
-  PROPFIND: function(url, callback) {
-    return this.request('PROPFIND', url, {Depth: "1"}, null, 'xml', callback);
-  },
+    PROPFIND: async function (url) {
+        return await this.request('PROPFIND', url, { Depth: "1" }, null, 'xml');
+    },
 
-  MKCOL: function(url, callback) {
-    return this.request('MKCOL', url, {}, null, 'text', callback);
-  },
-  
-  DELETE: function(url, callback) {
-    return this.request('DELETE', url, {}, null, 'text', callback);
-  },
+    MKCOL: async function (url) {
+        return await this.request('MKCOL', url, {}, null, 'text');
+    },
 
-  PUT: function(url, data, callback) {
-    return this.request('PUT', url, {}, data, 'text', callback);
-  },
-  
-  request: function(verb, url, headers, data, type, callback) {
-    var xhr = new XMLHttpRequest();
-    var body = function() {
-      var b = xhr.responseText;
-      if (type == 'xml') {
-        var xml = xhr.responseXML;
-        if(xml) {
-          b = xml.firstChild.nextSibling ? xml.firstChild.nextSibling : xml.firstChild;
+    DELETE: async function (url) {
+        return await this.request('DELETE', url, {}, null, 'text');
+    },
+
+    PUT: async function (url, data) {
+        return await this.request('PUT', url, {}, data, 'text');
+    },
+
+    request: async function (verb, url, headers, data, type) {
+        headers["Content-Type"] = "text/xml; charset=UTF-8";
+        let resp = await fetch(url, {
+            credentials: "include",
+            method: verb,
+            headers: headers,
+            body: data
+        });
+        let body = await resp.text();
+        if (type == "xml") {
+            let p = new DOMParser();
+            let xml = p.parseFromString(body, "text/xml");
+            if (xml) {
+                body = xml.firstChild.nextSibling || xml.firstChild;
+            }
         }
-      }
-      return b;
-    };
-    
-    if(callback) {
-      xhr.onreadystatechange = function() {
-        if(xhr.readyState == 4) { // complete.
-          var b = body();
-          if(b) {
-            callback(b);
-          }
-        }
-      };
+        return body;
     }
-    xhr.open(verb, url, !!callback);
-    xhr.setRequestHeader("Content-Type", "text/xml; charset=UTF-8");
-    for (var header in headers) {
-      xhr.setRequestHeader(header, headers[header]);
-    }
-    xhr.send(data);
-
-    if(!callback) {
-      return body();
-    }
-  }
 };
 
 // An Object-oriented API around WebDAV.
-WebDAV.Fs = function(rootUrl) {
-  this.rootUrl = rootUrl;
-  var fs = this;
-  
-  this.file = function(href) {
-    this.type = 'file';
+WebDAV.Fs = function (rootUrl) {
+    this.rootUrl = rootUrl;
+    var fs = this;
 
-    this.url = fs.urlFor(href);
+    this.file = function (href) {
+        this.type = 'file';
 
-    this.name = fs.nameFor(this.url);
+        this.url = fs.urlFor(href);
 
-    this.read = function(callback) {
-      return WebDAV.GET(this.url, callback);
+        this.name = fs.nameFor(this.url);
+
+        this.read = async function (force = false) {
+            return await WebDAV.GET(this.url, force);
+        };
+
+        this.write = async function (data) {
+            return await WebDAV.PUT(this.url, data);
+        };
+
+        this.rm = async function () {
+            let a = await WebDAV.DELETE(this.url);
+            console.log(a);
+            a.name = "a";
+            return a;
+        };
+
+        return this;
     };
 
-    this.write = function(data, callback) {
-      return WebDAV.PUT(this.url, data, callback);
+    this.dir = function (href) {
+        this.type = 'dir';
+
+        this.url = fs.urlFor(href);
+
+        this.name = fs.nameFor(this.url);
+
+        this.children = async function () {
+            let doc = await WebDAV.PROPFIND(this.url);
+            if (doc.childNodes == null) {
+                throw ('No such directory: ' + url);
+            }
+            var result = [];
+            // Start at 1, because the 0th is the same as self.
+            for (var i = 1; i < doc.childNodes.length; i++) {
+                var response = doc.childNodes[i];
+                var href = response.getElementsByTagName('D:href')[0].firstChild.nodeValue;
+                href = href.replace(/\/$/, ''); // Strip trailing slash
+                var propstat = response.getElementsByTagName('D:propstat')[0];
+                var prop = propstat.getElementsByTagName('D:prop')[0];
+                var resourcetype = prop.getElementsByTagName('D:resourcetype')[0];
+                var collection = resourcetype.getElementsByTagName('D:collection')[0];
+
+                if (collection) {
+                    result[i - 1] = new fs.dir(href);
+                } else {
+                    result[i - 1] = new fs.file(href);
+                }
+            }
+            return result;
+        };
+
+        this.rm = async function () {
+            return await WebDAV.DELETE(this.url);
+        };
+
+        this.mkdir = async function () {
+            return await WebDAV.MKCOL(this.url);
+        };
+
+        return this;
     };
 
-    this.rm = function(callback) {
-      return WebDAV.DELETE(this.url, callback);
+    this.urlFor = function (href) {
+        return (/^http/.test(href) ? href : this.rootUrl + href);
+    };
+
+    this.nameFor = function (url) {
+        return url.replace(/.*\/(.*)/, '$1');
     };
 
     return this;
-  };
-  
-  this.dir = function(href) {
-    this.type = 'dir';
-
-    this.url = fs.urlFor(href);
-
-    this.name = fs.nameFor(this.url);
-
-    this.children = function(callback) {
-      var childrenFunc = function(doc) {
-        if(doc.childNodes == null) {
-          throw('No such directory: ' + url);
-        }
-        var result = [];
-        // Start at 1, because the 0th is the same as self.
-        for(var i=1; i< doc.childNodes.length; i++) {
-          var response     = doc.childNodes[i];
-          var href         = response.getElementsByTagName('D:href')[0].firstChild.nodeValue;
-          href = href.replace(/\/$/, ''); // Strip trailing slash
-          var propstat     = response.getElementsByTagName('D:propstat')[0];
-          var prop         = propstat.getElementsByTagName('D:prop')[0];
-          var resourcetype = prop.getElementsByTagName('D:resourcetype')[0];
-          var collection   = resourcetype.getElementsByTagName('D:collection')[0];
-
-          if(collection) {
-            result[i-1] = new fs.dir(href);
-          } else {
-            result[i-1] = new fs.file(href);
-          }
-        }
-        return result;
-      };
-
-      if(callback) {
-        WebDAV.PROPFIND(this.url, function(doc) {
-          callback(childrenFunc(doc));
-        });
-      } else {
-        return childrenFunc(WebDAV.PROPFIND(this.url));
-      }
-    };
-
-    this.rm = function(callback) {
-      return WebDAV.DELETE(this.url, callback);
-    };
-
-    this.mkdir = function(callback) {
-      return WebDAV.MKCOL(this.url, callback);
-    };
-
-    return this;
-  };
-  
-  this.urlFor = function(href) {
-    return (/^http/.test(href) ? href : this.rootUrl + href);
-  };
-  
-  this.nameFor = function(url) {
-    return url.replace(/.*\/(.*)/, '$1');
-  };
-
-  return this;
 };

@@ -39,3 +39,7 @@
 * [*] 修改了 `/scripts/utility.js` 中的 `setHistory()` `getHistory()`
 
   将 LocalStorage 中保存的阅读进度的格式改为 `当前行/总行数`，这样就可以在书架界面显示进度。
+
+## v1.2.0
+
+* [*] 用 fetch() 改写 WebDAV.js
