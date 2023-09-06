@@ -1,4 +1,6 @@
-let _STRe_VER_ = "1.1.0";
+let _STRe_VER_ = "1.2.1";
+
+let DPR = window.devicePixelRatio;
 
 var STReHelper = {
 	// hack helper
@@ -280,8 +282,8 @@ var STRe_Settings = {
 				${this.getLabel("pagination_opacity", "text-align: right")} ${this.genInput("pagination_opacity")}
 				</div>
 				<hr />
-				<div class="dlg-btn-grp"></div>
 				</span>
+				<div class="dlg-btn-grp"></div>
 				</dialog>`).bind("cancel", () => this.hide());
 			dlg.find(".dlg-cap").append($(`<span class="dlg-close">&times;</span>`).click(() => this.hide()));
 			dlg.find(".dlg-btn-grp").append($(`<button>恢复默认</button>`).click(() => this.reset().load().apply().hide()));
@@ -366,8 +368,8 @@ var STRe_Settings = {
 	enable() {
 		if (!this.enabled) {
 			$(`<div id="STRe-setting-btn" class="btn-icon">
-				<svg class="icon" viewBox="0 -960 960 960" xmlns="http://www.w3.org/2000/svg">
-					<path d="M546-80H414q-11 0-19.5-7T384-105l-16-101q-19-7-40-19t-37-25l-93 43q-11 5-22 1.5T159-220L93-337q-6-10-3-21t12-18l86-63q-2-9-2.5-20.5T185-480q0-9 .5-20.5T188-521l-86-63q-9-7-12-18t3-21l66-117q6-11 17-14.5t22 1.5l93 43q16-13 37-25t40-18l16-102q2-11 10.5-18t19.5-7h132q11 0 19.5 7t10.5 18l16 101q19 7 40.5 18.5T669-710l93-43q11-5 22-1.5t17 14.5l66 116q6 10 3.5 21.5T858-584l-86 61q2 10 2.5 21.5t.5 21.5q0 10-.5 21t-2.5 21l86 62q9 7 12 18t-3 21l-66 117q-6 11-17 14.5t-22-1.5l-93-43q-16 13-36.5 25.5T592-206l-16 101q-2 11-10.5 18T546-80Zm-66-270q54 0 92-38t38-92q0-54-38-92t-92-38q-54 0-92 38t-38 92q0 54 38 92t92 38Zm0-60q-29 0-49.5-20.5T410-480q0-29 20.5-49.5T480-550q29 0 49.5 20.5T550-480q0 29-20.5 49.5T480-410Zm0-70Zm-44 340h88l14-112q33-8 62.5-25t53.5-41l106 46 40-72-94-69q4-17 6.5-33.5T715-480q0-17-2-33.5t-7-33.5l94-69-40-72-106 46q-23-26-52-43.5T538-708l-14-112h-88l-14 112q-34 7-63.5 24T306-642l-106-46-40 72 94 69q-4 17-6.5 33.5T245-480q0 17 2.5 33.5T254-413l-94 69 40 72 106-46q24 24 53.5 41t62.5 25l14 112Z"/>
+				<svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+					<path stroke="none" d="M12 8a4 4 0 0 1 4 4a4 4 0 0 1-4 4a4 4 0 0 1-4-4a4 4 0 0 1 4-4m0 2a2 2 0 0 0-2 2a2 2 0 0 0 2 2a2 2 0 0 0 2-2a2 2 0 0 0-2-2m-2 12c-.25 0-.46-.18-.5-.42l-.37-2.65c-.63-.25-1.17-.59-1.69-.99l-2.49 1.01c-.22.08-.49 0-.61-.22l-2-3.46a.493.493 0 0 1 .12-.64l2.11-1.66L4.5 12l.07-1l-2.11-1.63a.493.493 0 0 1-.12-.64l2-3.46c.12-.22.39-.31.61-.22l2.49 1c.52-.39 1.06-.73 1.69-.98l.37-2.65c.04-.24.25-.42.5-.42h4c.25 0 .46.18.5.42l.37 2.65c.63.25 1.17.59 1.69.98l2.49-1c.22-.09.49 0 .61.22l2 3.46c.13.22.07.49-.12.64L19.43 11l.07 1l-.07 1l2.11 1.63c.19.15.25.42.12.64l-2 3.46c-.12.22-.39.31-.61.22l-2.49-1c-.52.39-1.06.73-1.69.98l-.37 2.65c-.04.24-.25.42-.5.42h-4m1.25-18l-.37 2.61c-1.2.25-2.26.89-3.03 1.78L5.44 7.35l-.75 1.3L6.8 10.2a5.55 5.55 0 0 0 0 3.6l-2.12 1.56l.75 1.3l2.43-1.04c.77.88 1.82 1.52 3.01 1.76l.37 2.62h1.52l.37-2.61c1.19-.25 2.24-.89 3.01-1.77l2.43 1.04l.75-1.3l-2.12-1.55c.4-1.17.4-2.44 0-3.61l2.11-1.55l-.75-1.3l-2.41 1.04a5.42 5.42 0 0 0-3.03-1.77L12.75 4h-1.5Z"/>
 				</svg></div>`).click(() => this.show()).prependTo($("#btnWrapper"));
 			this.enabled = true;
 			console.log("Module <Settings> enabled.");
@@ -395,16 +397,16 @@ var STRe_FilesOnServer = {
 	enabled: false,
 	webDAVdir: "", // http://WebDAV/books
 
-	openFile(fname, onSucc = null) {
+	openFile(fname) {
 		console.log("STRe_FilesOnServer.openFile: " + fname);
 		showLoadingScreen();
 		STReHelper.fetchLink(this.webDAVdir + "/" + fname).then((resp) => {
 			if (!resp) return;
 			resp.blob().then((blob) => {
 				blob.name = fname;
+				let f = new File([blob], fname, {type: "text/plain"})
 				resetVars();
-				handleSelectedFile([blob]);
-				if (onSucc) onSucc();
+				handleSelectedFile([f]);
 			});
 		}).catch((e) => console.log(e));
 	},
@@ -477,9 +479,9 @@ var STRe_FilesOnServer = {
 			try {
 				await WebDAV.Fs("").dir(this.webDAVdir).children();
 				$(`<div id="STRe-FOS-btn" class="btn-icon">
-				<svg class="icon" viewBox="0 -960 960 960" xmlns="http://www.w3.org/2000/svg">
-					<path d="M251-160q-88 0-149.5-61.5T40-371q0-78 50-137t127-71q20-97 94-158.5T482-799q112 0 189 81.5T748-522v24q72-2 122 46.5T920-329q0 69-50 119t-119 50H251Zm0-60h500q45 0 77-32t32-77q0-45-32-77t-77-32h-63v-84q0-91-61-154t-149-63q-88 0-149.5 63T267-522h-19q-62 0-105 43.5T100-371q0 63 44 107t107 44Zm229-260Z"/>
-				</svg></div>`).click(() => this.show()).prependTo($("#btnWrapper"));
+					<svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+						<path stroke="none" d="M15 15H9v-1h6v1m0 1H9v1h6v-1m0 2H9v1h6v-1m8-4.5c0 1.25-.44 2.31-1.31 3.19c-.88.87-1.94 1.31-3.19 1.31H18v4H6v-4.05c-1.3-.1-2.43-.59-3.39-1.52C1.54 15.38 1 14.09 1 12.58c0-1.3.39-2.46 1.17-3.48S4 7.43 5.25 7.15c.42-1.53 1.25-2.77 2.5-3.72S10.42 2 12 2c1.95 0 3.6.68 4.96 2.04C18.32 5.4 19 7.05 19 9c1.15.13 2.1.63 2.86 1.5c.76.85 1.14 1.85 1.14 3M6 15.95V11h11V9c0-1.38-.5-2.56-1.46-3.54C14.56 4.5 13.38 4 12 4s-2.56.5-3.54 1.46C7.5 6.44 7 7.62 7 9h-.5c-.97 0-1.79.34-2.47 1.03c-.69.68-1.03 1.5-1.03 2.47s.34 1.79 1.03 2.5c.56.54 1.22.85 1.97.95M16 13H8v7h8v-7m5 .5c0-.7-.24-1.29-.73-1.77S19.2 11 18.5 11H18v5h.5c.7 0 1.29-.24 1.77-.72S21 14.2 21 13.5Z"/>
+					</svg></div>`).click(() => this.show()).prependTo($("#btnWrapper"));
 				this.enabled = true;
 				console.log("Module <Files on Server> enabled.");
 			} catch (e) {
@@ -509,10 +511,11 @@ var STRe_ProgressOnServer = {
 
 	enabled: false,
 	pauseSave: false,
+	syncOnFileLoad: false,
 
 	STRe_PROGRESS_RE: /^(?<line>\d+)(\/(?<total>\d+))?$/i, // 格式：line/total，match() 的结果：[full, line, /total, total]
 	STReFileLine: "", // filename + ":" + line 记录之前的文件和行数，改变才同步到云端，减少同步次数
-	STReFile: "",
+
 	webDAVdir: "", // http://WebDAV/progress
 	syncInterval: 1, // 同步间隔（秒）
 
@@ -536,7 +539,6 @@ var STRe_ProgressOnServer = {
 				} catch (e) {
 					console.log(e);
 				}
-				// this.STReFileLine = filename + ":" + line;
 			}
 		}
 	},
@@ -556,49 +558,44 @@ var STRe_ProgressOnServer = {
 					STRe_ProgressOnServer.pauseSave = false;
 				}
 
+				this.pauseSave = true;
 				let dlg = $(`<dialog id="syncProgressDlg">
 					<div class="dlg-cap">云端进度同步</div>
 					<div class="dlg-body" style="line-height:2em;">
-						<div>当前阅读进度：${getTopLineNumber()}/${fileContentChunks.length}</div>
-						<div>发现云端进度：${data}</div>
+						<div>当前阅读进度：<span style="float:right;">${getTopLineNumber()}/${fileContentChunks.length}</span></div>
+						<div>发现云端进度：<span style="float:right;">${data}</span></div>
 						<div>是否跳转到云端进度？</div>
 						<hr />
 						<div class="dlg-btn-grp"></div>
 					</div>
 					</dialog>`).bind("cancel", hide);
 				dlg.find(".dlg-cap").append($(`<span class="dlg-close">&times;</span>`).click(hide));
-				dlg.find(".dlg-btn-grp").append($(`<button style="float:left;">是</button>`).click(() => {
-					console.log("Load progress on server: " + filename + ":" + data);
-					hide();
-					setHistory(filename, line);
-					getHistory(filename);
-					this.STReFileLine = filename + ":" + line;
-				}));
-				dlg.find(".dlg-btn-grp").append($(`<button style="float:right;">否</button>`).click(hide));
+				dlg.find(".dlg-btn-grp")
+					.append($(`<button style="float:left;">是</button>`).click(() => {
+						console.log("Load progress on server: " + filename + ":" + data);
+						hide();
+						setHistory(filename, line);
+						getHistory(filename);
+						this.STReFileLine = filename + ":" + line;
+					}))
+					.append($(`<button style="float:right;">否</button>`).click(hide));
 				STReHelper.freezeContent();
 				dlg.appendTo("body");
 				dlg[0].showModal();
-				this.pauseSave = true;
 			}
 		}
 	},
 
-	loadProgress() {
-		if (!this.enabled) return;
+	async loadProgress() {
+		if (!STRe_ProgressOnServer.enabled) return;
+		if (!STRe_ProgressOnServer.syncOnFileLoad) return;
 		if (filename) {
-			if (contentContainer.style.display == "none") { // 阅读区域不可见，说明可能正在drag，getTopLineNumber()会取到错误行数，应该跳过
-				return;
-			}
-			if (this.STReFile != filename) { // 只在更换文件时同步进度
-				console.log("Check progress on server: " + filename);
-				try {
-					WebDAV.Fs("").file(this.webDAVdir + "/" + filename + ".progress").read()
-						.then(data => { this.syncProgress(data); })
-						.catch(e => console.log(e))
-						.finally(() => { this.STReFile = filename; });
-				} catch (e) {
-					console.log(e);
-				}
+			console.log("Check progress on server: " + filename);
+			try {
+				let progress = await WebDAV.Fs("").file(STRe_ProgressOnServer.webDAVdir + "/" + filename + ".progress").read();
+				if (progress) STRe_ProgressOnServer.syncProgress(progress);
+			} catch (e) {
+				console.log(e);
 			}
 		}
 	},
@@ -606,38 +603,101 @@ var STRe_ProgressOnServer = {
 	loop() { // 定时同步进度
 		if (this.enabled) {
 			if (this.syncInterval > 0) {
-				this.loadProgress();
+				this.syncOnFileLoad = true;
 				this.saveProgress();
 				setTimeout(() => this.loop(), this.syncInterval * 1000);
 			} else {
+				this.syncOnFileLoad = false;
 				setTimeout(() => this.loop(), 1000);
 			}
 		}
 	},
 
+	async show() {
+		if (this.enabled) {
+			let dlg = $(`<dialog id="progressDlg" class="">
+				<div class="dlg-cap">阅读进度</div>
+				<span class="dlg-body progress-list">
+				</span>
+				<div class="dlg-btn-grp" style="margin-bottom: 1rem;"></div>
+				</dialog>`).bind("cancel", () => this.hide());
+			dlg.find(".dlg-cap").append($(`<span class="dlg-close">&times;</span>`).click(() => this.hide()));
+			dlg.find(`.dlg-btn-grp`)
+				.append($(`<input type="checkbox" id="progressDlgChk" />`)
+					.change(evt => { evt.currentTarget.checked ? $("#progressDlg .dlg-body div.eq").show() : $("#progressDlg .dlg-body div.eq").hide(); }))
+				.append(`<label for="progressDlgChk">显示进度一致的书籍</label>`)
+				.append($(`<span style="float:right"></span>`)
+					.append(`<span>云端&nbsp;</span>`)
+					.append($(`<button> &lt; </button>`).click())
+					.append($(`<button> &gt; </button>`).click())
+					.append(`<span>&nbsp;本地</span>`)
+				);
+			STReHelper.freezeContent();
+			dlg.appendTo("body");
+			dlg[0].showModal();
+
+			let dir = WebDAV.Fs("").dir(this.webDAVdir)
+			let progList = [];
+			for (const f of await dir.children()) {
+				let name = decodeURIComponent(f.name);
+				let m = name.match(/^(?<name>.+)\.progress$/i);
+				if (m) {
+					let prog = await f.read();
+					if (prog) {
+						progList.push({ filename: m.groups["name"], progress_on_server: prog, progress_local: "" });
+					}
+				}
+			}
+			for (let i = 0;i < localStorage.length; i ++) {
+				let name = localStorage.key(i);
+				let m = name.match(/^.+\.txt$/i);
+				if (m) {
+					let prog = localStorage.getItem(name);
+					if (prog) {
+						let bk = progList.find(e => e.filename == name);
+						if (bk) {
+							bk.progress_local = prog;
+						} else {
+							progList.push({ filename: name, progress_on_server: "", progress_local: prog });
+						}
+					}
+				}
+			}
+			progList.sort((a, b) => (a.filename.localeCompare(b.filename, "zh")));
+			let container = dlg.find(".progress-list");
+			container.html(`<div>书籍文件名</div><div>云端进度</div><div>本地进度</div>`);
+			for (const bk of progList) {
+				let cls = (bk.progress_on_server == bk.progress_local) ? "eq" : "neq";
+				let row = $(`<div class="${cls}">${bk.filename}</div><div class="${cls}" style="text-align:right;">${bk.progress_on_server}</div><div class="${cls}" style="text-align:right;">${bk.progress_local}</div>`);
+				container.append(row);
+			}
+		}
+		return this;
+	},
+
+	hide() {
+		if (this.enabled) {
+			$("#progressDlg").remove();
+			STReHelper.unfreezeContent();
+		}
+		return this;
+	},
+
 	async enable() {
 		if (!this.enabled) {
-			// 检查服务端 '/progress' 目录是否存在且可写
-			try {
-				let test = "TEST TIMESTAMP: " + new Date().getTime();
-				let f = await WebDAV.Fs("").file(this.webDAVdir + "/!STRe!.txt");
-				await f.write(test);
-				if (await f.read() == test) {
-					this.enabled = true;
-					console.log("Module <Progress on Server> enabled.");
-				} else {
-					this.enabled = false;
-					console.log("Module <Progress on Server> not enabled, because can't access '/progress' on server.");
-				}
-			} catch (e) {
-				console.log(e);
-				console.log("Module <Progress on Server> not enabled, because can't access '/progress' on server.");
-				this.enabled = false;
-			}
+			fileloadCallback.regAfter(this.loadProgress);
+			$(`<div id="STRe-POS-btn" class="btn-icon">
+				<svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+					<path stroke="none" d="M13.5 20c.31.75.76 1.42 1.32 2H6c-1.11 0-2-.89-2-2V4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v7.03c-.16-.03-.33-.03-.5-.03c-.5 0-1 .07-1.5.18V4h-5v8l-2.5-2.25L8 12V4H6v16h7.5m5.5 0a2.5 2.5 0 0 1-2.5-2.5c0-.4.09-.78.26-1.12l-1.09-1.09c-.42.63-.67 1.39-.67 2.21c0 2.21 1.79 4 4 4V23l2.25-2.25L19 18.5V20m0-6.5V12l-2.25 2.25L19 16.5V15a2.5 2.5 0 0 1 2.5 2.5c0 .4-.09.78-.26 1.12l1.09 1.09c.42-.63.67-1.39.67-2.21c0-2.21-1.79-4-4-4Z"/>
+				</svg></div>`).click(() => this.show()).prependTo($("#btnWrapper"));
+			this.enabled = true;
+			console.log("Module <Progress on Server> enabled.");
 			if (this.syncInterval > 0) {
+				this.syncOnFileLoad = true;
 				setTimeout(() => this.loop(), this.syncInterval * 1000);
 				console.log("Module <Progress on Server> - <Auto Sync> enabled.");
 			} else {
+				this.syncOnFileLoad = false;
 				setTimeout(() => this.loop(), 1000);
 				console.log("Module <Progress on Server> - <Auto Sync> not enabled.");
 			}
@@ -647,8 +707,10 @@ var STRe_ProgressOnServer = {
 
 	disable() {
 		if (this.enabled) {
+			fileloadCallback.unregAfter(this.loadProgress);
+			$("#STRe-POS-btn").remove();
 			this.enabled = false;
-			console.log("Module <Files on Server> disabled.");
+			console.log("Module <Progress on Server> disabled.");
 		}
 		return this;
 	},
@@ -705,9 +767,16 @@ var STRe_Bookshelf = {
 	},
 
 	async saveFile(file) {
-		if (this.enabled) {
-			await this.db.putBook(file.name, file);
+		if (STRe_Bookshelf.enabled) {
+			if (file.type === "text/plain") {
+				console.log("saveFile: ", file.name);
+				// 先把文件保存到缓存db中
+				await STRe_Bookshelf.db.putBook(file.name, file);
+				// 刷新 Bookshelf in DropZone
+				await STRe_Bookshelf.freshBookList();
+			}
 		}
+		return file;
 	},
 
 	async isFileExist(fname) {
@@ -812,30 +881,29 @@ var STRe_Bookshelf = {
 	},
 
 	enable() {
-		// 替换 handleSelectedFile 函数
-		function handleSelectedFile__hack(fileList) {
-			if (fileList.length > 0 && fileList[0].type === "text/plain") {
-				// 先把文件保存到缓存db中
-				STRe_Bookshelf.saveFile(fileList[0])
-					.then(() => {
-						// 刷新 Bookshelf in DropZone
-						STRe_Bookshelf.freshBookList();
-					})
-					.finally(() => {
-						handSelectedFile__ORIGIN(fileList);
-					});
-			}
-		}
+		// // 替换 handleSelectedFile 函数
+		// function handleSelectedFile__hack(fileList) {
+		// 	if (fileList.length > 0 && fileList[0].type === "text/plain") {
+		// 		// 先把文件保存到缓存db中
+		// 		STRe_Bookshelf.saveFile(fileList[0])
+		// 			.then(() => {
+		// 				// 刷新 Bookshelf in DropZone
+		// 				STRe_Bookshelf.freshBookList();
+		// 			})
+		// 			.finally(() => {
+		// 				handSelectedFile__ORIGIN(fileList);
+		// 			});
+		// 	}
+		// }
 
 		if (!this.enabled) {
 			this.db = new STReLocalDB();
-			STReHelper.replaceFunc(window, "handleSelectedFile", "handSelectedFile__ORIGIN", handleSelectedFile__hack);
+			// STReHelper.replaceFunc(window, "handleSelectedFile", "handSelectedFile__ORIGIN", handleSelectedFile__hack);
+			fileloadCallback.regBefore(this.saveFile);
 			$(`<div id="STRe-bookshelf-btn" class="btn-icon">
-			<svg class="icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="fill:none;">
-				<rect width="18" height="40" rx="5" ry="5" stroke-width="6" transform="translate(15,35)" />
-				<rect width="20" height="60" rx="5" ry="5" stroke-width="6" transform="translate(40,15)" />
-				<rect width="18" height="50" rx="5" ry="5" stroke-width="6" transform="translate(65,25),rotate(-10)" />
-			</svg></div>`).click(() => this.show(false)).prependTo($("#btnWrapper"));
+				<svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+					<path stroke="none" d="M9 3v15h3V3H9m3 2l4 13l3-1l-4-13l-3 1M5 5v13h3V5H5M3 19v2h18v-2H3Z"/>
+				</svg></div>`).click(() => this.show(false)).prependTo($("#btnWrapper"));
 			this.enabled = true;
 			this.show(true);
 			console.log("Module <Bookshelf> enabled.");
@@ -846,7 +914,8 @@ var STRe_Bookshelf = {
 
 	disable() {
 		if (this.enabled) {
-			STReHelper.replaceFunc(window, "handleSelectedFile", "abandonFunc__STRe_Bookshelf", handSelectedFile__ORIGIN);
+			// STReHelper.replaceFunc(window, "handleSelectedFile", "abandonFunc__STRe_Bookshelf", handSelectedFile__ORIGIN);
+			fileloadCallback.unregBefore(this.saveFile);
 			$(".bookshelf-dz").remove();
 			$("#bookshelfDlg").remove();
 			$("#STRe-bookshelf-btn").remove();
@@ -870,3 +939,4 @@ if (STRe_Settings.settings.enableRos.val) {
 
 // STRe_FilesOnServer.enable();
 // STRe_ProgressOnServer.enable();
+// STReHelper.setCSS(":root", "font-size", (16*DPR)+"px");

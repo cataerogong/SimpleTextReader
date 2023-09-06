@@ -22,21 +22,27 @@ var WebDAV = {
 
     request: async function (verb, url, headers, data, type) {
         headers["Content-Type"] = "text/xml; charset=UTF-8";
-        let resp = await fetch(url, {
-            credentials: "include",
-            method: verb,
-            headers: headers,
-            body: data
-        });
-        let body = await resp.text();
-        if (type == "xml") {
-            let p = new DOMParser();
-            let xml = p.parseFromString(body, "text/xml");
-            if (xml) {
-                body = xml.firstChild.nextSibling || xml.firstChild;
+        try {
+            let resp = await fetch(url, {
+                credentials: "include",
+                method: verb,
+                headers: headers,
+                body: data
+            });
+            if (!resp.ok) throw new Error(`Network response was not ok. ${resp.status} ${resp.statusText}`);
+            let body = await resp.text();
+            if (type == "xml") {
+                let p = new DOMParser();
+                let xml = p.parseFromString(body, "text/xml");
+                if (xml) {
+                    body = xml.firstChild.nextSibling || xml.firstChild;
+                }
             }
+            return body;
+        } catch (e) {
+            console.log("WebDAV.request(): ", e);
+            return null;
         }
-        return body;
     }
 };
 
