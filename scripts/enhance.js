@@ -1,5 +1,8 @@
 let _STRe_VER_ = "1.2.1";
 
+let STRe_PROGRESS_FN_RE = /^(?<name>.+)\.progress$/i; // 格式：filename.progress
+let STRe_PROGRESS_RE = /^(?<line>\d+)(\/(?<total>\d+))?$/i; // 格式：line/total，match() 的结果：[full, line, /total, total]
+
 let DPR = window.devicePixelRatio;
 
 var STReHelper = {
@@ -55,16 +58,29 @@ var STReHelper = {
 	},
 
 	async fetchLink(link) {
-		try {
-			let resp = await fetch(link, {
-				credentials: "include",
-			});
-			return (resp.ok ? resp : null);
-		} catch (e) {
-			console.log(e);
-			return null;
+		let resp = await fetch(link, {
+			credentials: "include",
+		});
+		if (!resp.ok) throw new Error(`Fetch link <${link}> error! RESP: ${resp.status} ${resp.statusText}`);
+		return resp;
+	},
+
+	getLocalProgress(fn) {
+		return localStorage.getItem(fn + ".progress");
+	},
+	setLocalProgress(fn, prog) {
+		return localStorage.setItem(fn + ".progress", prog);
+	},
+	getLocalProgressAll() {
+		let ret = [];
+		for (let i = 0; i < localStorage.length; i++) {
+			let m = localStorage.key(i).match(STRe_PROGRESS_FN_RE);
+			if (m) {
+				ret.push({name: m.groups["name"], progress: this.getLocalProgress(m.groups["name"])});
+			}
 		}
-	}
+		return ret;
+	},
 };
 
 // 夹带点私货，我的小说命名规则是：书名.[作者]
@@ -213,7 +229,7 @@ var STRe_Settings = {
 		},
 	},
 
-	genInput(key, style="", cls="") {
+	genInput(key, style = "", cls = "") {
 		let s = this.settings[key];
 		if (!s) return "";
 		switch (s.type) {
@@ -236,7 +252,7 @@ var STRe_Settings = {
 				return `<input type="text" class="${cls}" style="width:6rem;${style}" id="setting_${key}" value="${s.val}" />`;
 		}
 	},
-	getLabel(key, style="", cls="") {
+	getLabel(key, style = "", cls = "") {
 		let s = this.settings[key];
 		if (!s) return "";
 		switch (s.type) {
@@ -367,10 +383,7 @@ var STRe_Settings = {
 
 	enable() {
 		if (!this.enabled) {
-			$(`<div id="STRe-setting-btn" class="btn-icon">
-				<svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-					<path stroke="none" d="M12 8a4 4 0 0 1 4 4a4 4 0 0 1-4 4a4 4 0 0 1-4-4a4 4 0 0 1 4-4m0 2a2 2 0 0 0-2 2a2 2 0 0 0 2 2a2 2 0 0 0 2-2a2 2 0 0 0-2-2m-2 12c-.25 0-.46-.18-.5-.42l-.37-2.65c-.63-.25-1.17-.59-1.69-.99l-2.49 1.01c-.22.08-.49 0-.61-.22l-2-3.46a.493.493 0 0 1 .12-.64l2.11-1.66L4.5 12l.07-1l-2.11-1.63a.493.493 0 0 1-.12-.64l2-3.46c.12-.22.39-.31.61-.22l2.49 1c.52-.39 1.06-.73 1.69-.98l.37-2.65c.04-.24.25-.42.5-.42h4c.25 0 .46.18.5.42l.37 2.65c.63.25 1.17.59 1.69.98l2.49-1c.22-.09.49 0 .61.22l2 3.46c.13.22.07.49-.12.64L19.43 11l.07 1l-.07 1l2.11 1.63c.19.15.25.42.12.64l-2 3.46c-.12.22-.39.31-.61.22l-2.49-1c-.52.39-1.06.73-1.69.98l-.37 2.65c-.04.24-.25.42-.5.42h-4m1.25-18l-.37 2.61c-1.2.25-2.26.89-3.03 1.78L5.44 7.35l-.75 1.3L6.8 10.2a5.55 5.55 0 0 0 0 3.6l-2.12 1.56l.75 1.3l2.43-1.04c.77.88 1.82 1.52 3.01 1.76l.37 2.62h1.52l.37-2.61c1.19-.25 2.24-.89 3.01-1.77l2.43 1.04l.75-1.3l-2.12-1.55c.4-1.17.4-2.44 0-3.61l2.11-1.55l-.75-1.3l-2.41 1.04a5.42 5.42 0 0 0-3.03-1.77L12.75 4h-1.5Z"/>
-				</svg></div>`).click(() => this.show()).prependTo($("#btnWrapper"));
+			$("#STRe-setting-btn").show();
 			this.enabled = true;
 			console.log("Module <Settings> enabled.");
 		}
@@ -380,11 +393,21 @@ var STRe_Settings = {
 	disable() {
 		if (this.enabled) {
 			this.hide().reset().load().apply();
-			$("#STRe-setting-btn").remove();
+			$("#STRe-setting-btn").hide();
 			this.enabled = false;
 			console.log("Module <Settings> disabled.");
 		}
 		return this;
+	},
+
+	init() {
+		$(`<div id="STRe-setting-btn" class="btn-icon">
+		<svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+			<path stroke="none" d="M12 8a4 4 0 0 1 4 4a4 4 0 0 1-4 4a4 4 0 0 1-4-4a4 4 0 0 1 4-4m0 2a2 2 0 0 0-2 2a2 2 0 0 0 2 2a2 2 0 0 0 2-2a2 2 0 0 0-2-2m-2 12c-.25 0-.46-.18-.5-.42l-.37-2.65c-.63-.25-1.17-.59-1.69-.99l-2.49 1.01c-.22.08-.49 0-.61-.22l-2-3.46a.493.493 0 0 1 .12-.64l2.11-1.66L4.5 12l.07-1l-2.11-1.63a.493.493 0 0 1-.12-.64l2-3.46c.12-.22.39-.31.61-.22l2.49 1c.52-.39 1.06-.73 1.69-.98l.37-2.65c.04-.24.25-.42.5-.42h4c.25 0 .46.18.5.42l.37 2.65c.63.25 1.17.59 1.69.98l2.49-1c.22-.09.49 0 .61.22l2 3.46c.13.22.07.49-.12.64L19.43 11l.07 1l-.07 1l2.11 1.63c.19.15.25.42.12.64l-2 3.46c-.12.22-.39.31-.61.22l-2.49-1c-.52.39-1.06.73-1.69.98l-.37 2.65c-.04.24-.25.42-.5.42h-4m1.25-18l-.37 2.61c-1.2.25-2.26.89-3.03 1.78L5.44 7.35l-.75 1.3L6.8 10.2a5.55 5.55 0 0 0 0 3.6l-2.12 1.56l.75 1.3l2.43-1.04c.77.88 1.82 1.52 3.01 1.76l.37 2.62h1.52l.37-2.61c1.19-.25 2.24-.89 3.01-1.77l2.43 1.04l.75-1.3l-2.12-1.55c.4-1.17.4-2.44 0-3.61l2.11-1.55l-.75-1.3l-2.41 1.04a5.42 5.42 0 0 0-3.03-1.77L12.75 4h-1.5Z"/>
+		</svg></div>`)
+			.click(() => this.show())
+			.prependTo($("#btnWrapper"))
+			.hide();
 	},
 }
 
@@ -401,14 +424,22 @@ var STRe_FilesOnServer = {
 		console.log("STRe_FilesOnServer.openFile: " + fname);
 		showLoadingScreen();
 		STReHelper.fetchLink(this.webDAVdir + "/" + fname).then((resp) => {
-			if (!resp) return;
 			resp.blob().then((blob) => {
-				blob.name = fname;
-				let f = new File([blob], fname, {type: "text/plain"})
-				resetVars();
-				handleSelectedFile([f]);
+				if (blob.type.startsWith("text/plain")) { // firefox type: "text/plain; charset=UTF-8"
+					let f = new File([blob], fname, { type: "text/plain" });
+					resetVars();
+					handleSelectedFile([f]);
+				} else {
+					console.log(`Unsupported file type: ${fname} (${blob.type})`);
+					alert("文件格式不支持");
+					hideLoadingScreen();
+				}
 			});
-		}).catch((e) => console.log(e));
+		}).catch((e) => {
+			console.log("", e);
+			alert("打开云端书籍出错");
+			hideLoadingScreen();
+		});
 	},
 
 	async show() {
@@ -432,11 +463,13 @@ var STRe_FilesOnServer = {
 				// for (const f of fs.dir("/books").children()) {
 				for (const f of await dir.children()) {
 					let fname = decodeURIComponent(f.name);
-					if (fname.substring(fname.length - 4).toLowerCase() == ".txt")
-						fname_list.push(fname);
+					// if (fname.toLowerCase().endsWith(".txt"))
+					fname_list.push(fname);
 				}
 			} catch (e) {
 				console.log(e);
+				dlg.find(".dlg-body").html(`<div>获取云端书籍列表发生错误！</div><div>WebDAV 地址：${this.webDAVdir}</div><div>错误信息：${e.message}</div>`);
+				return this;
 			}
 			fname_list.sort((a, b) => (a[0].localeCompare(b[0], "zh"))); // 拼音序
 			let booklist = dlg.find(".dlg-body");
@@ -448,11 +481,10 @@ var STRe_FilesOnServer = {
 					this.hide();
 					this.openFile(fn);
 				}).appendTo(booklist);
-				let progress = localStorage.getItem(fn);
+				let progress = STReHelper.getLocalProgress(fn); //localStorage.getItem(fn);
 				let pct = "?%";
 				if (progress) {
-					let m = progress.match(/^(?<line>\d+)\/(?<total>\d+)?$/i);
-					if (m) {
+					if (STRe_PROGRESS_RE.test(progress)) {
 						pct = (eval(progress) * 100).toFixed(0) + "%";
 						book.addClass("read").css("--read-progress", pct);
 					}
@@ -475,20 +507,9 @@ var STRe_FilesOnServer = {
 
 	async enable() {
 		if (!this.enabled) {
-			// 检查服务端 '/books' 目录是否存在
-			try {
-				await WebDAV.Fs("").dir(this.webDAVdir).children();
-				$(`<div id="STRe-FOS-btn" class="btn-icon">
-					<svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-						<path stroke="none" d="M15 15H9v-1h6v1m0 1H9v1h6v-1m0 2H9v1h6v-1m8-4.5c0 1.25-.44 2.31-1.31 3.19c-.88.87-1.94 1.31-3.19 1.31H18v4H6v-4.05c-1.3-.1-2.43-.59-3.39-1.52C1.54 15.38 1 14.09 1 12.58c0-1.3.39-2.46 1.17-3.48S4 7.43 5.25 7.15c.42-1.53 1.25-2.77 2.5-3.72S10.42 2 12 2c1.95 0 3.6.68 4.96 2.04C18.32 5.4 19 7.05 19 9c1.15.13 2.1.63 2.86 1.5c.76.85 1.14 1.85 1.14 3M6 15.95V11h11V9c0-1.38-.5-2.56-1.46-3.54C14.56 4.5 13.38 4 12 4s-2.56.5-3.54 1.46C7.5 6.44 7 7.62 7 9h-.5c-.97 0-1.79.34-2.47 1.03c-.69.68-1.03 1.5-1.03 2.47s.34 1.79 1.03 2.5c.56.54 1.22.85 1.97.95M16 13H8v7h8v-7m5 .5c0-.7-.24-1.29-.73-1.77S19.2 11 18.5 11H18v5h.5c.7 0 1.29-.24 1.77-.72S21 14.2 21 13.5Z"/>
-					</svg></div>`).click(() => this.show()).prependTo($("#btnWrapper"));
-				this.enabled = true;
-				console.log("Module <Files on Server> enabled.");
-			} catch (e) {
-				console.log(e);
-				console.log("Module <Files on Server> not enabled, because can't access '/books' on server.");
-				this.enabled = false;
-			}
+			$("#STRe-FOS-btn").show();
+			this.enabled = true;
+			console.log("Module <Files on Server> enabled.");
 		}
 		return this;
 	},
@@ -496,11 +517,21 @@ var STRe_FilesOnServer = {
 	disable() {
 		if (this.enabled) {
 			this.hide();
-			$("#STRe-FOS-btn").remove();
+			$("#STRe-FOS-btn").hide();
 			this.enabled = false;
 			console.log("Module <Files on Server> disabled.");
 		}
 		return this;
+	},
+
+	init() {
+		$(`<div id="STRe-FOS-btn" class="btn-icon">
+		<svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+			<path stroke="none" d="M15 15H9v-1h6v1m0 1H9v1h6v-1m0 2H9v1h6v-1m8-4.5c0 1.25-.44 2.31-1.31 3.19c-.88.87-1.94 1.31-3.19 1.31H18v4H6v-4.05c-1.3-.1-2.43-.59-3.39-1.52C1.54 15.38 1 14.09 1 12.58c0-1.3.39-2.46 1.17-3.48S4 7.43 5.25 7.15c.42-1.53 1.25-2.77 2.5-3.72S10.42 2 12 2c1.95 0 3.6.68 4.96 2.04C18.32 5.4 19 7.05 19 9c1.15.13 2.1.63 2.86 1.5c.76.85 1.14 1.85 1.14 3M6 15.95V11h11V9c0-1.38-.5-2.56-1.46-3.54C14.56 4.5 13.38 4 12 4s-2.56.5-3.54 1.46C7.5 6.44 7 7.62 7 9h-.5c-.97 0-1.79.34-2.47 1.03c-.69.68-1.03 1.5-1.03 2.47s.34 1.79 1.03 2.5c.56.54 1.22.85 1.97.95M16 13H8v7h8v-7m5 .5c0-.7-.24-1.29-.73-1.77S19.2 11 18.5 11H18v5h.5c.7 0 1.29-.24 1.77-.72S21 14.2 21 13.5Z"/>
+		</svg></div>`)
+			.click(() => this.show())
+			.prependTo($("#btnWrapper"))
+			.hide();
 	},
 };
 
@@ -513,13 +544,20 @@ var STRe_ProgressOnServer = {
 	pauseSave: false,
 	syncOnFileLoad: false,
 
-	STRe_PROGRESS_RE: /^(?<line>\d+)(\/(?<total>\d+))?$/i, // 格式：line/total，match() 的结果：[full, line, /total, total]
 	STReFileLine: "", // filename + ":" + line 记录之前的文件和行数，改变才同步到云端，减少同步次数
 
 	webDAVdir: "", // http://WebDAV/progress
 	syncInterval: 1, // 同步间隔（秒）
 
-	saveProgress() {
+	async getProgress(name) {
+		return await WebDAV.Fs("").file(this.webDAVdir + "/" + name + ".progress").read(true);
+	},
+
+	async setProgress(name, progress) {
+		return await WebDAV.Fs("").file(this.webDAVdir + "/" + name + ".progress").write(progress);
+	},
+
+	async saveProgress() {
 		if (!this.enabled) return; // 不开启云端进度
 		if (this.pauseSave) return; // 正在等用户决定是否同步
 		if (filename) {
@@ -530,58 +568,11 @@ var STRe_ProgressOnServer = {
 			if ((filename + ":" + line) != this.STReFileLine) {
 				console.log("Save progress on server: " + filename + ":" + line + "/" + fileContentChunks.length);
 				try {
-					WebDAV.Fs("").file(this.webDAVdir + "/" + filename + ".progress")
-						.write(line + "/" + fileContentChunks.length)
-						.catch(e => console.log(e))
-						.finally(() => {
-							this.STReFileLine = filename + ":" + line;
-						});
+					await this.setProgress(filename, line + "/" + fileContentChunks.length);
 				} catch (e) {
 					console.log(e);
 				}
-			}
-		}
-	},
-
-	syncProgress(data) {
-		let m = data.match(this.STRe_PROGRESS_RE);
-		if (m) { // 取到服务端进度
-			// let line = parseInt(m[1]);
-			let line = parseInt(m.groups["line"]);
-			if (line == getTopLineNumber()) { // 进度一致，无需同步
 				this.STReFileLine = filename + ":" + line;
-			} else { // 进度不一致
-
-				function hide() {
-					$('#syncProgressDlg').remove();
-					STReHelper.unfreezeContent();
-					STRe_ProgressOnServer.pauseSave = false;
-				}
-
-				this.pauseSave = true;
-				let dlg = $(`<dialog id="syncProgressDlg">
-					<div class="dlg-cap">云端进度同步</div>
-					<div class="dlg-body" style="line-height:2em;">
-						<div>当前阅读进度：<span style="float:right;">${getTopLineNumber()}/${fileContentChunks.length}</span></div>
-						<div>发现云端进度：<span style="float:right;">${data}</span></div>
-						<div>是否跳转到云端进度？</div>
-						<hr />
-						<div class="dlg-btn-grp"></div>
-					</div>
-					</dialog>`).bind("cancel", hide);
-				dlg.find(".dlg-cap").append($(`<span class="dlg-close">&times;</span>`).click(hide));
-				dlg.find(".dlg-btn-grp")
-					.append($(`<button style="float:left;">是</button>`).click(() => {
-						console.log("Load progress on server: " + filename + ":" + data);
-						hide();
-						setHistory(filename, line);
-						getHistory(filename);
-						this.STReFileLine = filename + ":" + line;
-					}))
-					.append($(`<button style="float:right;">否</button>`).click(hide));
-				STReHelper.freezeContent();
-				dlg.appendTo("body");
-				dlg[0].showModal();
 			}
 		}
 	},
@@ -591,20 +582,36 @@ var STRe_ProgressOnServer = {
 		if (!STRe_ProgressOnServer.syncOnFileLoad) return;
 		if (filename) {
 			console.log("Check progress on server: " + filename);
+			STRe_ProgressOnServer.pauseSave = true;
 			try {
-				let progress = await WebDAV.Fs("").file(STRe_ProgressOnServer.webDAVdir + "/" + filename + ".progress").read();
-				if (progress) STRe_ProgressOnServer.syncProgress(progress);
+				let progress = await STRe_ProgressOnServer.getProgress(filename);
+				let m = STRe_PROGRESS_RE.exec(progress);
+				if (m) { // 取到服务端进度
+					let line = parseInt(m.groups["line"]);
+					let curLine = getTopLineNumber();
+					if (line == curLine) { // 进度一致，无需同步
+						STRe_ProgressOnServer.STReFileLine = filename + ":" + line;
+					} else { // 进度不一致
+						if (confirm(`当前阅读进度：${curLine}/${fileContentChunks.length}\n发现云端进度：${progress}\n是否跳转到云端进度？`)) {
+							console.log("Load progress on server: " + filename + ":" + progress);
+							setHistory(filename, line);
+							getHistory(filename);
+							STRe_ProgressOnServer.STReFileLine = filename + ":" + line;
+						}
+					}
+				}
 			} catch (e) {
 				console.log(e);
 			}
+			STRe_ProgressOnServer.pauseSave = false;
 		}
 	},
 
-	loop() { // 定时同步进度
+	async loop() { // 定时同步进度
 		if (this.enabled) {
 			if (this.syncInterval > 0) {
 				this.syncOnFileLoad = true;
-				this.saveProgress();
+				await this.saveProgress();
 				setTimeout(() => this.loop(), this.syncInterval * 1000);
 			} else {
 				this.syncOnFileLoad = false;
@@ -613,10 +620,73 @@ var STRe_ProgressOnServer = {
 		}
 	},
 
+	async upload() {
+		if (this.enabled) {
+			console.log("Uploading progress.");
+			for (p of STReHelper.getLocalProgressAll()) {
+				if (STRe_PROGRESS_RE.test(p.progress)) {
+					try {
+						await this.setProgress(p.name, p.progress);
+					} catch (e) {
+						console.log(e);
+					}
+				}
+			}
+		}
+	},
+
+	async download() {
+		if (this.enabled) {
+			console.log("Downloading progress.");
+			try {
+				for (const f of await WebDAV.Fs("").dir(this.webDAVdir).children()) {
+					let m = decodeURIComponent(f.name).match(STRe_PROGRESS_FN_RE);
+					if (m) {
+						let prog = await this.getProgress(m.groups["name"]);
+						if (STRe_PROGRESS_RE.test(prog)) {
+							STReHelper.setLocalProgress(m.groups["name"], prog); //localStorage.setItem(m.groups["name"], prog);
+						}
+					}
+				}
+			} catch (e) {
+				console.log(e);
+			}
+		}
+	},
+
+	async refreshProgressList() {
+		let progList = [];
+		for (const f of await WebDAV.Fs("").dir(this.webDAVdir).children()) {
+			let m = decodeURIComponent(f.name).match(STRe_PROGRESS_FN_RE);
+			if (m) {
+				let prog = await f.read(true);
+				if (prog) {
+					progList.push({ filename: m.groups["name"], progress_on_server: prog, progress_local: "-" });
+				}
+			}
+		}
+		for (const p of STReHelper.getLocalProgressAll()) {
+			let bk = progList.find(e => e.filename == p.name);
+			if (bk) {
+				bk.progress_local = p.progress;
+			} else {
+				progList.push({ filename: p.name, progress_on_server: "-", progress_local: p.progress });
+			}
+		}
+		progList.sort((a, b) => (a.filename.localeCompare(b.filename, "zh")));
+		let container = $("#progressDlg .progress-list");
+		container.html(`<div>书籍文件名</div><div style="text-align:right;">云端进度</div><div style="text-align:right;">本地进度</div>`);
+		for (const bk of progList) {
+			let cls = (bk.progress_on_server == bk.progress_local) ? "eq" : "neq";
+			let row = $(`<div class="prog-name ${cls}">${bk.filename}</div><div class="prog-server ${cls}">${bk.progress_on_server}</div><div class="prog-local ${cls}">${bk.progress_local}</div>`);
+			container.append(row);
+		}
+	},
+
 	async show() {
 		if (this.enabled) {
 			let dlg = $(`<dialog id="progressDlg" class="">
-				<div class="dlg-cap">阅读进度</div>
+				<div class="dlg-cap">手动同步进度</div>
 				<span class="dlg-body progress-list">
 				</span>
 				<div class="dlg-btn-grp" style="margin-bottom: 1rem;"></div>
@@ -624,53 +694,18 @@ var STRe_ProgressOnServer = {
 			dlg.find(".dlg-cap").append($(`<span class="dlg-close">&times;</span>`).click(() => this.hide()));
 			dlg.find(`.dlg-btn-grp`)
 				.append($(`<input type="checkbox" id="progressDlgChk" />`)
-					.change(evt => { evt.currentTarget.checked ? $("#progressDlg .dlg-body div.eq").show() : $("#progressDlg .dlg-body div.eq").hide(); }))
+					.change(evt => { evt.currentTarget.checked ? $("#progressDlg .eq").show() : $("#progressDlg .eq").hide(); }))
 				.append(`<label for="progressDlgChk">显示进度一致的书籍</label>`)
 				.append($(`<span style="float:right"></span>`)
 					.append(`<span>云端&nbsp;</span>`)
-					.append($(`<button> &lt; </button>`).click())
-					.append($(`<button> &gt; </button>`).click())
+					.append($(`<button> &lt; </button>`).click(async () => { await this.upload(); this.refreshProgressList(); }))
+					.append($(`<button> &gt; </button>`).click(async () => { await this.download(); this.refreshProgressList(); STRe_Bookshelf.refreshBookList(); }))
 					.append(`<span>&nbsp;本地</span>`)
 				);
 			STReHelper.freezeContent();
 			dlg.appendTo("body");
 			dlg[0].showModal();
-
-			let dir = WebDAV.Fs("").dir(this.webDAVdir)
-			let progList = [];
-			for (const f of await dir.children()) {
-				let name = decodeURIComponent(f.name);
-				let m = name.match(/^(?<name>.+)\.progress$/i);
-				if (m) {
-					let prog = await f.read();
-					if (prog) {
-						progList.push({ filename: m.groups["name"], progress_on_server: prog, progress_local: "" });
-					}
-				}
-			}
-			for (let i = 0;i < localStorage.length; i ++) {
-				let name = localStorage.key(i);
-				let m = name.match(/^.+\.txt$/i);
-				if (m) {
-					let prog = localStorage.getItem(name);
-					if (prog) {
-						let bk = progList.find(e => e.filename == name);
-						if (bk) {
-							bk.progress_local = prog;
-						} else {
-							progList.push({ filename: name, progress_on_server: "", progress_local: prog });
-						}
-					}
-				}
-			}
-			progList.sort((a, b) => (a.filename.localeCompare(b.filename, "zh")));
-			let container = dlg.find(".progress-list");
-			container.html(`<div>书籍文件名</div><div>云端进度</div><div>本地进度</div>`);
-			for (const bk of progList) {
-				let cls = (bk.progress_on_server == bk.progress_local) ? "eq" : "neq";
-				let row = $(`<div class="${cls}">${bk.filename}</div><div class="${cls}" style="text-align:right;">${bk.progress_on_server}</div><div class="${cls}" style="text-align:right;">${bk.progress_local}</div>`);
-				container.append(row);
-			}
+			await this.refreshProgressList();
 		}
 		return this;
 	},
@@ -685,11 +720,8 @@ var STRe_ProgressOnServer = {
 
 	async enable() {
 		if (!this.enabled) {
+			$("#STRe-POS-btn").show();
 			fileloadCallback.regAfter(this.loadProgress);
-			$(`<div id="STRe-POS-btn" class="btn-icon">
-				<svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-					<path stroke="none" d="M13.5 20c.31.75.76 1.42 1.32 2H6c-1.11 0-2-.89-2-2V4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v7.03c-.16-.03-.33-.03-.5-.03c-.5 0-1 .07-1.5.18V4h-5v8l-2.5-2.25L8 12V4H6v16h7.5m5.5 0a2.5 2.5 0 0 1-2.5-2.5c0-.4.09-.78.26-1.12l-1.09-1.09c-.42.63-.67 1.39-.67 2.21c0 2.21 1.79 4 4 4V23l2.25-2.25L19 18.5V20m0-6.5V12l-2.25 2.25L19 16.5V15a2.5 2.5 0 0 1 2.5 2.5c0 .4-.09.78-.26 1.12l1.09 1.09c.42-.63.67-1.39.67-2.21c0-2.21-1.79-4-4-4Z"/>
-				</svg></div>`).click(() => this.show()).prependTo($("#btnWrapper"));
 			this.enabled = true;
 			console.log("Module <Progress on Server> enabled.");
 			if (this.syncInterval > 0) {
@@ -707,12 +739,22 @@ var STRe_ProgressOnServer = {
 
 	disable() {
 		if (this.enabled) {
+			$("#STRe-POS-btn").hide();
 			fileloadCallback.unregAfter(this.loadProgress);
-			$("#STRe-POS-btn").remove();
 			this.enabled = false;
 			console.log("Module <Progress on Server> disabled.");
 		}
 		return this;
+	},
+
+	init() {
+		$(`<div id="STRe-POS-btn" class="btn-icon">
+		<svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+			<path stroke="none" d="M13.5 20c.31.75.76 1.42 1.32 2H6c-1.11 0-2-.89-2-2V4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v7.03c-.16-.03-.33-.03-.5-.03c-.5 0-1 .07-1.5.18V4h-5v8l-2.5-2.25L8 12V4H6v16h7.5m5.5 0a2.5 2.5 0 0 1-2.5-2.5c0-.4.09-.78.26-1.12l-1.09-1.09c-.42.63-.67 1.39-.67 2.21c0 2.21 1.79 4 4 4V23l2.25-2.25L19 18.5V20m0-6.5V12l-2.25 2.25L19 16.5V15a2.5 2.5 0 0 1 2.5 2.5c0 .4-.09.78-.26 1.12l1.09 1.09c.42-.63.67-1.39.67-2.21c0-2.21-1.79-4-4-4Z"/>
+		</svg></div>`)
+			.click(() => this.show())
+			.prependTo($("#btnWrapper"))
+			.hide();
 	},
 };
 
@@ -773,7 +815,7 @@ var STRe_Bookshelf = {
 				// 先把文件保存到缓存db中
 				await STRe_Bookshelf.db.putBook(file.name, file);
 				// 刷新 Bookshelf in DropZone
-				await STRe_Bookshelf.freshBookList();
+				await STRe_Bookshelf.refreshBookList();
 			}
 		}
 		return file;
@@ -807,60 +849,50 @@ var STRe_Bookshelf = {
 		});
 		book.find(".delete-btn").click((evt) => {
 			evt.originalEvent.stopPropagation();
-			this.deleteFile(name, () => this.freshBookList());
+			this.deleteFile(name, () => this.refreshBookList());
 		});
-		let progress = localStorage.getItem(name);
+		let progress = STReHelper.getLocalProgress(name); //localStorage.getItem(name);
 		let pct = "?%";
 		if (progress) {
-			let m = progress.match(/^(?<line>\d+)\/(?<total>\d+)?$/i);
-			if (m) {
+			if (STRe_PROGRESS_RE.test(progress)) {
 				pct = (eval(progress) * 100).toFixed(1) + "%";
 				book.addClass("read").css("--read-progress", pct);
 			}
-			// book.attr("title", "阅读进度："+pct+" ("+progress+")");
 			book.find(".progress").html("进度：" + pct).attr("title", progress);
 		} else {
-			// book.attr("title", "阅读进度：无");
 			book.find(".progress").html("进度：无");
 		}
 		return book;
 	},
 
-	async freshBookList() {
+	async refreshBookList() {
 		if (this.enabled) {
-			let container = $(".bookshelf .dlg-body");
-			container.html("");
 			let booklist = [];
-			for (const book of await this.db.getAllBooks()) {
-				booklist.push(book.name);
-			}
-			booklist.sort((a, b) => (a.localeCompare(b, "zh")));
-			for (const name of booklist) {
-				container.append(this.genBookItem(name));
+			try {
+				for (const book of await this.db.getAllBooks()) {
+					booklist.push(book.name);
+				}
+				booklist.sort((a, b) => (a.localeCompare(b, "zh")));
+				let container = $(".bookshelf .dlg-body");
+				container.html("");
+				for (const name of booklist) {
+					container.append(this.genBookItem(name));
+				}
+			} catch (e) {
+				console.log(e);
 			}
 		}
 	},
 
-	async show(inDropZone = true) {
+	async show() {
 		if (this.enabled) {
-			let bookshelf = $(`<div class="bookshelf">
-				<div class="dlg-cap">本地缓存书架</div>
-				<span class="dlg-body"></span>
-				</div>`);
-			if (inDropZone) {
-				let frm = $(`<div class="dlg bookshelf-dz"></div>`);
-				bookshelf.find(".dlg-cap").after($(`<div style="font-size:1rem;font-family:ui;text-align:center;">添加书籍：拖入文件 / 空白处双击${STRe_Settings.settings.enableFos.val ? " / 云端书库" : ""}</div>`));
-				frm.append(bookshelf);
-				frm.appendTo("#dropZone");
-			} else if (!STReHelper.isElmVisible(document.getElementById("dropZone"))) {
-				let frm = $(`<dialog id="bookshelfDlg" class="bookshelf-dlg"></dialog>`).bind("cancel", () => this.hide());
-				bookshelf.find(".dlg-cap").append($(`<span class="dlg-close">&times;</span>`).click(() => this.hide()));
-				frm.append(bookshelf);
-				STReHelper.freezeContent();
-				frm.appendTo("body");
-				frm[0].showModal();
-			}
-			this.freshBookList();
+			$(`<div class="bookshelf-dz"><div class="bookshelf">
+			<div class="dlg-cap">本地缓存书架
+				<div style="font-size:1rem;font-family:ui;text-align:center;">添加书籍：拖入文件 / 空白处双击${STRe_Settings.settings.enableFos.val ? " / 云端书库" : ""}</div>
+			</div>
+			<span class="dlg-body"></span>
+			</div></div>`).appendTo("#dropZone");
+			this.refreshBookList();
 		}
 		return this;
 	},
@@ -881,29 +913,10 @@ var STRe_Bookshelf = {
 	},
 
 	enable() {
-		// // 替换 handleSelectedFile 函数
-		// function handleSelectedFile__hack(fileList) {
-		// 	if (fileList.length > 0 && fileList[0].type === "text/plain") {
-		// 		// 先把文件保存到缓存db中
-		// 		STRe_Bookshelf.saveFile(fileList[0])
-		// 			.then(() => {
-		// 				// 刷新 Bookshelf in DropZone
-		// 				STRe_Bookshelf.freshBookList();
-		// 			})
-		// 			.finally(() => {
-		// 				handSelectedFile__ORIGIN(fileList);
-		// 			});
-		// 	}
-		// }
-
 		if (!this.enabled) {
 			this.db = new STReLocalDB();
-			// STReHelper.replaceFunc(window, "handleSelectedFile", "handSelectedFile__ORIGIN", handleSelectedFile__hack);
 			fileloadCallback.regBefore(this.saveFile);
-			$(`<div id="STRe-bookshelf-btn" class="btn-icon">
-				<svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-					<path stroke="none" d="M9 3v15h3V3H9m3 2l4 13l3-1l-4-13l-3 1M5 5v13h3V5H5M3 19v2h18v-2H3Z"/>
-				</svg></div>`).click(() => this.show(false)).prependTo($("#btnWrapper"));
+			$("#STRe-bookshelf-btn").show();
 			this.enabled = true;
 			this.show(true);
 			console.log("Module <Bookshelf> enabled.");
@@ -914,19 +927,32 @@ var STRe_Bookshelf = {
 
 	disable() {
 		if (this.enabled) {
-			// STReHelper.replaceFunc(window, "handleSelectedFile", "abandonFunc__STRe_Bookshelf", handSelectedFile__ORIGIN);
 			fileloadCallback.unregBefore(this.saveFile);
 			$(".bookshelf-dz").remove();
 			$("#bookshelfDlg").remove();
-			$("#STRe-bookshelf-btn").remove();
+			$("#STRe-bookshelf-btn").hide();
 			this.db = null;
 			this.enabled = false;
 			console.log("Module <Bookshelf> disabled.");
 		}
 		return this;
 	},
+
+	init() {
+		$(`<div id="STRe-bookshelf-btn" class="btn-icon">
+		<svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+			<path stroke="none" d="M9 3v15h3V3H9m3 2l4 13l3-1l-4-13l-3 1M5 5v13h3V5H5M3 19v2h18v-2H3Z"/>
+		</svg></div>`)
+			.click(() => resetUI())
+			.prependTo($("#btnWrapper"))
+			.hide();
+	},
 };
 
+STRe_Settings.init();
+STRe_Bookshelf.init();
+STRe_ProgressOnServer.init();
+STRe_FilesOnServer.init();
 
 STRe_Settings.enable().load().apply();
 
@@ -939,4 +965,4 @@ if (STRe_Settings.settings.enableRos.val) {
 
 // STRe_FilesOnServer.enable();
 // STRe_ProgressOnServer.enable();
-// STReHelper.setCSS(":root", "font-size", (16*DPR)+"px");
+STReHelper.setCSS(":root", "font-size", (16*DPR)+"px");

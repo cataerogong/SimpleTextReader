@@ -1,22 +1,24 @@
 function setHistory(filename, lineNumber) {
+    let fn = filename + ".progress";
     // console.log("History set to line: ", lineNumber);
     // localStorage.setItem(filename, lineNumber);
-    localStorage.setItem(filename, lineNumber + "/" + fileContentChunks.length);
+    localStorage.setItem(fn, lineNumber + "/" + fileContentChunks.length);
     if (lineNumber === 0) {
         // Don't save history if line number is 0
-        localStorage.removeItem(filename);
+        localStorage.removeItem(fn);
     }
 }
 
 function getHistory(filename) {
-    if (localStorage.getItem(filename)) {
+    let fn = filename + ".progress";
+    if (localStorage.getItem(fn)) {
         // let tempLine = localStorage.getItem(filename);
         // try {
         //     tempLine = parseInt(tempLine) || 0;
         // } catch (error) {
         //     tempLine = 0;
         // }
-        let m = localStorage.getItem(filename).match(/^(\d+)(\/(\d+))?$/i); // 格式：line/total，match() 的结果：[full, line, /total, total]
+        let m = localStorage.getItem(fn).match(/^(\d+)(\/(\d+))?$/i); // 格式：line/total，match() 的结果：[full, line, /total, total]
         let tempLine = (m ? parseInt(m[1]) : 0);
         console.log("History found! Go to line: ", tempLine);
         let success = gotoLine(tempLine, false);

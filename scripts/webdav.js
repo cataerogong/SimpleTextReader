@@ -1,48 +1,43 @@
 // A raw WebDAV interface
 var WebDAV = {
-    GET: async function (url, force = false) {
+    async GET(url, force = false) {
         return await this.request('GET', url, (force ? { "If-Modified-Since": "0" } : {}), null, 'text');
     },
 
-    PROPFIND: async function (url) {
+    async PROPFIND(url) {
         return await this.request('PROPFIND', url, { Depth: "1" }, null, 'xml');
     },
 
-    MKCOL: async function (url) {
+    async MKCOL(url) {
         return await this.request('MKCOL', url, {}, null, 'text');
     },
 
-    DELETE: async function (url) {
+    async DELETE(url) {
         return await this.request('DELETE', url, {}, null, 'text');
     },
 
-    PUT: async function (url, data) {
+    async PUT(url, data) {
         return await this.request('PUT', url, {}, data, 'text');
     },
 
-    request: async function (verb, url, headers, data, type) {
+    async request(verb, url, headers, data, type) {
         headers["Content-Type"] = "text/xml; charset=UTF-8";
-        try {
-            let resp = await fetch(url, {
-                credentials: "include",
-                method: verb,
-                headers: headers,
-                body: data
-            });
-            if (!resp.ok) throw new Error(`Network response was not ok. ${resp.status} ${resp.statusText}`);
-            let body = await resp.text();
-            if (type == "xml") {
-                let p = new DOMParser();
-                let xml = p.parseFromString(body, "text/xml");
-                if (xml) {
-                    body = xml.firstChild.nextSibling || xml.firstChild;
-                }
+        let resp = await fetch(url, {
+            credentials: "include",
+            method: verb,
+            headers: headers,
+            body: data
+        });
+        if (!resp.ok) throw new Error(`Network response was not ok. ${resp.status} ${resp.statusText}`);
+        let body = await resp.text();
+        if (type == "xml") {
+            let p = new DOMParser();
+            let xml = p.parseFromString(body, "text/xml");
+            if (xml) {
+                body = xml.firstChild.nextSibling || xml.firstChild;
             }
-            return body;
-        } catch (e) {
-            console.log("WebDAV.request(): ", e);
-            return null;
         }
+        return body;
     }
 };
 
@@ -67,10 +62,7 @@ WebDAV.Fs = function (rootUrl) {
         };
 
         this.rm = async function () {
-            let a = await WebDAV.DELETE(this.url);
-            console.log(a);
-            a.name = "a";
-            return a;
+            return await WebDAV.DELETE(this.url);
         };
 
         return this;
@@ -86,7 +78,7 @@ WebDAV.Fs = function (rootUrl) {
         this.children = async function () {
             let doc = await WebDAV.PROPFIND(this.url);
             if (doc.childNodes == null) {
-                throw ('No such directory: ' + url);
+                throw new Error('No such directory: ' + this.url);
             }
             var result = [];
             // Start at 1, because the 0th is the same as self.

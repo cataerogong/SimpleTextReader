@@ -1,5 +1,4 @@
-dialog,
-.dlg {
+dialog {
     border-radius: 10px;
     padding: 0px;
     font-family: ui;
@@ -105,38 +104,38 @@ dialog,
     opacity: 1;
 }
 
-.bookshelf-dlg {
-    width: calc(100vw - 8rem);
-    /* 避开 btn-group */
-    height: 90vh;
-}
-
 .bookshelf-dz {
-    position: fixed;
-    top: 5vh;
-    bottom: 5vh;
-    left: 4rem;
-    right: 4rem;
-    /* 避开 btn-group */
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 0px;
+    font-family: ui;
+    font-size: 1.2rem;
+    background: var(--bgColor);
+    color: var(--fontColor);
+    display: flex;
+    flex-flow: column;
     z-index: 2000;
-    border: 3px solid var(--fontColor);
 }
 
 .bookshelf {
     font-size: 1.2rem;
-    overflow-x: scroll;
-    overflow-y: scroll;
+    overflow: scroll;
+    color: var(--fontColor);
     background: var(--bgColor);
     display: flex;
     flex-flow: column;
     flex: 1;
-    color: var(--fontColor);
-    z-index: 2000;
+    /* z-index: 2000; */
 }
 
 .bookshelf .dlg-body {
     text-align: center;
     border: 1px solid gray;
+    /* 避开 btn-group */
+    margin-right: 4rem;
 }
 
 .bookshelf .book {
@@ -219,23 +218,32 @@ dialog,
 
 #progressDlg {
     height: 90vh;
+    min-width: 50vw;
+    max-width: 90vw;
 }
 
 #progressDlg .progress-list {
-    /* height: 100%; */
-    /* flex: 1; */
     overflow-y: scroll;
     display: grid;
     grid-gap: 0.5rem 0.5rem;
     grid-template-columns: repeat(3, max-content);
+    grid-auto-rows: min-content;
 }
 
 #progressDlg .progress-list div {
     height: 1.8rem;
+    padding: 0 5px;
     border-bottom: 1px dotted gray;
 }
 
-#progressDlg .dlg-body div.eq {
+#progressDlg .progress-list .eq {
     display: none;
     color: grey;
+}
+
+#progressDlg .progress-list .prog-server,
+#progressDlg .progress-list .prog-local {
+    text-align: right;
+    font-size: 80%;
+    /* border: 1px dotted gray; */
 }
