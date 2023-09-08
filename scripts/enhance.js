@@ -1,4 +1,4 @@
-let _STRe_VER_ = "1.2.1";
+let _STRe_VER_ = "1.3.0";
 
 let STRe_PROGRESS_FN_RE = /^(?<name>.+)\.progress$/i; // 格式：filename.progress
 let STRe_PROGRESS_RE = /^(?<line>\d+)(\/(?<total>\d+))?$/i; // 格式：line/total，match() 的结果：[full, line, /total, total]
@@ -20,36 +20,6 @@ var STReHelper = {
 	replaceFunc(funcOwner, funcName, funcCopyName, newFunc) {
 		funcOwner[funcCopyName] = new Function(this.getFuncArgs(funcOwner[funcName]), this.getFuncBody(funcOwner[funcName]));
 		funcOwner[funcName] = new Function(this.getFuncArgs(funcOwner[funcName]), this.getFuncBody(newFunc));
-	},
-
-	FUNC_KEYDOWN_: document.onkeydown, // 保存页面原来的 onkeydown 函数，下面会临时屏蔽 onkeydown
-	freezeContent() {
-		document.onkeydown = null;
-		$("body").css("overflow-y", "hidden");
-	},
-	unfreezeContent() {
-		document.onkeydown = this.FUNC_KEYDOWN_;
-		$("body").css("overflow-y", "auto");
-	},
-
-	getCSS(sel, prop) {
-		for (const sheet of document.styleSheets) {
-			for (const rule of sheet.cssRules) {
-				if (rule.selectorText === sel) {
-					return rule.style.getPropertyValue(prop);
-				}
-			}
-		}
-		return null;
-	},
-	setCSS(sel, prop, val) {
-		for (const sheet of document.styleSheets) {
-			for (const rule of sheet.cssRules) {
-				if (rule.selectorText === sel) {
-					rule.style.setProperty(prop, val);
-				}
-			}
-		}
 	},
 
 	isElmVisible(elm, pseudoElt = null) {
@@ -76,7 +46,7 @@ var STReHelper = {
 		for (let i = 0; i < localStorage.length; i++) {
 			let m = localStorage.key(i).match(STRe_PROGRESS_FN_RE);
 			if (m) {
-				ret.push({name: m.groups["name"], progress: this.getLocalProgress(m.groups["name"])});
+				ret.push({ name: m.groups["name"], progress: this.getLocalProgress(m.groups["name"]) });
 			}
 		}
 		return ret;
@@ -107,70 +77,6 @@ var STRe_Settings = {
 	ITEM_SETTINGS: "STReSettings",
 
 	settings: {
-		p_lineHeight: {
-			val: "",
-			def: STReHelper.getCSS(":root", "--p_lineHeight"),
-			type: "text", // text, int, bool, select
-			desc: "行高",
-			options: {},
-			apply() { STReHelper.setCSS(":root", "--p_lineHeight", this.val || this.def); },
-		},
-		p_fontSize: {
-			val: "",
-			def: STReHelper.getCSS(":root", "--p_fontSize"),
-			type: "text",
-			desc: "字号",
-			options: {},
-			apply() { STReHelper.setCSS(":root", "--p_fontSize", this.val || this.def); },
-		},
-		fontColor: {
-			val: "",
-			def: STReHelper.getCSS(":root", "--fontColor"),
-			type: "text",
-			desc: "日间字符色",
-			options: {},
-			apply() { STReHelper.setCSS(":root", "--fontColor", this.val || this.def); },
-		},
-		bgColor: {
-			val: "",
-			def: STReHelper.getCSS(":root", "--bgColor"),
-			type: "text",
-			desc: "日间背景色",
-			options: {},
-			apply() { STReHelper.setCSS(":root", "--bgColor", this.val || this.def); },
-		},
-		dark_fontColor: {
-			val: "",
-			def: STReHelper.getCSS('[data-theme="dark"]', "--fontColor"),
-			type: "text",
-			desc: "夜间字符色",
-			options: {},
-			apply() { STReHelper.setCSS('[data-theme="dark"]', "--fontColor", this.val || this.def); },
-		},
-		dark_bgColor: {
-			val: "",
-			def: STReHelper.getCSS('[data-theme="dark"]', "--bgColor"),
-			type: "text",
-			desc: "夜间背景色",
-			options: {},
-			apply() { STReHelper.setCSS('[data-theme="dark"]', "--bgColor", this.val || this.def); },
-		},
-		pagination_bottom: {
-			val: "",
-			def: STReHelper.getCSS("#pagination", "bottom"),
-			type: "text",
-			desc: "分页条与底部距离",
-			options: {},
-			apply() { STReHelper.setCSS("#pagination", "bottom", this.val || this.def); },
-		},
-		pagination_opacity: {
-			val: "",
-			def: STReHelper.getCSS("#pagination", "opacity"),
-			type: "text",
-			desc: "分页条透明度(0.0~1.0)",
-			options: {},
-			apply() { STReHelper.setCSS("#pagination", "opacity", this.val || this.def); },
-		},
 		fosWebDAV: {
 			val: "",
 			def: "/books",
@@ -229,45 +135,6 @@ var STRe_Settings = {
 		},
 	},
 
-	genInput(key, style = "", cls = "") {
-		let s = this.settings[key];
-		if (!s) return "";
-		switch (s.type) {
-			case "bool":
-				return `<input type="checkbox" class="${cls}" style="${style}" id="setting_${key}" ${s.val ? "checked" : ""} />`;
-			case "select": {
-				let str = `<select class="${cls}" style="${style}" id="setting_${key}">`;
-				for (k in s.options) {
-					str += `<option value="${k}" ${(k == s.val) ? "selected" : ""}>${s.options[k]}</option>`;
-				}
-				str += `</select>`;
-				return str;
-			}
-			case "int":
-			case "+int":
-			case "-int":
-				return `<input type="text" class="${cls}" style="text-align:right;${style}" id="setting_${key}" value="${s.val}" />`;
-			case "text":
-			default:
-				return `<input type="text" class="${cls}" style="width:6rem;${style}" id="setting_${key}" value="${s.val}" />`;
-		}
-	},
-	getLabel(key, style = "", cls = "") {
-		let s = this.settings[key];
-		if (!s) return "";
-		switch (s.type) {
-			case "bool":
-				return `<label for="setting_${key}" class="${cls}" style="${style}">${s.desc}</label>`;
-			case "select":
-			case "int":
-			case "+int":
-			case "-int":
-			case "text":
-			default:
-				return `<div class="${cls}" style="display:inline-block;${style}">${s.desc}</div>`;
-		}
-	},
-
 	show() {
 		if (this.enabled) {
 			this.settings.enableFos.val = STRe_FilesOnServer.enabled;
@@ -299,115 +166,17 @@ var STRe_Settings = {
 				</div>
 				<hr />
 				</span>
-				<div class="dlg-btn-grp"></div>
+				<div class="dlg-foot"></div>
 				</dialog>`).bind("cancel", () => this.hide());
 			dlg.find(".dlg-cap").append($(`<span class="dlg-close">&times;</span>`).click(() => this.hide()));
-			dlg.find(".dlg-btn-grp").append($(`<button>恢复默认</button>`).click(() => this.reset().load().apply().hide()));
-			dlg.find(".dlg-btn-grp").append($(`<button style="float:right;">应用</button>`).click(() => this.save().apply().hide()))
-			STReHelper.freezeContent();
+			dlg.find(".dlg-foot").append($(`<button>恢复默认</button>`).click(() => this.reset().load().apply().hide()));
+			dlg.find(".dlg-foot").append($(`<button style="float:right;">应用</button>`).click(() => this.save().apply().hide()))
+			freezeContent();
 			dlg.appendTo("body");
 			// document.getElementById("settingDlg").showModal();
 			dlg[0].showModal();
 		}
 		return this;
-	},
-
-	hide() {
-		if (this.enabled) {
-			$("#settingDlg").remove();
-			STReHelper.unfreezeContent();
-		}
-		return this;
-	},
-
-	load() {
-		if (this.enabled) {
-			let st = JSON.parse(localStorage.getItem(this.ITEM_SETTINGS)) || {};
-			for (key in this.settings) {
-				this.settings[key].val = (key in st) ? st[key] : this.settings[key].def;
-			}
-		}
-		return this;
-	},
-
-	save() {
-		if (this.enabled) {
-			let st = {};
-			for (key in this.settings) {
-				let s = this.settings[key];
-				switch (s.type) {
-					case "bool":
-						s.val = document.getElementById("setting_" + key).checked;
-						break;
-					case "int": {
-						let v = parseInt($("#setting_" + key).val());
-						s.val = isNaN(v) ? s.def : v;
-						break;
-					}
-					case "+int": {
-						let v = parseInt($("#setting_" + key).val());
-						s.val = (isNaN(v) || v <= 0) ? s.def : v;
-						break;
-					}
-					case "-int": {
-						let v = parseInt($("#setting_" + key).val());
-						s.val = (isNaN(v) || v >= 0) ? s.def : v;
-						break;
-					}
-					default:
-						s.val = $("#setting_" + key).val() || s.def;
-						break;
-				}
-				st[key] = s.val;
-			}
-			localStorage.setItem(this.ITEM_SETTINGS, JSON.stringify(st));
-		}
-		return this;
-	},
-
-	apply() {
-		if (this.enabled) {
-			for (s in this.settings) {
-				this.settings[s].apply();
-			}
-		}
-		return this;
-	},
-
-	reset() {
-		if (this.enabled) {
-			localStorage.removeItem(this.ITEM_SETTINGS);
-		}
-		return this;
-	},
-
-	enable() {
-		if (!this.enabled) {
-			$("#STRe-setting-btn").show();
-			this.enabled = true;
-			console.log("Module <Settings> enabled.");
-		}
-		return this;
-	},
-
-	disable() {
-		if (this.enabled) {
-			this.hide().reset().load().apply();
-			$("#STRe-setting-btn").hide();
-			this.enabled = false;
-			console.log("Module <Settings> disabled.");
-		}
-		return this;
-	},
-
-	init() {
-		$(`<div id="STRe-setting-btn" class="btn-icon">
-		<svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-			<path stroke="none" d="M12 8a4 4 0 0 1 4 4a4 4 0 0 1-4 4a4 4 0 0 1-4-4a4 4 0 0 1 4-4m0 2a2 2 0 0 0-2 2a2 2 0 0 0 2 2a2 2 0 0 0 2-2a2 2 0 0 0-2-2m-2 12c-.25 0-.46-.18-.5-.42l-.37-2.65c-.63-.25-1.17-.59-1.69-.99l-2.49 1.01c-.22.08-.49 0-.61-.22l-2-3.46a.493.493 0 0 1 .12-.64l2.11-1.66L4.5 12l.07-1l-2.11-1.63a.493.493 0 0 1-.12-.64l2-3.46c.12-.22.39-.31.61-.22l2.49 1c.52-.39 1.06-.73 1.69-.98l.37-2.65c.04-.24.25-.42.5-.42h4c.25 0 .46.18.5.42l.37 2.65c.63.25 1.17.59 1.69.98l2.49-1c.22-.09.49 0 .61.22l2 3.46c.13.22.07.49-.12.64L19.43 11l.07 1l-.07 1l2.11 1.63c.19.15.25.42.12.64l-2 3.46c-.12.22-.39.31-.61.22l-2.49-1c-.52.39-1.06.73-1.69.98l-.37 2.65c-.04.24-.25.42-.5.42h-4m1.25-18l-.37 2.61c-1.2.25-2.26.89-3.03 1.78L5.44 7.35l-.75 1.3L6.8 10.2a5.55 5.55 0 0 0 0 3.6l-2.12 1.56l.75 1.3l2.43-1.04c.77.88 1.82 1.52 3.01 1.76l.37 2.62h1.52l.37-2.61c1.19-.25 2.24-.89 3.01-1.77l2.43 1.04l.75-1.3l-2.12-1.55c.4-1.17.4-2.44 0-3.61l2.11-1.55l-.75-1.3l-2.41 1.04a5.42 5.42 0 0 0-3.03-1.77L12.75 4h-1.5Z"/>
-		</svg></div>`)
-			.click(() => this.show())
-			.prependTo($("#btnWrapper"))
-			.hide();
 	},
 }
 
@@ -451,7 +220,7 @@ var STRe_FilesOnServer = {
 				</span>
 				</dialog>`).bind("cancel", () => this.hide());
 			dlg.find(".dlg-cap").append($(`<span class="dlg-close">&times;</span>`).click(() => this.hide()));
-			STReHelper.freezeContent();
+			freezeContent();
 			// document.getElementById("serverFilesDlg").showModal();
 			dlg.appendTo("body");
 			dlg[0].showModal();
@@ -500,7 +269,7 @@ var STRe_FilesOnServer = {
 	hide() {
 		if (this.enabled) {
 			$('#serverFilesDlg').remove();
-			STReHelper.unfreezeContent();
+			unfreezeContent();
 		}
 		return this;
 	},
@@ -689,10 +458,10 @@ var STRe_ProgressOnServer = {
 				<div class="dlg-cap">手动同步进度</div>
 				<span class="dlg-body progress-list">
 				</span>
-				<div class="dlg-btn-grp" style="margin-bottom: 1rem;"></div>
+				<div class="dlg-foot" style="margin-bottom: 1rem;"></div>
 				</dialog>`).bind("cancel", () => this.hide());
 			dlg.find(".dlg-cap").append($(`<span class="dlg-close">&times;</span>`).click(() => this.hide()));
-			dlg.find(`.dlg-btn-grp`)
+			dlg.find(`.dlg-foot`)
 				.append($(`<input type="checkbox" id="progressDlgChk" />`)
 					.change(evt => { evt.currentTarget.checked ? $("#progressDlg .eq").show() : $("#progressDlg .eq").hide(); }))
 				.append(`<label for="progressDlgChk">显示进度一致的书籍</label>`)
@@ -702,7 +471,7 @@ var STRe_ProgressOnServer = {
 					.append($(`<button> &gt; </button>`).click(async () => { await this.download(); this.refreshProgressList(); STRe_Bookshelf.refreshBookList(); }))
 					.append(`<span>&nbsp;本地</span>`)
 				);
-			STReHelper.freezeContent();
+			freezeContent();
 			dlg.appendTo("body");
 			dlg[0].showModal();
 			await this.refreshProgressList();
@@ -713,7 +482,7 @@ var STRe_ProgressOnServer = {
 	hide() {
 		if (this.enabled) {
 			$("#progressDlg").remove();
-			STReHelper.unfreezeContent();
+			unfreezeContent();
 		}
 		return this;
 	},
@@ -762,6 +531,34 @@ var STRe_ProgressOnServer = {
 // ------------------------------------------------
 // Module <Bookshelf>
 // ------------------------------------------------
+class SettingGroupBookshelf extends SettingGroupBase {
+	constructor() {
+		super("setting-group-bs", "本地缓存书架");
+		this.settings["enable"] = new SettingCheckbox(this.id + "-enable", "启用", true);
+		this.settings["reopen"] = new SettingCheckbox(this.id + "-reopen", "启动时打开上次阅读书籍", true);
+	}
+
+	genHTML() {
+		let sts = this.settings;
+		let html = `<div class="sub-cap">${this.desc}</div>
+            <div class="setting-group setting-group-bs">
+            <div class="row">${sts["enable"].genInputElm()} ${sts["enable"].genLabelElm()}</div>
+            <div class="row">${sts["reopen"].genInputElm()} ${sts["reopen"].genLabelElm()}</div>
+            </div>`;
+		return html;
+	}
+
+	apply() {
+		if (this.settings["enable"].value) {
+			STRe_Bookshelf.enable();
+		} else {
+			STRe_Bookshelf.disable();
+		}
+		return this;
+	}
+
+}
+
 var STRe_Bookshelf = {
 
 	enabled: false,
@@ -900,7 +697,7 @@ var STRe_Bookshelf = {
 	hide() {
 		if (this.enabled) {
 			$("#bookshelfDlg").remove();
-			STReHelper.unfreezeContent();
+			unfreezeContent();
 		}
 		return this;
 	},
@@ -946,18 +743,22 @@ var STRe_Bookshelf = {
 			.click(() => resetUI())
 			.prependTo($("#btnWrapper"))
 			.hide();
+
+		settingMgr.groups["Bookshelf"] = new SettingGroupBookshelf();
+		settingMgr.load("Bookshelf").apply("Bookshelf");
 	},
 };
 
-STRe_Settings.init();
+// STRe_Settings.init();
 STRe_Bookshelf.init();
 STRe_ProgressOnServer.init();
 STRe_FilesOnServer.init();
 
-STRe_Settings.enable().load().apply();
+// STRe_Settings.enable().load().apply();
 
 // 启动时打开上次阅读书籍
-if (STRe_Settings.settings.enableRos.val) {
+if (settingMgr.groups["Bookshelf"].settings["reopen"].value) {
+	// if (STRe_Settings.settings.enableRos.val) {
 	STRe_Bookshelf.reopenFile();
 }
 
@@ -965,4 +766,4 @@ if (STRe_Settings.settings.enableRos.val) {
 
 // STRe_FilesOnServer.enable();
 // STRe_ProgressOnServer.enable();
-STReHelper.setCSS(":root", "font-size", (16*DPR)+"px");
+$("body").css("font-size", (16 * DPR) + "px");
