@@ -24,6 +24,10 @@ Now SimpleTextReader can be installed as a PWA in supported browsers (Chromium-b
 
 Enable dark mode.
 
+### Version 1.3 (cataerogong mod)
+
+增加界面参数设置。
+
 ## Usage
 
 ### Load unpacked extensions
