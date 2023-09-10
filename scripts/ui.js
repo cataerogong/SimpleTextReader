@@ -39,26 +39,65 @@ window.addEventListener('dragenter', function(event) {
     init = true;
     event.preventDefault();
     let res = showDropZone(focused=true);
-    if (res == 0) {
-        // showDropZone success
-        contentContainer.style.display = "none";
-    }
+    // if (res == 0) {
+    //     // showDropZone success
+    //     contentContainer.style.display = "none";
+    // }
 });
 
-window.onscroll = function(event) {
+// window.onscroll = function(event) {
+contentLayer.onscroll = function(event) {
     event.preventDefault();
     if (!init) {
         GetScrollPositions();
     }
 };
 
-document.onkeydown = function(event) {
+function onDocKeydown(event) {
+    let lh = 16;
+    if (isElementVisible(contentContainer)) {
+        let p = contentContainer.getElementsByTagName("p");
+        if (p.length) {
+            lh = parseInt((p[0].currentStyle || window.getComputedStyle(p[0])).lineHeight) || lh;
+        }
+    }
     switch (event.key) {
+        case "Home":
+            event.preventDefault();
+            event.stopPropagation();
+            contentLayer.scrollTo(0, 0);
+            break;
+        case "End":
+            event.preventDefault();
+            event.stopPropagation();
+            contentLayer.scrollTo(0, contentLayer.scrollHeight);
+            break;
+        case "PageUp":
+            event.preventDefault();
+            event.stopPropagation();
+            contentLayer.scrollBy(0, -contentLayer.clientHeight+lh);
+            break;
+        case "PageDown":
+        case " ":
+            event.preventDefault();
+            event.stopPropagation();
+            contentLayer.scrollBy(0, contentLayer.clientHeight-lh);
+            break;
+        case "ArrowUp":
+            event.preventDefault();
+            event.stopPropagation();
+            contentLayer.scrollBy(0, -lh*3);
+            break;
+        case "ArrowDown":
+            event.preventDefault();
+            event.stopPropagation();
+            contentLayer.scrollBy(0, lh*3);
+            break;
         case 'ArrowLeft':
-            jumpToPage(currentPage-1);
+            gotoPage(currentPage-1);
         break;
         case 'ArrowRight':
-            jumpToPage(currentPage+1);
+            gotoPage(currentPage+1);
         break;
         case 'Escape':
             // console.log("Escape pressed:", no_ui);
@@ -68,6 +107,8 @@ document.onkeydown = function(event) {
         break;
     }
 };
+
+document.onkeydown = onDocKeydown;
 
 function openFileSelector(event) {
     event.preventDefault();
@@ -94,14 +135,14 @@ function handleDragEnter(event) {
     dragCounter++;
     event.preventDefault();
     showDropZone(focused=true);
-    contentContainer.style.display = "none";
+    // contentContainer.style.display = "none";
 }
 
 function handleDragOver(event) {
     // console.log("Drag over");
     event.preventDefault();
     showDropZone(focused=true);
-    contentContainer.style.display = "none";
+    // contentContainer.style.display = "none";
 }
 
 function handleDragLeave(event) {
@@ -112,12 +153,13 @@ function handleDragLeave(event) {
         if (contentContainer.innerHTML === "") {
             // no file loaded, show dropZone
             showDropZone();
-            contentContainer.style.display = "none";
+            // contentContainer.style.display = "none";
         } else {
             // file loaded, revert back to normal
-            hideDropZone();
-            contentContainer.style.display = "block";
-            gotoLine(historyLineNumber, isTitle=false);
+            // hideDropZone();
+            // contentContainer.style.display = "block";
+            showContent();
+            gotoLine(historyLineNumber, false);
             init = false;
         }
     }
@@ -125,8 +167,8 @@ function handleDragLeave(event) {
 
 function handleDrop(event) {
     event.preventDefault();
-    hideDropZone();
-    contentContainer.style.display = "block";
+    // hideDropZone();
+    // contentContainer.style.display = "block";
     resetVars();
     // setTOC_onRatio(initial=true);
 
@@ -319,22 +361,22 @@ async function handleSelectedFile(fileList) {
 
         fileReader.onloadstart = function (event) {
             event.preventDefault();
-            hideDropZone();
+            // hideDropZone();
             showLoadingScreen();
-            hideContent();
+            // hideContent();
         };
 
         fileReader.onprogress = function (event) {
             event.preventDefault();
-            hideDropZone();
+            // hideDropZone();
             showLoadingScreen();
-            hideContent();
+            // hideContent();
         };
 
         fileReader.onloadend = function (event) {
             event.preventDefault();
-            hideDropZone();
-            hideLoadingScreen();
+            // hideDropZone();
+            // hideLoadingScreen();
             showContent();
             fileloadCallback.after();
         };
@@ -424,9 +466,7 @@ function generatePagination() {
             tempInput.addEventListener('input', function(event) {
                 this.size = (this.value.length <= 0 ? 1 : this.value.length);
             });
-            tempInput.addEventListener('keypress', function(event) {
-                jumpToPageInputField(event);
-            });
+            tempInput.addEventListener('keypress', jumpToPageInputField);
             tempItem.appendChild(tempInput);
             paginationItem.appendChild(tempItem);
             paginationList.appendChild(paginationItem);
@@ -478,16 +518,6 @@ function generatePagination() {
     paginationContainer.appendChild(paginationList);
 }
 
-function processTOC_bak() {
-    // for each title in allTitles, create a link
-    var toc = "";
-    for (var i in allTitles) {
-        toc += `<a id='a${allTitles[i][1]}_bull' href='#line${allTitles[i][1]}' onclick='gotoLine(${allTitles[i][1]})' class='prevent-select toc-bullet'></a><a id='a${allTitles[i][1]}' href='#line${allTitles[i][1]}' onclick='gotoLine(${allTitles[i][1]})' class='prevent-select toc-text'>${allTitles[i][0]}</a><br/>`;
-    }
-
-    return toc;
-}
-
 function processTOC() {
     for (var i in allTitles) {
         let tempBullet = document.createElement("a");
@@ -499,12 +529,6 @@ function processTOC() {
             event.preventDefault();
             // console.log("gotoLine: ", parseInt(event.target.id.replace(/(a|_bull)/g, '')));
             gotoLine(parseInt(event.target.id.replace(/(a|_bull)/g, '')));
-            let line = document.getElementById(`line${parseInt(event.target.id.replace(/(a|_bull)/g, ''))}`);
-            let top = line.offsetTop;
-            let style = line.currentStyle || window.getComputedStyle(line);
-            let top_margin = parseFloat(style.marginTop);
-            // console.log("top: ", top, "top_margin: ", top_margin);
-            window.scrollTo(0, (top - top_margin), {behavior: 'instant'});
         });
         tocContainer.appendChild(tempBullet);
 
@@ -513,19 +537,12 @@ function processTOC() {
         tempText.href = `#line${allTitles[i][1]}`;
         tempText.classList.add("prevent-select");
         tempText.classList.add("toc-text");
-        // tempText.innerHTML = allTitles[i][0];
         tempText.innerText = allTitles[i][0];
-        tempText.title =  allTitles[i][0];
+        // tempText.title =  allTitles[i][0];
         tempText.addEventListener('click', function(event) {
             event.preventDefault();
             // console.log("gotoLine: ", parseInt(event.target.id.replace(/(a)/g, '')));
             gotoLine(parseInt(event.target.id.replace(/(a)/g, '')));
-            let line = document.getElementById(`line${parseInt(event.target.id.replace(/(a)/g, ''))}`);
-            let top = line.offsetTop;
-            let style = line.currentStyle || window.getComputedStyle(line);
-            let top_margin = parseFloat(style.marginTop);
-            // console.log("top: ", top, "top_margin: ", top_margin);
-            window.scrollTo(0, (top - top_margin), {behavior: 'instant'});
         });
         tocContainer.appendChild(tempText);
     }
@@ -534,54 +551,24 @@ function processTOC() {
 
 
 // Helper functions
-function jumpToPage(pageNumber, scrolltoTop=true) {
-    if (!isNaN(pageNumber)) {
-        currentPage = pageNumber > totalPages ? totalPages : (pageNumber < 1 ? 1 : pageNumber);
-        showCurrentPageContent();
-        generatePagination();
-    } else {
-        currentPage = currentPage;
-        showCurrentPageContent();
-        generatePagination();
-    }
-
-    if ((currentPage > 1) && (currentPage < totalPages)) {
-        if (scrolltoTop) {
-            window.scrollTo(0, 0, {behavior: 'instant'});
-        }
-    }
-    GetScrollPositions();
-}
-
 function jumpToPageInputField(event, scrolltoTop=true) {
     if (event.key === 'Enter') {
-        pageNumberInput = event.target.value;
-        const pageNumber = parseInt(pageNumberInput);
-
-        if (!isNaN(pageNumber)) {
-            currentPage = pageNumber > totalPages ? totalPages : (pageNumber < 1 ? 1 : pageNumber);
-            showCurrentPageContent();
-            generatePagination();
-        } else {
-            currentPage = currentPage;
-            showCurrentPageContent();
-            generatePagination();
-        }
-
-        if (scrolltoTop) {
-            window.scrollTo(0, 0, {behavior: 'instant'});
-        }
-        GetScrollPositions();
+        gotoPage(parseInt(event.currentTarget.value), scrolltoTop);
     }
 }
 
 function gotoPage(page, scrolltoTop=true) {
-    currentPage = page;
+    if (!isNaN(page)) {
+        // currentPage = (page > totalPages) ? totalPages : ((page < 1) ? 1 : page);
+        currentPage = Math.min(Math.max(1, page), totalPages);
+    } else {
+        console.log(`Not a valid page number: ${page}, so goto <currentPage:${currentPage}>.`);
+    }
     showCurrentPageContent();
     generatePagination();
 
     if (scrolltoTop) {
-        window.scrollTo(0, 0, {behavior: 'instant'});
+        contentLayer.scrollTo({top: 0, behavior: 'instant'});
     }
     GetScrollPositions();
 }
@@ -596,34 +583,31 @@ function gotoLine(lineNumber, isTitle=true) {
         gotoPage(needToGoPage, false);
     }
 
+    // scroll to the particular line
+    try {
+        const line = document.getElementById(`line${lineNumber}`);
+        // console.log(line.offsetTop)
+        contentLayer.scrollTo({top: line.offsetTop, behavior: "instant"});
+        // console.log("line.tagName: ", line.tagName);
+        if (line.tagName === "H1" || line.tagName === "H2") {
+            // // scroll back to show the title and margin
+            // let style = line.currentStyle /* for IE */ || window.getComputedStyle(line);
+            // let top_margin = parseFloat(style.marginTop);
+            // contentLayer.scrollBy(0, -top_margin+1);
+
+            // Set the title in the TOC as active
+            setTitleActive(lineNumber);
+        }
+    } catch (error) {
+        console.log(`Error: No tag with id 'line${lineNumber}' found.`);
+        return -1;
+    }
     if (isTitle) {
         // Set the current title in the TOC as active
-        setTitleActive(lineNumber);
+        // setTitleActive(lineNumber);
 
         gotoTitle_Clicked = true;
         // console.log("gotoTitle_Clicked: ", gotoTitle_Clicked);
-    } else {
-        // scroll to the particular line
-        const line = document.getElementById(`line${lineNumber}`);
-        try {
-            // console.log("line.tagName: ", line.tagName);
-            if (line.tagName === "H2") {
-                // Add the following line because we no longer use in-line onclick event
-                line.scrollIntoView(true, {behavior: 'instant'});
-                // scroll back 3.2em to show the title and margin
-                // line-height:1.6em;
-                // margin-top:1.6em;
-                let scrollBackPx = emInPx * 3;
-                // console.log("scrollBackPx: ", scrollBackPx);
-                window.scrollBy(0, -scrollBackPx);
-                setTitleActive(lineNumber);
-            } else {
-                line.scrollIntoView(true, {behavior: 'instant'});
-            }
-        } catch (error) {
-            console.log(`Error: No tag with id 'line${lineNumber}' found.`);
-            return -1;
-        }
     }
 
     // Remember the line number in history
@@ -716,35 +700,35 @@ function setTitleActive(titleID) {
         }
         // Move the selected title to the center of the TOC
         if (!isInContainerViewport(tocContainer, selectedTitle, tocContainer.clientHeight / 10)) {
-            tocContainer.scrollTo(0, selectedTitle.offsetTop - tocContainer.clientHeight / 2, {behavior: 'smooth'});
+            tocContainer.scrollTo({top: selectedTitle.offsetTop - tocContainer.clientHeight / 2, behavior: 'smooth'});
         }
-        // Set the selected title's :target:before css style
-        let selectedLine = document.getElementById(`line${titleID}`);
-        if (selectedLine && (selectedLine.tagName[0] === "H")) {
-            // style.ui_anchorTargetBefore = eval(`style.h${selectedLine.tagName[1]}_margin`);
-            switch (selectedLine.tagName[1]) {
-                case '1':
-                    style.ui_anchorTargetBefore = style.h1_margin;
-                break;
-                case '2':
-                    style.ui_anchorTargetBefore = style.h2_margin;
-                break;
-                case '3':
-                    style.ui_anchorTargetBefore = style.h3_margin;
-                break;
-                case '4':
-                    style.ui_anchorTargetBefore = style.h4_margin;
-                break;
-                case '5':
-                    style.ui_anchorTargetBefore = style.h5_margin;
-                break;
-                case '6':
-                    style.ui_anchorTargetBefore = style.h6_margin;
-                break;
-                default:
-                    style.ui_anchorTargetBefore = style.h2_margin;
-            }
-        }
+        // // Set the selected title's :target:before css style
+        // let selectedLine = document.getElementById(`line${titleID}`);
+        // if (selectedLine && (selectedLine.tagName[0] === "H")) {
+        //     // style.ui_anchorTargetBefore = eval(`style.h${selectedLine.tagName[1]}_margin`);
+        //     switch (selectedLine.tagName[1]) {
+        //         case '1':
+        //             style.ui_anchorTargetBefore = style.h1_margin;
+        //         break;
+        //         case '2':
+        //             style.ui_anchorTargetBefore = style.h2_margin;
+        //         break;
+        //         case '3':
+        //             style.ui_anchorTargetBefore = style.h3_margin;
+        //         break;
+        //         case '4':
+        //             style.ui_anchorTargetBefore = style.h4_margin;
+        //         break;
+        //         case '5':
+        //             style.ui_anchorTargetBefore = style.h5_margin;
+        //         break;
+        //         case '6':
+        //             style.ui_anchorTargetBefore = style.h6_margin;
+        //         break;
+        //         default:
+        //             style.ui_anchorTargetBefore = style.h2_margin;
+        //     }
+        // }
     } catch (error) {
         console.log(`Error: No title with ID ${titleID} found.`);
     }
@@ -771,12 +755,11 @@ function getBottomLineNumber() {
     return curLineNumber;
 }
 
-FUNC_KEYDOWN_ = document.onkeydown; // 保存页面原来的 onkeydown 函数，下面会临时屏蔽 onkeydown
 function freezeContent() {
     document.onkeydown = null;
-    $("body").css("overflow-y", "hidden");
+    // $("body").css("overflow-y", "hidden");
 }
 function unfreezeContent() {
-    document.onkeydown = FUNC_KEYDOWN_;
-    $("body").css("overflow-y", "auto");
+    document.onkeydown = onDocKeydown;
+    // $("body").css("overflow-y", "auto");
 }

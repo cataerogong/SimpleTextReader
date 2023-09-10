@@ -1,7 +1,6 @@
 function setHistory(filename, lineNumber) {
     let fn = filename + ".progress";
     // console.log("History set to line: ", lineNumber);
-    // localStorage.setItem(filename, lineNumber);
     localStorage.setItem(fn, lineNumber + "/" + fileContentChunks.length);
     if (lineNumber === 0) {
         // Don't save history if line number is 0
@@ -12,12 +11,6 @@ function setHistory(filename, lineNumber) {
 function getHistory(filename) {
     let fn = filename + ".progress";
     if (localStorage.getItem(fn)) {
-        // let tempLine = localStorage.getItem(filename);
-        // try {
-        //     tempLine = parseInt(tempLine) || 0;
-        // } catch (error) {
-        //     tempLine = 0;
-        // }
         let m = localStorage.getItem(fn).match(/^(\d+)(\/(\d+))?$/i); // 格式：line/total，match() 的结果：[full, line, /total, total]
         let tempLine = (m ? parseInt(m[1]) : 0);
         console.log("History found! Go to line: ", tempLine);
@@ -166,4 +159,9 @@ function getUIMode() {
         console.log("UI mode is light by default.");
         return true;
     }
+}
+
+function isElementVisible(elm, pseudoElt = null) {
+    let style = elm.currentStyle /* for IE */ || window.getComputedStyle(elm, pseudoElt);
+    return (style["display"] != "none") && (style["visibility"] != "hidden") && (style["visibility"] != "collapse");
 }

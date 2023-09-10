@@ -64,11 +64,6 @@ function process(str, lineNumber, to_drop_cap) {
                 // console.log("h1 Clicked");
                 event.preventDefault();
                 gotoLine(parseInt(this.parentElement.id.slice(4)));
-                let line = document.getElementById(`line${parseInt(this.parentElement.id.slice(4))}`);
-                let top = line.offsetTop;
-                let style = line.currentStyle || window.getComputedStyle(line);
-                let top_margin = parseFloat(style.marginTop);
-                window.scrollTo(0, (top - top_margin), {behavior: 'instant'});
             });
             tempElement.innerHTML = '';
             tempElement.appendChild(tempAnchor);
@@ -96,11 +91,6 @@ function process(str, lineNumber, to_drop_cap) {
                     // console.log("h2 Clicked");
                     event.preventDefault();
                     gotoLine(parseInt(this.parentElement.id.slice(4)));
-                    let line = document.getElementById(`line${parseInt(this.parentElement.id.slice(4))}`);
-                    let top = line.offsetTop;
-                    let style = line.currentStyle || window.getComputedStyle(line);
-                    let top_margin = parseFloat(style.marginTop);
-                    window.scrollTo(0, (top - top_margin), {behavior: 'instant'});
                 });
                 let tempH2 = document.createElement('h2');
                 tempH2.id = `line${lineNumber}`;

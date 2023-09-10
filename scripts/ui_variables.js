@@ -31,13 +31,16 @@ var loadingScreen = document.getElementById('loading');
 var dropZoneText = document.getElementById("dropZoneText");
 var dropZoneImg = document.getElementById("dropZoneImg");
 var contentContainer = document.getElementById("content");
-var tocWrapper = document.getElementById("tocWrapper");
+var tocPanel = document.getElementById("tocPanel");
+// var tocWrapper = document.getElementById("tocWrapper");
 var tocContainer = document.getElementById("tocContent");
-var paginationContainer = document.getElementById("pagination");
 var progressContainer = document.getElementById("progress");
 var progressTitle = document.getElementById("progress-title");
 var progressContent = document.getElementById("progress-content");
+var paginationContainer = document.getElementById("pagination");
 var footNoteContainer = document.getElementById("footnote-content");
 
 var darkModeActualButton = document.getElementById("switch-btn");   // just for set visibility
 var darkModeToggle = document.getElementById("switch");
+
+var contentLayer = document.getElementById("contentLayer");

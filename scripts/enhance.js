@@ -8,18 +8,25 @@ let DPR = window.devicePixelRatio;
 var STReHelper = {
 	// hack helper
 	FUNC_RE: /^\s*(function)?\s*(?<name>\w*)\s*\((?<args>[^\)]*)\)[\s\r\n]*{(?<body>.*)}\s*$/si, // function F(a) {b}
-	FUNC_RE2: /^\s*\((?<args>[^\)]*)\)[\s\r\n]*=>[\s\r\n]*{?(?<body>.*)}?\s*$/is, // (a) => {b}
+	// FUNC_RE2: /^\s*\((?<args>[^\)]*)\)[\s\r\n]*=>[\s\r\n]*{?(?<body>.*)}?\s*$/is, // (a) => {b}
 	getFuncArgs(func) {
-		let r = this.FUNC_RE.exec(func.toString()) || this.FUNC_RE2.exec(func.toString());
+		let r = this.FUNC_RE.exec(func.toString()); // || this.FUNC_RE2.exec(func.toString());
 		return r ? r.groups["args"] : "";
 	},
 	getFuncBody(func) {
-		let r = this.FUNC_RE.exec(func.toString()) || this.FUNC_RE2.exec(func.toString());
+		let r = this.FUNC_RE.exec(func.toString()); // || this.FUNC_RE2.exec(func.toString());
 		return r ? r.groups["body"] : "";
 	},
 	replaceFunc(funcOwner, funcName, funcCopyName, newFunc) {
-		funcOwner[funcCopyName] = new Function(this.getFuncArgs(funcOwner[funcName]), this.getFuncBody(funcOwner[funcName]));
-		funcOwner[funcName] = new Function(this.getFuncArgs(funcOwner[funcName]), this.getFuncBody(newFunc));
+		try {
+			funcOwner[funcCopyName] = new Function(this.getFuncArgs(funcOwner[funcName]), this.getFuncBody(funcOwner[funcName]));
+			funcOwner[funcName] = new Function(this.getFuncArgs(funcOwner[funcName]), this.getFuncBody(newFunc));
+		} catch (e) {
+			console.log(this.getFuncArgs(funcOwner[funcName]));
+			console.log(this.getFuncBody(funcOwner[funcName]));
+			console.log(this.getFuncBody(newFunc));
+			throw e;
+		}
 	},
 
 	isElmVisible(elm, pseudoElt = null) {
@@ -69,121 +76,36 @@ STReHelper.replaceFunc(window, "getBookNameAndAuthor", "getBookNameAndAuthor____
 
 
 // ------------------------------------------------
-// Module <Settings>
-// ------------------------------------------------
-var STRe_Settings = {
-
-	enabled: false,
-	ITEM_SETTINGS: "STReSettings",
-
-	settings: {
-		fosWebDAV: {
-			val: "",
-			def: "/books",
-			type: "text",
-			desc: "WebDAV 地址",
-			options: {},
-			apply() { STRe_FilesOnServer.webDAVdir = this.val.trimEnd().replace(/\/*$/, ""); },
-		},
-		enableFos: {
-			val: null,
-			def: false,
-			type: "bool",
-			desc: "云端书库",
-			options: {},
-			apply() { this.val ? STRe_FilesOnServer.enable() : STRe_FilesOnServer.disable(); },
-		},
-		posWebDAV: {
-			val: "",
-			def: "/progress",
-			type: "text",
-			desc: "WebDAV 地址",
-			options: {},
-			apply() { STRe_ProgressOnServer.webDAVdir = this.val.trimEnd().replace(/\/*$/, ""); },
-		},
-		posInterval: {
-			val: 1,
-			def: 1,
-			type: "int",
-			desc: "自动同步间隔",
-			options: {},
-			apply() { STRe_ProgressOnServer.syncInterval = this.val; },
-		},
-		enablePos: {
-			val: null,
-			def: false,
-			type: "bool",
-			desc: "云端进度",
-			options: {},
-			apply() { this.val ? STRe_ProgressOnServer.enable() : STRe_ProgressOnServer.disable(); },
-		},
-		enableBookshelf: {
-			val: null,
-			def: true,
-			type: "bool",
-			desc: "本地缓存书架",
-			options: {},
-			apply() { this.val ? STRe_Bookshelf.enable() : STRe_Bookshelf.disable(); },
-		},
-		enableRos: {
-			val: null,
-			def: true,
-			type: "bool",
-			desc: "启动时打开上次阅读书籍",
-			options: {},
-			apply() { },
-		},
-	},
-
-	show() {
-		if (this.enabled) {
-			this.settings.enableFos.val = STRe_FilesOnServer.enabled;
-			this.settings.enablePos.val = STRe_ProgressOnServer.enabled;
-			this.settings.enableBookshelf.val = STRe_Bookshelf.enabled;
-			let dlg = $(`<dialog id="settingDlg">
-				<div class="dlg-cap">设置</div>
-				<span class="dlg-body">
-				<div class="sub-cap">增强功能</div>
-				<div class="fn-setting-wrapper">
-				<div class="row">${this.genInput("enableFos")} ${this.getLabel("enableFos")}</div>
-				${this.getLabel("fosWebDAV", "", "lv-2")} ${this.genInput("fosWebDAV", "width:20rem;")}
-				<div class="row">${this.genInput("enablePos")} ${this.getLabel("enablePos")}</div>
-				${this.getLabel("posWebDAV", "", "lv-2")} ${this.genInput("posWebDAV", "width:20rem;")}
-				${this.getLabel("posInterval", "", "lv-2")} <span>${this.genInput("posInterval", "width:2rem;")}秒（0 表示关闭自动同步）</span>
-				<div class="row">${this.genInput("enableBookshelf")} ${this.getLabel("enableBookshelf")}</div>
-				<div class="row lv-2">${this.genInput("enableRos")} ${this.getLabel("enableRos")}</div>
-				</div>
-				<div class="sub-cap">阅读界面</div>
-				<div class="ui-setting-wrapper">
-				${this.getLabel("p_lineHeight", "text-align: right")} ${this.genInput("p_lineHeight")}
-				${this.getLabel("p_fontSize", "text-align: right")} ${this.genInput("p_fontSize")}
-				${this.getLabel("fontColor", "text-align: right")} ${this.genInput("fontColor")}
-				${this.getLabel("bgColor", "text-align: right")} ${this.genInput("bgColor")}
-				${this.getLabel("dark_fontColor", "text-align: right")} ${this.genInput("dark_fontColor")}
-				${this.getLabel("dark_bgColor", "text-align: right")} ${this.genInput("dark_bgColor")}
-				${this.getLabel("pagination_bottom", "text-align: right")} ${this.genInput("pagination_bottom")}
-				${this.getLabel("pagination_opacity", "text-align: right")} ${this.genInput("pagination_opacity")}
-				</div>
-				<hr />
-				</span>
-				<div class="dlg-foot"></div>
-				</dialog>`).bind("cancel", () => this.hide());
-			dlg.find(".dlg-cap").append($(`<span class="dlg-close">&times;</span>`).click(() => this.hide()));
-			dlg.find(".dlg-foot").append($(`<button>恢复默认</button>`).click(() => this.reset().load().apply().hide()));
-			dlg.find(".dlg-foot").append($(`<button style="float:right;">应用</button>`).click(() => this.save().apply().hide()))
-			freezeContent();
-			dlg.appendTo("body");
-			// document.getElementById("settingDlg").showModal();
-			dlg[0].showModal();
-		}
-		return this;
-	},
-}
-
-
-// ------------------------------------------------
 // Module <Files on Server>
 // ------------------------------------------------
+class SettingGroupFoS extends SettingGroupBase {
+	constructor() {
+		super("setting-group-FoS", "云端书库");
+		this.settings["enable"] = new SettingCheckbox(this.id + "-enable", "启用", false);
+		this.settings["WebDAV"] = new SettingText(this.id + "-WebDAV", "WebDAV 地址", "/books");
+	}
+
+	genHTML() {
+		let sts = this.settings;
+		let html = `<div class="sub-cap">${this.desc}</div>
+            <div class="setting-group setting-group-fos">
+            <div class="row">${sts["enable"].genInputElm()} ${sts["enable"].genLabelElm()}</div>
+            ${sts["WebDAV"].genLabelElm()} ${sts["WebDAV"].genInputElm()}
+            </div>`;
+		return html;
+	}
+
+	apply() {
+		STRe_FilesOnServer.webDAVdir =  this.settings["WebDAV"].value.trimEnd().replace(/\/*$/, "");
+		if (this.settings["enable"].value) {
+			STRe_FilesOnServer.enable();
+		} else {
+			STRe_FilesOnServer.disable();
+		}
+		return this;
+	}
+}
+
 var STRe_FilesOnServer = {
 
 	enabled: false,
@@ -301,16 +223,50 @@ var STRe_FilesOnServer = {
 			.click(() => this.show())
 			.prependTo($("#btnWrapper"))
 			.hide();
+
+		settingMgr.groups["FoS"] = new SettingGroupFoS();
+		settingMgr.load("FoS").apply("FoS");
 	},
 };
 
 // ------------------------------------------------
 // Module <Progress on Server>
 // ------------------------------------------------
+class SettingGroupPoS extends SettingGroupBase {
+	constructor() {
+		super("setting-group-PoS", "云端进度");
+		this.settings["enable"] = new SettingCheckbox(this.id + "-enable", "启用", false);
+		this.settings["WebDAV"] = new SettingText(this.id + "-WebDAV", "WebDAV 地址", "/progress");
+		this.settings["interval"] = new SettingInt(this.id + "-interval", "自动同步间隔", 5);
+	}
+
+	genHTML() {
+		let sts = this.settings;
+		let html = `<div class="sub-cap">${this.desc}</div>
+            <div class="setting-group setting-group-pos">
+            <div class="row">${sts["enable"].genInputElm()} ${sts["enable"].genLabelElm()}</div>
+            ${sts["WebDAV"].genLabelElm()} ${sts["WebDAV"].genInputElm()}
+            ${sts["interval"].genLabelElm()} <span>${sts["interval"].genInputElm(`style="width:3rem;"`)}秒（0 表示关闭自动同步）</span>
+            </div>`;
+		return html;
+	}
+
+	apply() {
+		STRe_ProgressOnServer.webDAVdir =  this.settings["WebDAV"].value.trimEnd().replace(/\/*$/, "");
+		STRe_ProgressOnServer.syncInterval = this.settings["interval"].value;
+		if (this.settings["enable"].value) {
+			STRe_ProgressOnServer.enable();
+		} else {
+			STRe_ProgressOnServer.disable();
+		}
+		return this;
+	}
+}
+
 var STRe_ProgressOnServer = {
 
 	enabled: false,
-	pauseSave: false,
+	loopPaused: false,
 	syncOnFileLoad: false,
 
 	STReFileLine: "", // filename + ":" + line 记录之前的文件和行数，改变才同步到云端，减少同步次数
@@ -328,7 +284,7 @@ var STRe_ProgressOnServer = {
 
 	async saveProgress() {
 		if (!this.enabled) return; // 不开启云端进度
-		if (this.pauseSave) return; // 正在等用户决定是否同步
+		if (this.loopPaused) return; // 正在等用户决定是否同步
 		if (filename) {
 			if (contentContainer.style.display == "none") { // 阅读区域不可见，说明可能正在drag，getTopLineNumber()会取到错误行数，应该跳过
 				return;
@@ -351,7 +307,6 @@ var STRe_ProgressOnServer = {
 		if (!STRe_ProgressOnServer.syncOnFileLoad) return;
 		if (filename) {
 			console.log("Check progress on server: " + filename);
-			STRe_ProgressOnServer.pauseSave = true;
 			try {
 				let progress = await STRe_ProgressOnServer.getProgress(filename);
 				let m = STRe_PROGRESS_RE.exec(progress);
@@ -372,7 +327,6 @@ var STRe_ProgressOnServer = {
 			} catch (e) {
 				console.log(e);
 			}
-			STRe_ProgressOnServer.pauseSave = false;
 		}
 	},
 
@@ -387,6 +341,14 @@ var STRe_ProgressOnServer = {
 				setTimeout(() => this.loop(), 1000);
 			}
 		}
+	},
+	pauseLoop() {
+		STRe_ProgressOnServer.loopPaused = true;
+		// console.log("PoS loop paused.")
+	},
+	resumeLoop() {
+		STRe_ProgressOnServer.loopPaused = false;
+		// console.log("PoS loop resumed.")
 	},
 
 	async upload() {
@@ -428,9 +390,9 @@ var STRe_ProgressOnServer = {
 		for (const f of await WebDAV.Fs("").dir(this.webDAVdir).children()) {
 			let m = decodeURIComponent(f.name).match(STRe_PROGRESS_FN_RE);
 			if (m) {
-				let prog = await f.read(true);
-				if (prog) {
-					progList.push({ filename: m.groups["name"], progress_on_server: prog, progress_local: "-" });
+				let m2 = STRe_PROGRESS_RE.exec(await f.read(true));
+				if (m2 && m2.groups["line"] != "0") {
+					progList.push({ filename: m.groups["name"], progress_on_server: m2[0], progress_local: "-" });
 				}
 			}
 		}
@@ -454,11 +416,11 @@ var STRe_ProgressOnServer = {
 
 	async show() {
 		if (this.enabled) {
-			let dlg = $(`<dialog id="progressDlg" class="">
+			let dlg = $(`<dialog id="progressDlg">
 				<div class="dlg-cap">手动同步进度</div>
 				<span class="dlg-body progress-list">
 				</span>
-				<div class="dlg-foot" style="margin-bottom: 1rem;"></div>
+				<div class="dlg-foot"></div>
 				</dialog>`).bind("cancel", () => this.hide());
 			dlg.find(".dlg-cap").append($(`<span class="dlg-close">&times;</span>`).click(() => this.hide()));
 			dlg.find(`.dlg-foot`)
@@ -467,10 +429,11 @@ var STRe_ProgressOnServer = {
 				.append(`<label for="progressDlgChk">显示进度一致的书籍</label>`)
 				.append($(`<span style="float:right"></span>`)
 					.append(`<span>云端&nbsp;</span>`)
-					.append($(`<button> &lt; </button>`).click(async () => { await this.upload(); this.refreshProgressList(); }))
-					.append($(`<button> &gt; </button>`).click(async () => { await this.download(); this.refreshProgressList(); STRe_Bookshelf.refreshBookList(); }))
+					.append($(`<button> ⇦ </button>`).click(async () => { await this.upload(); this.refreshProgressList(); }))
+					.append(" ")
+					.append($(`<button> ⇨ </button>`).click(async () => { await this.download(); this.refreshProgressList(); STRe_Bookshelf.refreshBookList(); }))
 					.append(`<span>&nbsp;本地</span>`)
-				);
+				);// ＜⇦←⇠◀◁   →⇢＞⇨▶▷
 			freezeContent();
 			dlg.appendTo("body");
 			dlg[0].showModal();
@@ -490,7 +453,9 @@ var STRe_ProgressOnServer = {
 	async enable() {
 		if (!this.enabled) {
 			$("#STRe-POS-btn").show();
+			fileloadCallback.regBefore(this.pauseLoop);
 			fileloadCallback.regAfter(this.loadProgress);
+			fileloadCallback.regAfter(this.resumeLoop);
 			this.enabled = true;
 			console.log("Module <Progress on Server> enabled.");
 			if (this.syncInterval > 0) {
@@ -509,7 +474,9 @@ var STRe_ProgressOnServer = {
 	disable() {
 		if (this.enabled) {
 			$("#STRe-POS-btn").hide();
+			fileloadCallback.unregBefore(this.pauseLoop);
 			fileloadCallback.unregAfter(this.loadProgress);
+			fileloadCallback.unregAfter(this.resumeLoop);
 			this.enabled = false;
 			console.log("Module <Progress on Server> disabled.");
 		}
@@ -524,6 +491,9 @@ var STRe_ProgressOnServer = {
 			.click(() => this.show())
 			.prependTo($("#btnWrapper"))
 			.hide();
+
+		settingMgr.groups["PoS"] = new SettingGroupPoS();
+		settingMgr.load("PoS").apply("PoS");
 	},
 };
 
@@ -533,7 +503,7 @@ var STRe_ProgressOnServer = {
 // ------------------------------------------------
 class SettingGroupBookshelf extends SettingGroupBase {
 	constructor() {
-		super("setting-group-bs", "本地缓存书架");
+		super("setting-group-Bookshelf", "本地缓存书架");
 		this.settings["enable"] = new SettingCheckbox(this.id + "-enable", "启用", true);
 		this.settings["reopen"] = new SettingCheckbox(this.id + "-reopen", "启动时打开上次阅读书籍", true);
 	}
@@ -541,7 +511,7 @@ class SettingGroupBookshelf extends SettingGroupBase {
 	genHTML() {
 		let sts = this.settings;
 		let html = `<div class="sub-cap">${this.desc}</div>
-            <div class="setting-group setting-group-bs">
+            <div class="setting-group setting-group-bookshelf">
             <div class="row">${sts["enable"].genInputElm()} ${sts["enable"].genLabelElm()}</div>
             <div class="row">${sts["reopen"].genInputElm()} ${sts["reopen"].genLabelElm()}</div>
             </div>`;
@@ -565,6 +535,7 @@ var STRe_Bookshelf = {
 	db: null,
 
 	STRe_FILE: "STReFile",
+	STRe_CACHE_FLAG: "STRe-Cache-File",
 	// STRe_POS_CLOUD: "WebDAV",
 	// STRe_POS_LOCAL: "indexedDB",
 	STRe_TAG_CLOUD: "☁",
@@ -591,6 +562,7 @@ var STRe_Bookshelf = {
 				let book = await this.db.getBook(fname);
 				if (book) {
 					book.name = fname;
+					book[this.STRe_CACHE_FLAG] = true;
 					resetVars();
 					handleSelectedFile([book]);
 					return true;
@@ -608,11 +580,15 @@ var STRe_Bookshelf = {
 	async saveFile(file) {
 		if (STRe_Bookshelf.enabled) {
 			if (file.type === "text/plain") {
-				console.log("saveFile: ", file.name);
-				// 先把文件保存到缓存db中
-				await STRe_Bookshelf.db.putBook(file.name, file);
-				// 刷新 Bookshelf in DropZone
-				await STRe_Bookshelf.refreshBookList();
+				if (file[STRe_Bookshelf.STRe_CACHE_FLAG]) {
+					console.log("Openning cache-file, so not save.");
+				} else {
+					console.log("saveFile: ", file.name);
+					// 先把文件保存到缓存db中
+					await STRe_Bookshelf.db.putBook(file.name, file);
+					// 刷新 Bookshelf in DropZone
+					await STRe_Bookshelf.refreshBookList();
+				}
 			}
 		}
 		return file;
@@ -635,7 +611,7 @@ var STRe_Bookshelf = {
 	},
 
 	genBookItem(name) {
-		let book = $(`<div class="book property" data-filename="${name}">
+		let book = $(`<div class="book" data-filename="${name}">
 			<div style="height:1.5rem;line-height:1.5rem;"><span class="delete-btn" title="删除">&times;</span></div>
 			<div class="cover">${name}</div>
 			<div class="progress"></div></div>`);
@@ -683,12 +659,12 @@ var STRe_Bookshelf = {
 
 	async show() {
 		if (this.enabled) {
-			$(`<div class="bookshelf-dz"><div class="bookshelf">
+			$(`<div class="bookshelf">
 			<div class="dlg-cap">本地缓存书架
-				<div style="font-size:1rem;font-family:ui;text-align:center;">添加书籍：拖入文件 / 空白处双击${STRe_Settings.settings.enableFos.val ? " / 云端书库" : ""}</div>
+				<div style="font-size:1rem;font-family:ui;text-align:center;">拖入文件 / 空白处双击</div>
 			</div>
 			<span class="dlg-body"></span>
-			</div></div>`).appendTo("#dropZone");
+			</div>`).appendTo("#dropZone");
 			this.refreshBookList();
 		}
 		return this;
@@ -713,6 +689,10 @@ var STRe_Bookshelf = {
 		if (!this.enabled) {
 			this.db = new STReLocalDB();
 			fileloadCallback.regBefore(this.saveFile);
+			STReHelper.replaceFunc(window, "resetUI", "resetUI__STReBookshelf_bak", function() {
+				STRe_Bookshelf.refreshBookList();
+				resetUI__STReBookshelf_bak();
+			});
 			$("#STRe-bookshelf-btn").show();
 			this.enabled = true;
 			this.show(true);
@@ -724,9 +704,9 @@ var STRe_Bookshelf = {
 
 	disable() {
 		if (this.enabled) {
+			STReHelper.replaceFunc(window, "resetUI", "resetUI__STReBookshelf_abandon", resetUI__STReBookshelf_bak);
 			fileloadCallback.unregBefore(this.saveFile);
-			$(".bookshelf-dz").remove();
-			$("#bookshelfDlg").remove();
+			$(".bookshelf").remove();
 			$("#STRe-bookshelf-btn").hide();
 			this.db = null;
 			this.enabled = false;
@@ -740,7 +720,7 @@ var STRe_Bookshelf = {
 		<svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
 			<path stroke="none" d="M9 3v15h3V3H9m3 2l4 13l3-1l-4-13l-3 1M5 5v13h3V5H5M3 19v2h18v-2H3Z"/>
 		</svg></div>`)
-			.click(() => resetUI())
+			.click(() => {this.refreshBookList(); resetUI();})
 			.prependTo($("#btnWrapper"))
 			.hide();
 
@@ -766,4 +746,11 @@ if (settingMgr.groups["Bookshelf"].settings["reopen"].value) {
 
 // STRe_FilesOnServer.enable();
 // STRe_ProgressOnServer.enable();
-$("body").css("font-size", (16 * DPR) + "px");
+function setCSS(rule) {
+	document.styleSheets[document.styleSheets.length-1].insertRule(rule);
+}
+if (DPR > 1) {
+	setCSS(`:root {font-size:${12 * DPR}px}`);
+	setCSS("dialog {height:100vh}");
+	setCSS("#settingDlg .setting-group-UI {grid-template-columns:max-content 1fr}");
+}

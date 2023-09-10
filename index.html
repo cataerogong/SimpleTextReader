@@ -3,7 +3,6 @@
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
         <title></title>
-        <!-- <link rel="preload" href="./fonts/icons.woff2" as="font" type="font/woff2" crossorigin="anonymous" /> -->
         <link rel="preload" href="./fonts/qiji-combo.woff" as="font" type="font/woff" crossorigin="anonymous" />
         <link rel="preload" href="./fonts/FZSKBXKK.woff2" as="font" type="font/woff2" crossorigin="anonymous" />
         <link rel="preload" href="./fonts/LXGWWenKai-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous" />
@@ -24,55 +23,64 @@
         <link rel="manifest" href="./manifests/PWA/manifest.json" />
     </head>
     <body>
-        <div id="dropZone" class="uifont prevent-select">
+        <div id="dropZone" class="uifont prevent-select layer">
             <h3 id="dropZoneText" class="uifont prevent-select"></h3>
             <img id="dropZoneImg" src="./images/drop.png" alt="" />
         </div>
 
         <!-- Loading screen -->
-        <div id="loading" class="uifont prevent-select">
+        <div id="loading" class="uifont prevent-select layer">
             <img src="./images/loading_geometry.gif" />
         </div>
 
         <!-- Table of contents -->
-        <div id="tocWrapper"><div id="tocContent"></div></div>
-        <div id="progress" class="uifont prevent-select">
-            <span id="progress-title"></span>
-            <br />
-            <span id="progress-content"></span>
-        </div>
-
-        <div id="btnWrapper" class="btn-group">
-        <!-- Dark mode toggle -->
-        <input type="checkbox" id="switch" />
-        <div class="btn-icon" id="switch-btn" style="visibility:hidden;">
-            <label for="switch">
-                <div class="icons">
-                    <!-- <span class="material-symbols-rounded"> light_mode </span>
-                    <span class="material-symbols-rounded"> nights_stay </span> -->
-                    <svg version="1.1" class="icon sun" viewBox="0 0 24 24" style="fill:none;" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M12 3V4M12 20V21M4 12H3M6.31412 6.31412L5.5 5.5M17.6859 6.31412L18.5 5.5M6.31412 17.69L5.5 18.5001M17.6859 17.69L18.5 18.5001M21 12H20M16 12C16 14.2091 14.2091 16 12 16C9.79086 16 8 14.2091 8 12C8 9.79086 9.79086 8 12 8C14.2091 8 16 9.79086 16 12Z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                    <svg version="1.1" class="icon moon" viewBox="0 0 24 24" style="fill:none;" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M3.32031 11.6835C3.32031 16.6541 7.34975 20.6835 12.3203 20.6835C16.1075 20.6835 19.3483 18.3443 20.6768 15.032C19.6402 15.4486 18.5059 15.6834 17.3203 15.6834C12.3497 15.6834 8.32031 11.654 8.32031 6.68342C8.32031 5.50338 8.55165 4.36259 8.96453 3.32996C5.65605 4.66028 3.32031 7.89912 3.32031 11.6835Z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
+        <div id="tocLayer" class="layer toc-layer no-interact" style="display:none;">
+            <div id="tocPanel" class="toc-panel interact">
+                <!-- <div id="tocWrapper"> -->
+                    <div id="tocContent"></div>
+                <!-- </div> -->
+                <div id="progress" class="uifont prevent-select">
+                    <span id="progress-title"></span>
+                    <br />
+                    <span id="progress-content"></span>
                 </div>
-            </label>
+            </div>
         </div>
+
+        <!-- menu ui -->
+        <div id="menuLayer" class="layer menu-layer no-interact">
+            <div id="menuPanel" class="menu-panel interact">
+                <div id="btnWrapper" class="btn-group">
+                    <!-- Dark mode toggle -->
+                    <input type="checkbox" id="switch" style="display:none;" />
+                    <label for="switch">
+                        <div class="btn-icon" id="switch-btn">
+                            <div class="icons">
+                                <svg version="1.1" class="icon sun" viewBox="0 0 24 24" style="fill:none;" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 3V4M12 20V21M4 12H3M6.31412 6.31412L5.5 5.5M17.6859 6.31412L18.5 5.5M6.31412 17.69L5.5 18.5001M17.6859 17.69L18.5 18.5001M21 12H20M16 12C16 14.2091 14.2091 16 12 16C9.79086 16 8 14.2091 8 12C8 9.79086 9.79086 8 12 8C14.2091 8 16 9.79086 16 12Z" />
+                                </svg>
+                                <svg version="1.1" class="icon moon" viewBox="0 0 24 24" style="fill:none;" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M3.32031 11.6835C3.32031 16.6541 7.34975 20.6835 12.3203 20.6835C16.1075 20.6835 19.3483 18.3443 20.6768 15.032C19.6402 15.4486 18.5059 15.6834 17.3203 15.6834C12.3497 15.6834 8.32031 11.654 8.32031 6.68342C8.32031 5.50338 8.55165 4.36259 8.96453 3.32996C5.65605 4.66028 3.32031 7.89912 3.32031 11.6835Z" />
+                                </svg>
+                            </div>
+                        </div>
+                    </label>
+                </div>
+            </div>
         </div>
 
-        <!-- Main text -->
-        <div id="content"></div>
+        <div id="contentLayer" class="layer content-layer" style="visibility: hidden;">
+            <!-- Main text -->
+            <div id="content"></div>
 
-        <!-- Pagination -->
-        <div id="pagination" class="uifont prevent-select"></div>
+            <!-- Footnotes -->
+            <ol id="footnote-content"></ol>
 
-        <!-- Footnotes -->
-        <ol id="footnote-content"></ol>
+            <!-- Pagination -->
+            <div id="pagination" class="uifont prevent-select"></div>
+        </div>
 
-        <!-- <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script> -->
         <script type="text/javascript" src="./scripts/jquery.min.js"></script>
-        <!-- <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jschardet/1.4.1/jschardet.min.js" async></script> -->
         <script type="text/javascript" src="./scripts/jschardet.min.js"></script>
         <script type="text/javascript" src="./scripts/css-global-variables.js"></script>
         <script type="text/javascript" src="./scripts/regex_rules.js"></script>

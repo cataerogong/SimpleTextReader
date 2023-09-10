@@ -4,6 +4,7 @@ body {
     background-color: var(--bgColor) !important;
     scrollbar-color: var(--fontInfoColor) var(--bgColor) !important;
     /* transition: var(--darkMode_animation); */
+    overflow: hidden;
 }
 ::-webkit-scrollbar {
     width: 14px;
@@ -18,21 +19,16 @@ body {
     -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
     /* transition: var(--darkMode_animation); */
 }
-div {
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
-    overflow-y: scroll;
-}
-div::-webkit-scrollbar {
-    display: none;
-}
-#content {
-    /* width: 75%; */
+
+.layer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
     height: 100%;
-    /* margin: 0 0 0 22%; */
-    display: block;
-    overflow-x: hidden;
+    background: transparent;
 }
+
 .active {
     font-weight: normal;
 }
@@ -51,28 +47,48 @@ div::-webkit-scrollbar {
     -ms-user-select       : none;     /* Internet Explorer/Edge */
     user-select: none; /* Standard syntax */
 }
+.no-interact {
+    pointer-events: none;
+}
+.interact {
+    pointer-events: auto;
+}
+.hidden {
+    display: none;
+    visibility: hidden;
+}
 /* 
 Credit: https://stackoverflow.com/questions/64997928/how-to-offset-a-anchor-link-to-clear-fixed-header
 To Offset the anchor link to clear fixed header
  */
-:target:before {
+/* :target:before {
     content: "";
     display: block;
     height: var(--ui_anchorTargetBefore);
     margin: calc(-1*var(--ui_anchorTargetBefore)) 0 0;
+} */
+
+/* Main content */
+.content-layer {
+    overflow-y: auto;
+    scroll-behavior: smooth;
+}
+#content {
+    /* width: 75%; */
+    /* height: 100vh; */
+    /* margin: 0 0 0 22%; */
+    display: block;
+    overflow-x: hidden;
+    background-color: var(--bgColor);
+    box-shadow: 0 0 5px var(--borderColor);
 }
 
 
 /* Drop Zone */
 #dropZone {
     background: var(--bgColor);
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 999;
-    visibility: show;
+    /* z-index: 999; */
+    /* visibility: visible; */
     border: 0.5em dashed var(--mainColor);
     border-radius: 16px;
     box-sizing: border-box;
@@ -81,8 +97,8 @@ To Offset the anchor link to clear fixed header
     /* transition: var(--darkMode_animation); */
 }
 #dropZoneText {
-    visibility: show;
-    z-index: 1000;
+    /* visibility: visible; */
+    /* z-index: 1000; */
     position: absolute;
     top: 50%;
     left: 50%;
@@ -92,8 +108,8 @@ To Offset the anchor link to clear fixed header
     font-size: 5em;
 }
 #dropZoneImg {
-    visibility: show;
-    z-index: 1000;
+    /* visibility: visible; */
+    /* z-index: 1000; */
     position: absolute;
     top: 50%;
     left: 50%;
@@ -112,12 +128,7 @@ To Offset the anchor link to clear fixed header
 /* Loading screen */
 #loading {
     background: var(--bgColor);
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 999;
+    /* z-index: 999; */
     visibility: hidden;
 }
 #loading img {
@@ -138,26 +149,15 @@ To Offset the anchor link to clear fixed header
     background-color: var(--bgColor);
     border: 1px dashed var(--borderColor);
     border-radius: 8px;
-    box-shadow: 0 1px 1px var(--shadowColor), 
-              0 2px 2px var(--shadowColor), 
-              0 4px 4px var(--shadowColor), 
-              0 8px 8px var(--shadowColor),
-              0 16px 16px var(--shadowColor);
-    -webkit-box-shadow: var(--shadowColor) 0 1px 1px, 
-    var(--shadowColor) 0 2px 2px, 
-    var(--shadowColor) 0 4px 4px, 
-    var(--shadowColor) 0 8px 8px,
-    var(--shadowColor) 0 16px 16px;
-    -moz-box-shadow: 0 1px 1px var(--shadowColor), 
-    0 2px 2px var(--shadowColor), 
-    0 4px 4px var(--shadowColor), 
-    0 8px 8px var(--shadowColor),
-    0 16px 16px var(--shadowColor);
+    box-shadow: var(--shadowV_args);
+    -webkit-box-shadow: var(--webkit-shadowV_args);
+    -moz-box-shadow: var(--moz-shadowV_args);
     /* display: none; */
     /* left: 61%; */
     transform: translate(-50%);
     -webkit-transform: translate(-50%);
     font-size: 0.9em;
+    z-index: 1;
 }
 .pagination {
     list-style-type: none;
@@ -201,26 +201,46 @@ To Offset the anchor link to clear fixed header
 
 
 /* TOC */
-#tocWrapper {
-    position: relative;
-    /* width: 16%; */
-    /* height: 50%; */
+.toc-layer:hover {
+    z-index: 1;
+}
+.toc-panel {
+    height: 100%;
+    width: max-content;
+    padding-right: 2rem;
+    display: grid;
+    grid-template-rows: 1fr max-content;
+    background-color: var(--bgColor);
+    transition: var(--darkMode_animation);
+}
+.toc-panel:hover {
+    border-right: 1px solid var(--borderColor);
+    box-shadow:var(--shadowH_args);
+    -webkit-box-shadow: var(--webkit-shadowH_args);
+    -moz-box-shadow: var(--moz-shadowH_args);
 }
 #tocContent {
-    /* border: var(--mainColor_focused) solid 1px; */
-    /* width: 16%; */
-    /* height: 50%; */
-    /* margin: 0 0 0 3%; */
-    position: fixed;
-    top: 50%;
-    transform: translate(0%, -50%);
-    -webkit-transform: translate(0%, -50%);
+    scroll-behavior: smooth;
+    position: relative;
     line-height: 1em;
     font-size: 1em;
     overflow-x: hidden;
-    overflow-y: auto;
+    overflow-y: scroll;
     font-family:var(--fontFamily_title);
-    z-index: 100;
+    margin: 1rem 0;
+    /* width: max-content; */
+    display: grid;
+    grid-auto-rows: max-content;
+    grid-template-columns: max-content max-content;
+    align-items: center;
+    align-self: center;
+}
+div#tocContent {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+}
+div#tocContent::-webkit-scrollbar {
+    display: none;
 }
 /* Credit: https://stackoverflow.com/questions/3874602/elements-to-look-like-a-bullet-point-list-inside-an-anchor-link */
 .toc-bullet {
@@ -228,7 +248,6 @@ To Offset the anchor link to clear fixed header
     border-radius: 1em;
     content: " ";
     display: inline-block;
-    /* margin-right: 6px; */
     width: 0.9em;
     height: 0.3em;
     visibility: visible !important;
@@ -237,8 +256,9 @@ To Offset the anchor link to clear fixed header
 }
 .toc-text {
     display: inline-block;
-    width: calc(100% - 0.9em - 1em);      /* 100% - width of .toc-bullet - margin-left of <a>*/
-    transition: visibility 5s, opacity 1s;
+    /*width: calc(100% - 0.9em - 1em);      /* 100% - width of .toc-bullet - margin-left of <a>*/
+    width: fit-content;
+    transition: visibility 1s, opacity 1s;
     visibility: hidden;
     opacity: 0;
     text-decoration: none;
@@ -284,17 +304,11 @@ a.toc-active::before {
 
 /* Progress */
 #progress {
-    position: fixed;
     white-space: nowrap;
     text-overflow: ellipsis;
-    /* width: 16%; */
-    height: 3.6em;
-    line-height: 2em;
-    /* margin: 0 0 0 3%; */
+    height: 3.6rem;
     color: var(--fontInfoColor);
-    /* top: 75%; */
-    font-size: 0.8em;
-    z-index: 101;
+    font-size: 0.8rem;
 }
 
 
@@ -329,10 +343,32 @@ img#seal_CN {
     position: relative;
 }
 
+/* Menu Panel */
+.menu-layer {
+    z-index: 999;
+}
+.menu-panel {
+    position: absolute;
+    width: min-content;
+    height: min-content;
+    right: 0;
+    bottom: 1rem;
+    transform: translateX(50%);
+    transition: var(--darkMode_animation);
+}
+.menu-panel:hover {
+    transform: translateX(0);
+}
+.menu-panel:hover .btn-icon {
+    box-shadow: var(--shadowV_args);
+    -webkit-box-shadow: var(--webkit-shadowV_args);
+    -moz-box-shadow: var(--moz-shadowV_args);
+}
+/* Dialog */
 dialog {
     border-radius: 10px;
     padding: 0px;
-    font-family: ui;
+    font-family: var(--fontFamily_ui);
     font-size: 1.2rem;
     background-color: var(--bgColor);
     color: var(--mainColor_focused);
@@ -384,7 +420,6 @@ dialog {
 
 .dlg-body {
     display: block;
-    flex: 1;
     margin: 0.2rem 1rem;
     overflow-y: scroll;
     scrollbar-gutter: stable both-edges;
@@ -401,7 +436,7 @@ dialog {
     background-color: var(--bgColor);
 }
 
-.dlg-body input[type="checkbox"] {
+dialog input[type="checkbox"] {
    width: 1rem;
    height: 1rem;
 }
@@ -429,5 +464,5 @@ input:invalid {
 }
 
 #settingDlg .setting-group-UI {
-    /* grid-template-columns: repeat(2, max-content 1fr); */
+    grid-template-columns: repeat(2, max-content 1fr);
 }

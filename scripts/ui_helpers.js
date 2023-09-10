@@ -6,7 +6,7 @@ function setMainContentUI() {
     setUIMode(!darkModeToggle.checked);
     style.ui_Mode = (!darkModeToggle.checked ? "light" : "dark");
     // console.log(style.ui_Mode);
-    darkModeActualButton.style.setProperty("visibility", "visible");
+    // darkModeActualButton.style.setProperty("visibility", "visible");
     setTimeout(function() {
         style.darkMode_animation = style.darkMode_default_animation;
     }, 1000);
@@ -25,26 +25,41 @@ function setMainContentUI() {
     style.ui_paginationCenter = (parseInt(style.ui_contentWidth) / 2 + parseInt(style.ui_contentMarginLeft)).toString();
     
     // Main content
-    if (isVariableDefined(contentContainer)) {
-        contentContainer.style.width = style.ui_contentWidth + '%';
-        contentContainer.style.marginTop = '0px';
-        contentContainer.style.marginRight = '0px';
-        contentContainer.style.marginBottom = '0px';
-        contentContainer.style.marginLeft = style.ui_contentMarginLeft + '%';
+    // if (isVariableDefined(contentContainer)) {
+    //     contentContainer.style.width = style.ui_contentWidth + '%';
+    //     contentContainer.style.marginTop = '0px';
+    //     contentContainer.style.marginRight = '0px';
+    //     contentContainer.style.marginBottom = '0px';
+    //     contentContainer.style.marginLeft = style.ui_contentMarginLeft + '%';
+    // }
+    if (isVariableDefined(contentLayer)) {
+        contentLayer.style.width = style.ui_contentWidth + '%';
+        contentLayer.style.marginTop = '0px';
+        contentLayer.style.marginRight = '0px';
+        contentLayer.style.marginBottom = '0px';
+        contentLayer.style.marginLeft = style.ui_contentMarginLeft + '%';
     }
 
     // TOC
-    if (isVariableDefined(tocWrapper)) {
-        tocWrapper.style.width = style.ui_tocWidth + '%';
-        tocWrapper.style.height = style.ui_tocHeight + '%';
-        tocWrapper.style.marginTop = '0px';
-        tocWrapper.style.marginRight = '0px';
-        tocWrapper.style.marginBottom = '0px';
-        tocWrapper.style.marginLeft = style.ui_windowLeftRightMargin + '%';
-    }
-    if (isVariableDefined(tocContainer)) {
-        tocContainer.style.width = style.ui_tocWidth + '%';
-        tocContainer.style.height = 'auto';
+    // if (isVariableDefined(tocWrapper)) {
+    //     tocWrapper.style.width = style.ui_tocWidth + '%';
+    //     tocWrapper.style.height = style.ui_tocHeight + '%';
+    //     tocWrapper.style.marginTop = '0px';
+    //     tocWrapper.style.marginRight = '0px';
+    //     tocWrapper.style.marginBottom = '0px';
+    //     tocWrapper.style.marginLeft = style.ui_windowLeftRightMargin + '%';
+    // }
+    // if (isVariableDefined(tocContainer)) {
+    //     tocContainer.style.width = style.ui_tocWidth + '%';
+    //     tocContainer.style.height = 'auto';
+    // }
+    if (isVariableDefined(tocPanel)) {
+        // tocPanel.style.width = style.ui_tocWidth + '%';
+        tocContainer.style.height =  style.ui_tocHeight + '%';
+        tocPanel.style.marginTop = '0px';
+        tocPanel.style.marginRight = '0px';
+        tocPanel.style.marginBottom = '0px';
+        tocPanel.style.marginLeft = style.ui_windowLeftRightMargin + '%';
     }
 
     // Pagination
@@ -53,36 +68,38 @@ function setMainContentUI() {
     }
 
     // Progress
-    if (isVariableDefined(progressContainer)) {
-        progressContainer.style.width = style.ui_tocWidth + '%';
-        progressContainer.style.marginTop = '2.5em';
-        progressContainer.style.marginRight = '0';
-        progressContainer.style.marginBottom = '2.5em';
-        progressContainer.style.marginLeft = style.ui_windowLeftRightMargin + '%';
-        progressContainer.style.top = '75%';
-    }
+    // if (isVariableDefined(progressContainer)) {
+    //     progressContainer.style.width = style.ui_tocWidth + '%';
+    //     progressContainer.style.marginTop = '2.5em';
+    //     progressContainer.style.marginRight = '0';
+    //     progressContainer.style.marginBottom = '2.5em';
+    //     progressContainer.style.marginLeft = style.ui_windowLeftRightMargin + '%';
+    //     progressContainer.style.top = '75%';
+    // }
 }
 
 function updateTOCUI(isIncreasing) {
-    if (isVariableDefined(tocWrapper)) {
-        tocWrapper.style.height = style.ui_tocHeight + '%';
-    }
-    if (isVariableDefined(tocContainer)) {
-        tocContainer.style.height = 'auto';
-        if (tocContainer.scrollHeight > (window.innerHeight * 0.5)) {
-            tocContainer.style.height = '50%';
-        }
-    }
+    // if (isVariableDefined(tocWrapper)) {
+    //   tocWrapper.style.height = style.ui_tocHeight + '%';
+    // }
+    // if (isVariableDefined(tocContainer)) {
+    //     tocContainer.style.height = 'auto';
+    //     if (tocContainer.scrollHeight > (window.innerHeight * 0.5)) {
+    //         tocContainer.style.height = '50%';
+    //     }
+    // }
 
     if (isVariableDefined(paginationContainer)) {
         if (!isIncreasing) {
-            if (((paginationContainer.offsetWidth) > (contentContainer.offsetWidth * 0.5)) && (parseInt(style.ui_numPaginationItems) > 5)) {
+            // if (((paginationContainer.offsetWidth) > (contentContainer.offsetWidth * 0.5)) && (parseInt(style.ui_numPaginationItems) > 5)) {
+            if (((paginationContainer.offsetWidth) > (contentLayer.offsetWidth * 0.5)) && (parseInt(style.ui_numPaginationItems) > 5)) {
                 style.ui_numPaginationItems = (parseInt(style.ui_numPaginationItems) - 2).toString();
                 style.ui_numPaginationItems = (Math.max(parseInt(style.ui_numPaginationItems), 5)).toString();
                 generatePagination();
             }
         } else {
-            if (((paginationContainer.offsetWidth + 2*(paginationContainer.offsetWidth / (parseInt(style.ui_numPaginationItems) + 2))) < (contentContainer.offsetWidth * 0.5)) && (parseInt(style.ui_numPaginationItems) < 9)) {
+            // if (((paginationContainer.offsetWidth + 2*(paginationContainer.offsetWidth / (parseInt(style.ui_numPaginationItems) + 2))) < (contentContainer.offsetWidth * 0.5)) && (parseInt(style.ui_numPaginationItems) < 9)) {
+            if (((paginationContainer.offsetWidth + 2*(paginationContainer.offsetWidth / (parseInt(style.ui_numPaginationItems) + 2))) < (contentLayer.offsetWidth * 0.5)) && (parseInt(style.ui_numPaginationItems) < 9)) {
                 style.ui_numPaginationItems = (parseInt(style.ui_numPaginationItems) + 2).toString();
                 style.ui_numPaginationItems = (Math.min(parseInt(style.ui_numPaginationItems), 9)).toString();
                 generatePagination();
@@ -167,6 +184,29 @@ function setTOC_onRatio(initial=false) {
     }
 }
 
+function showLayer(layer) {
+    if (isVariableDefined(dropZone)) {
+        // dropZone.style.zIndex = "1";
+        dropZone.style.visibility = (layer == "dropZone") ? "visible" : "hidden";
+        // dropZone.style.display = (layer == "dropZone") ? "" : "none";
+    }
+    if (isVariableDefined(loadingScreen)) {
+        // loadingScreen.style.zIndex = "1";
+        loadingScreen.style.visibility = (layer == "loading") ? "visible" : "hidden";
+        // loadingScreen.style.display = (layer == "loading") ? "" : "none";
+    }
+    if (isVariableDefined(contentLayer)) {
+        // contentLayer.style.zIndex = "auto";
+        contentLayer.style.visibility = (layer == "reader") ? "visible" : "hidden";
+        // contentLayer.style.display = (layer == "reader") ? "" : "none";
+    }
+    if (isVariableDefined(tocLayer)) {
+        // tocLayer.style.zIndex = "auto";
+        // tocLayer.style.visibility = (layer == "reader") ? "visible" : "hidden";
+        tocLayer.style.display = (layer == "reader") ? "" : "none";
+    }
+}
+
 function showDropZone(focused=false) {
     if (isVariableDefined(dropZone) && isVariableDefined(dropZoneText) && isVariableDefined(dropZoneImg)) {
         let c = style.mainColor;
@@ -175,15 +215,10 @@ function showDropZone(focused=false) {
             c = style.mainColor_focused;
             filter = style.mainColor_focused_filter;
         }
-        dropZone.style.visibility = "visible";
-        dropZone.style.zIndex = "999";
         dropZone.style.borderColor = c;
-        dropZoneText.style.visibility = "visible";
-        dropZoneText.style.zIndex = "1000";
         dropZoneText.style.color = c;
-        dropZoneImg.style.visibility = "visible";
-        dropZoneImg.style.zIndex = "1001";
         dropZoneImg.style.setProperty("filter", filter);
+        showLayer("dropZone");
         return 0;
     } else {
         return 1;
@@ -191,43 +226,43 @@ function showDropZone(focused=false) {
 }
 
 function hideDropZone() {
+    throw new Error("no hideDropZone");
     if (isVariableDefined(dropZone) && isVariableDefined(dropZoneText) && isVariableDefined(dropZoneImg)) {
         dropZone.style.visibility = "hidden";
-        dropZone.style.zIndex = "1";
+        // dropZone.style.zIndex = "1";
         dropZoneText.style.visibility = "hidden";
-        dropZoneText.style.zIndex = "2";
+        // dropZoneText.style.zIndex = "2";
         dropZoneImg.style.visibility = "hidden";
-        dropZoneImg.style.zIndex = "3";
+        // dropZoneImg.style.zIndex = "3";
     }
 }
 
 function showLoadingScreen() {
-    loadingScreen.style.visibility = "visible";
+    showLayer("loading");
 }
 
 function hideLoadingScreen() {
+    throw new Error("no hideLoadingScreen");
     loadingScreen.style.visibility = "hidden";
 }
 
 function showContent() {
-    contentContainer.style.visibility = "visible";
-    tocContainer.style.visibility = "visible";
-    paginationContainer.style.visibility = "visible";
-    progressContainer.style.visibility = "visible";
+    showLayer("reader");
 }
 
 function hideContent() {
-    contentContainer.style.visibility = "hidden";
-    tocContainer.style.visibility = "hidden";
+    throw new Error("no hideContent");
+    // contentContainer.style.visibility = "hidden";
+    contentLayer.style.visibility = "hidden";
+    // tocContainer.style.visibility = "hidden";
     paginationContainer.style.visibility = "hidden";
-    progressContainer.style.visibility = "hidden";
+    // progressContainer.style.visibility = "hidden";
+    tocPanel.style.visibility = "hidden";
 }
 
 function resetUI() {
     resetVars();
     showDropZone();
-    hideLoadingScreen();
-    hideContent();
 }
 
 function resetVars() {

@@ -98,7 +98,6 @@ class SettingInt extends SettingText {
     }
     getInputVal() {
         super.getInputVal();
-        console.log(this.value)
         this.value = Math.floor(parseFloat(this.value)) || this.defaultValue;
         return this;
     }
@@ -307,6 +306,7 @@ class SettingCSS extends SettingText {
             for (const rule of sheet.cssRules) {
                 if (rule.selectorText === (sel || this.selector)) {
                     rule.style.setProperty(prop || this.property, (val == null) ? this.value : val);
+                    return;
                 }
             }
         }
