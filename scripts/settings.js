@@ -157,8 +157,9 @@ var settingMgr = {
 				<div class="dlg-foot"></div>
 				</dialog>`).bind("cancel", () => this.hide());
             dlg.find(".dlg-cap").append($(`<span class="dlg-close">&times;</span>`).click(() => this.hide()));
-            dlg.find(".dlg-foot").append($(`<button>恢复默认</button>`).click(() => this.reset().apply().hide()));
-            dlg.find(".dlg-foot").append($(`<button style="float:right;">应用</button>`).click(() => this.save().apply().hide()))
+            dlg.find(".dlg-foot").append(`<span style="font-size:1rem;color:var(--fontInfoColor);">易笺﹒改 v${_STRe_VER_}</span>`);
+            dlg.find(".dlg-foot").append($(`<button style="float:right;margin-left:1rem;">应用</button>`).click(() => this.save().apply().hide()))
+            dlg.find(".dlg-foot").append($(`<button style="float:right;">恢复默认</button>`).click(() => this.reset().apply().hide()));
             let container = dlg.find(".dlg-body");
             for (k in this.groups) {
                 let sg = this.groups[k];
@@ -256,6 +257,7 @@ var settingMgr = {
     },
 }
 
+// 启用参数设置模块
 settingMgr.init().enable();
 
 // 设置示例
@@ -310,6 +312,7 @@ class SettingCSS extends SettingText {
                 }
             }
         }
+        document.styleSheets[document.styleSheets.length - 1].insertRule(`${sel || this.selector} {${prop || this.property}: ${(val == null) ? this.value : val}}`);
     }
     constructor(id, desc, selector, property, defaultValue = null) {
         super(id, desc, defaultValue);
@@ -353,5 +356,6 @@ class SettingGroupUI extends SettingGroupBase {
     }
 }
 
+// 加载“界面参数”设置
 settingMgr.groups["UI"] = new SettingGroupUI();
 settingMgr.load("UI").apply("UI");

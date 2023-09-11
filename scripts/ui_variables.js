@@ -44,3 +44,5 @@ var darkModeActualButton = document.getElementById("switch-btn");   // just for 
 var darkModeToggle = document.getElementById("switch");
 
 var contentLayer = document.getElementById("contentLayer");
+
+const _STRe_VER_ = "1.3.0-wip";

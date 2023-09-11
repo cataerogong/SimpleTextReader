@@ -165,3 +165,48 @@ function isElementVisible(elm, pseudoElt = null) {
     let style = elm.currentStyle /* for IE */ || window.getComputedStyle(elm, pseudoElt);
     return (style["display"] != "none") && (style["visibility"] != "hidden") && (style["visibility"] != "collapse");
 }
+
+function getCSS(sel, prop) {
+    if (!sel || !prop) return null;
+    for (const sheet of document.styleSheets) {
+        for (const rule of sheet.cssRules) {
+            if (rule.selectorText === sel) {
+                return rule.style.getPropertyValue(prop);
+            }
+        }
+    }
+    return null;
+}
+
+function setCSS(sel, prop, val) {
+    if (!sel || !prop || !val) return false;
+    for (const sheet of document.styleSheets) {
+        for (const rule of sheet.cssRules) {
+            if (rule.selectorText === sel) {
+                rule.style.setProperty(prop, val);
+                return true;
+            }
+        }
+    }
+    document.styleSheets[document.styleSheets.length - 1].insertRule(`${sel} {${prop}: ${val}}`);
+    return true;
+}
+
+function delCSS(sel, prop = "") {
+    for (const sheet of document.styleSheets) {
+        for (const i in sheet.cssRules) {
+            let rule = sheet.cssRules[i];
+            if (rule.selectorText === sel) {
+                if (prop) {
+                    rule.style.removeProperty(prop);
+                    // console.log(`after delCSS(${sel},${prop})`, rule.style);
+                } else {
+                    sheet.deleteRule(i);
+                    // console.log(`after delCSS(${sel})`, sheet.cssRules);
+                }
+                return true;
+            }
+        }
+    }
+    return false;
+}

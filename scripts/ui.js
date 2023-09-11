@@ -53,60 +53,167 @@ contentLayer.onscroll = function(event) {
     }
 };
 
+let tocSelItem = -1;
+let tocFocused = false;
+let tocCurItem = -1;
+let tocNumPerPage = 10; // PgDn,PgUp 跳转章数
 function onDocKeydown(event) {
-    let lh = 16;
-    if (isElementVisible(contentContainer)) {
-        let p = contentContainer.getElementsByTagName("p");
-        if (p.length) {
-            lh = parseInt((p[0].currentStyle || window.getComputedStyle(p[0])).lineHeight) || lh;
+    if (!isElementVisible(contentContainer)) return;
+    let handled = false;
+    if (event.key == "Shift") { // activate toc
+        if (event.repeat) return;
+        setCSS(".toc-layer", "z-index", "1");
+        setCSS(".toc-panel", "border-right", "1px solid var(--borderColor)");
+        setCSS(".toc-panel", "box-shadow", "var(--shadowH_args)");
+        setCSS(".toc-panel", "-webkit-box-shadow", "var(--webkit-shadowH_args)");
+        setCSS(".toc-panel", "-moz-box-shadow", "var(--moz-shadowH_args)");
+        setCSS(".toc-text", "visibility", "visible");
+        setCSS(".toc-text", "opacity", "1");
+        setCSS(".toc-hint", "visibility", "visible");
+        const tocItems = tocContainer.getElementsByClassName("toc-text");
+        tocSelItem = -1;
+        if (tocItems) {
+            for (let i = 0; i < tocItems.length; i++) {
+                if (tocItems[i].classList.contains("toc-active")) {
+                    tocSelItem = i;
+                    tocFocused = true;
+                    tocCurItem = i;
+                    break;
+                }
+            }
+            if ((tocSelItem >= 0) && tocFocused) {
+                tocItems[tocSelItem].focus();
+                // tocNumPerPage = Math.floor(tocContainer.clientHeight / tocItems[tocFocusedItem].offsetHeight);
+                // console.log(tocNumPerPage)
+            }
+        }
+        handled = true;
+    }
+    else if (event.shiftKey) { // toc
+        const tocItems = tocContainer.getElementsByClassName("toc-text");
+        if (!tocItems.length) return;
+        handled = true;
+        switch (event.key) {
+            case "Home":
+                tocSelItem = 0;
+                tocFocused = true;
+                break;
+            case "End":
+                tocSelItem = tocItems.length - 1;
+                tocFocused = true;
+                break;
+            case "PageUp":
+                tocSelItem = Math.max(tocSelItem - tocNumPerPage, 0);
+                tocFocused = true;
+                break;
+            case "PageDown":
+                tocSelItem = Math.min(tocSelItem + tocNumPerPage, tocItems.length - 1);
+                tocFocused = true;
+                break;
+            case "ArrowUp":
+            case "ArrowLeft":
+                tocSelItem = Math.max(tocSelItem - 1, 0);
+                tocFocused = true;
+                break;
+            case "ArrowDown":
+            case "ArrowRight":
+                tocSelItem = Math.min(tocSelItem + 1, tocItems.length - 1);
+                tocFocused = true;
+                break;
+            case " ":
+                tocFocused = !tocFocused;
+                break;
+            default:
+                handled = false;
+                break;
+        }
+        if (handled && (tocSelItem >= 0)) {
+            if (tocFocused) {
+                tocItems[tocSelItem].focus();
+            } else {
+                tocItems[tocSelItem].blur();
+            }
+        }
+    } else { // content
+        let lh = 1.5*emInPx;
+        if (isElementVisible(contentContainer)) {
+            let p = contentContainer.getElementsByTagName("p");
+            if (p.length) {
+                lh = parseInt((p[0].currentStyle || window.getComputedStyle(p[0])).lineHeight) || lh;
+            }
+        }
+        handled = true;
+        switch (event.key) {
+            case "Home":
+                contentLayer.scrollTo(0, 0);
+                break;
+            case "End":
+                contentLayer.scrollTo(0, contentLayer.scrollHeight);
+                break;
+            case "PageUp":
+                contentLayer.scrollBy(0, -contentLayer.clientHeight+lh);
+                break;
+            case "PageDown":
+            case " ":
+                contentLayer.scrollBy(0, contentLayer.clientHeight-lh);
+                break;
+            case "ArrowUp":
+                contentLayer.scrollBy(0, -lh*3);
+                break;
+            case "ArrowDown":
+                contentLayer.scrollBy(0, lh * 3);
+                break;
+            case 'ArrowLeft':
+                gotoPage(currentPage - 1);
+                break;
+            case 'ArrowRight':
+                gotoPage(currentPage+1);
+                break;
+            case 'Escape':
+                // console.log("Escape pressed:", no_ui);
+                if (isVariableDefined(dropZone)) {
+                    resetUI();
+                }
+                break;
+            default:
+                handled = false;
+                break;
         }
     }
-    switch (event.key) {
-        case "Home":
-            event.preventDefault();
-            event.stopPropagation();
-            contentLayer.scrollTo(0, 0);
-            break;
-        case "End":
-            event.preventDefault();
-            event.stopPropagation();
-            contentLayer.scrollTo(0, contentLayer.scrollHeight);
-            break;
-        case "PageUp":
-            event.preventDefault();
-            event.stopPropagation();
-            contentLayer.scrollBy(0, -contentLayer.clientHeight+lh);
-            break;
-        case "PageDown":
-        case " ":
-            event.preventDefault();
-            event.stopPropagation();
-            contentLayer.scrollBy(0, contentLayer.clientHeight-lh);
-            break;
-        case "ArrowUp":
-            event.preventDefault();
-            event.stopPropagation();
-            contentLayer.scrollBy(0, -lh*3);
-            break;
-        case "ArrowDown":
-            event.preventDefault();
-            event.stopPropagation();
-            contentLayer.scrollBy(0, lh*3);
-            break;
-        case 'ArrowLeft':
-            gotoPage(currentPage-1);
-        break;
-        case 'ArrowRight':
-            gotoPage(currentPage+1);
-        break;
-        case 'Escape':
-            // console.log("Escape pressed:", no_ui);
-            if (isVariableDefined(dropZone)) {
-                resetUI();
-            }
-        break;
+    if (handled) {
+        event.preventDefault();
+        event.stopPropagation();
     }
 };
+
+function onDocKeyup(event) {
+    if (event.key == "Shift") {
+        event.preventDefault();
+        event.stopPropagation();
+        delCSS(".toc-layer", "z-index");
+        delCSS(".toc-panel", "border-right");
+        delCSS(".toc-panel", "box-shadow");
+        delCSS(".toc-panel", "-webkit-box-shadow");
+        delCSS(".toc-panel", "-moz-box-shadow");
+        setCSS(".toc-text", "visibility", "hidden");
+        setCSS(".toc-text", "opacity", "0");
+        setCSS(".toc-hint", "visibility", "hidden");
+        const tocItems = tocContainer.getElementsByClassName("toc-text");
+        if (tocItems.length) {
+            if (tocSelItem >= 0) {
+                if (tocFocused && (tocSelItem != tocCurItem)) {
+                    tocItems[tocSelItem].click();
+                }
+                tocItems[tocSelItem].blur();
+                tocSelItem = -1;
+                tocFocused = false;
+                tocCurItem = -1;
+            }
+        }
+    }
+}
+
+document.onkeyup = onDocKeyup;
 
 document.onkeydown = onDocKeydown;
 
@@ -348,7 +455,6 @@ async function handleSelectedFile(fileList) {
             showCurrentPageContent();
             generatePagination();
             updateTOCUI(false);
-            GetScrollPositions(toSetHistory=false);
 
             // Retrieve reading history if exists
             // removeAllHistory();    // for debugging
@@ -357,6 +463,7 @@ async function handleSelectedFile(fileList) {
                 // if the first line is a header, it will show up in TOC
                 setTitleActive(curLineNumber);
             }
+            GetScrollPositions(false);
         };
 
         fileReader.onloadstart = function (event) {
@@ -379,6 +486,7 @@ async function handleSelectedFile(fileList) {
             // hideLoadingScreen();
             showContent();
             fileloadCallback.after();
+            // GetScrollPositions(false);
         };
 
         fileReader.readAsArrayBuffer(fileList[0]);
@@ -617,7 +725,8 @@ function gotoLine(lineNumber, isTitle=true) {
 
 function GetScrollPositions(toSetHistory=true) {
     // console.log("GetScrollPositions() called, gotoTitle_Clicked: ", gotoTitle_Clicked);
-    
+    // console.log(GetScrollPositions.caller)
+
     // Get current scroll position
     // const scrollTop = window.scrollY || document.documentElement.scrollTop;
     // console.log(`Top: ${scrollTop}px`);

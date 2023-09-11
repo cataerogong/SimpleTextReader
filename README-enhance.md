@@ -66,7 +66,12 @@
 
 ## v1.3.0-wip
 
-> 从这个版本开始，与主版本分离了，对原版的页面和脚本开始有较大的改动。
+**从这个版本开始，与主版本分离了，对原版的页面和脚本开始有较大的改动。**
 
 * [*] 改写 Settings 模块及相关
 
+* [*] 重新安排页面布局和改写相关函数
+
+* [+] 增加“键盘操作 toc 并跳转”的功能，Shift + Home/End/PgUp/PgDn/Up/Down/Left/Right/Space
+
+  > 顺带发现 Chrome/Edge 的平滑滚动居然是要开的，而且不在 setting 里！`chrome://flags/#smooth-scrolling`

@@ -53,10 +53,6 @@ body {
 .interact {
     pointer-events: auto;
 }
-.hidden {
-    display: none;
-    visibility: hidden;
-}
 /* 
 Credit: https://stackoverflow.com/questions/64997928/how-to-offset-a-anchor-link-to-clear-fixed-header
 To Offset the anchor link to clear fixed header
@@ -80,7 +76,6 @@ To Offset the anchor link to clear fixed header
     display: block;
     overflow-x: hidden;
     background-color: var(--bgColor);
-    box-shadow: 0 0 5px var(--borderColor);
 }
 
 
@@ -209,7 +204,8 @@ To Offset the anchor link to clear fixed header
     width: max-content;
     padding-right: 2rem;
     display: grid;
-    grid-template-rows: 1fr max-content;
+    grid-template-rows: max-content 1fr max-content;
+    grid-template-columns: max-content;
     background-color: var(--bgColor);
     transition: var(--darkMode_animation);
 }
@@ -219,21 +215,40 @@ To Offset the anchor link to clear fixed header
     -webkit-box-shadow: var(--webkit-shadowH_args);
     -moz-box-shadow: var(--moz-shadowH_args);
 }
+.toc-hint {
+    height: fit-content;
+    font-family: var(--fontFamily_ui);
+    font-size: 0.8rem;
+    color: var(--fontInfoColor);
+    display: grid;
+    grid-gap:  0.3rem 1rem;
+    grid-template-columns: max-content max-content max-content max-content;
+    align-self: center;
+    margin: 1rem 0;
+    visibility: hidden;
+}
+.toc-panel:hover .toc-hint {
+    visibility: visible;
+}
+.toc-hint span:nth-child(-n + 2) {
+    visibility: visible;
+}
 #tocContent {
     scroll-behavior: smooth;
     position: relative;
     line-height: 1em;
     font-size: 1em;
+    max-width: 70vw;
     overflow-x: hidden;
     overflow-y: scroll;
     font-family:var(--fontFamily_title);
-    margin: 1rem 0;
+    padding: 1rem 0;
     /* width: max-content; */
     display: grid;
     grid-auto-rows: max-content;
     grid-template-columns: max-content max-content;
     align-items: center;
-    align-self: center;
+    /* align-self: center; */
 }
 div#tocContent {
     -ms-overflow-style: none;  /* IE and Edge */
@@ -252,7 +267,8 @@ div#tocContent::-webkit-scrollbar {
     height: 0.3em;
     visibility: visible !important;
     opacity: 1 !important;
-    margin-bottom: 1.6em;
+    margin-top: 0.3rem;
+    margin-bottom: 1.3em;
 }
 .toc-text {
     display: inline-block;
@@ -268,7 +284,7 @@ div#tocContent::-webkit-scrollbar {
     overflow-y: hidden;
 }
 /* Credit: https://www.taccgl.org/blog/css-transition-visibility.html */
-#tocContent:hover > .toc-text {
+#tocPanel:hover .toc-text {
     visibility: visible;
     opacity: 1;
 }
@@ -282,11 +298,8 @@ a.toc-text, a.toc-text:link, a.toc-text:visited {
     color: var(--fontInfoColor);
     margin: 0.3em 0 1.3em 1em;
 }
-a.toc-text:hover:not(.active) {
+a.toc-text:hover {
     color: var(--mainColor);
-}
-a.toc-text:active {
-    color: var(--mainColor_focused);
 }
 a.toc-active {
     font-weight: bold;

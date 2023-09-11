@@ -1,5 +1,3 @@
-let _STRe_VER_ = "1.3.0";
-
 let STRe_PROGRESS_FN_RE = /^(?<name>.+)\.progress$/i; // 格式：filename.progress
 let STRe_PROGRESS_RE = /^(?<line>\d+)(\/(?<total>\d+))?$/i; // 格式：line/total，match() 的结果：[full, line, /total, total]
 
@@ -746,9 +744,6 @@ if (settingMgr.groups["Bookshelf"].settings["reopen"].value) {
 
 // STRe_FilesOnServer.enable();
 // STRe_ProgressOnServer.enable();
-function setCSS(rule) {
-	document.styleSheets[document.styleSheets.length-1].insertRule(rule);
-}
 if (DPR > 1) {
 	setCSS(`:root {font-size:${12 * DPR}px}`);
 	setCSS("dialog {height:100vh}");
