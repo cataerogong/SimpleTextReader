@@ -616,7 +616,6 @@ var STRe_Bookshelf = {
 			<div class="progress"></div></div>`);
 		book.find(".cover").click((evt) => {
 			evt.originalEvent.stopPropagation();
-			this.hide();
 			this.openBook(bookInfo.name);
 		});
 		book.find(".delete-btn").click((evt) => {
@@ -639,11 +638,14 @@ var STRe_Bookshelf = {
 
 	async refreshBookList() {
 		if (this.enabled) {
-			let container = $(".bookshelf .dlg-body");
+			let container = $(".bookshelf .book-list");
 			container.html("");
 			let storageInfo = await navigator.storage.estimate();
-			if (storageInfo) container.append(`<div class="sub-title">【提示】书籍保存在浏览器缓存空间内，可能会被系统自动清除。<br/>
-                已用空间：${(storageInfo.usage / storageInfo.quota * 100).toFixed(1)}% (${(storageInfo.usage / 1000 / 1000).toFixed(2)} MB / ${(storageInfo.quota / 1000 / 1000).toFixed(2)} MB)<div>`);
+			if (storageInfo) {
+				$("#bookshelfUsagePct").html((storageInfo.usage / storageInfo.quota * 100).toFixed(1));
+				$("#bookshelfUsage").html((storageInfo.usage / 1000 / 1000).toFixed(2));
+				$("#bookshelfQuota").html((storageInfo.quota / 1000 / 1000).toFixed(2));
+			}
 			let booklist = [];
 			try {
 				for (const book of await this.db.getAllBooks()) {
@@ -662,18 +664,13 @@ var STRe_Bookshelf = {
 	async show() {
 		if (this.enabled) {
 			$(`<div class="bookshelf">
-			<div class="dlg-cap">缓存书架</div>
-			<span class="dlg-body"></span>
+			<div class="title">缓存书架
+				<div class="sub-title">【提示】书籍保存在浏览器缓存空间内，可能会被系统自动清除。<br />
+				已用空间：<span id="bookshelfUsagePct"></span>% (<span id="bookshelfUsage"></span> MB / <span id="bookshelfQuota"></span> MB)</div>
+			</div>
+			<span class="book-list"></span>
 			</div>`).appendTo("#dropZone");
 			this.refreshBookList();
-		}
-		return this;
-	},
-
-	hide() {
-		if (this.enabled) {
-			$("#bookshelfDlg").remove();
-			unfreezeContent();
 		}
 		return this;
 	},
@@ -695,7 +692,7 @@ var STRe_Bookshelf = {
 			});
 			$("#STRe-bookshelf-btn").show();
 			this.enabled = true;
-			this.show(true);
+			this.show();
 			console.log("Module <Bookshelf> enabled.");
 			setTimeout(() => this.loop(), 1000);
 		}

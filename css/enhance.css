@@ -27,15 +27,30 @@
     z-index: 2000;
 }
 
+.bookshelf .title {
+    padding: 0.5rem 0;
+    font-size: 1.6rem;
+    font-family: title;
+    text-align: center;
+    overflow: hidden;
+    border-bottom: 2px solid var(--borderColor);
+}
+
 .bookshelf .sub-title {
     color: var(--fontInfoColor);
+    font-family: var(--fontFamily_ui);;
     font-size: 1rem;
 }
 
-.bookshelf .dlg-body {
+.bookshelf .book-list {
+    display: block;
+    margin: 0.2rem 0;
+    overflow-y: scroll;
+    scrollbar-gutter: stable both-edges;
+    scrollbar-width: thin;
     text-align: center;
     /* 避开 btn-group */
-    /* margin-right: 4rem; */
+    padding-right: 4rem;
 }
 
 .bookshelf .book {
