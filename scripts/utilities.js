@@ -167,11 +167,14 @@ function isElementVisible(elm, pseudoElt = null) {
 }
 
 function getCSS(sel, prop) {
-    if (!sel || !prop) return null;
+    if (!sel) return null;
     for (const sheet of document.styleSheets) {
         for (const rule of sheet.cssRules) {
             if (rule.selectorText === sel) {
-                return rule.style.getPropertyValue(prop);
+                if (prop)
+                    return rule.style.getPropertyValue(prop);
+                else
+                    return rule.style;
             }
         }
     }

@@ -94,7 +94,7 @@ class SettingGroupFoS extends SettingGroupBase {
 	}
 
 	apply() {
-		STRe_FilesOnServer.webDAVdir =  this.settings["WebDAV"].value.trimEnd().replace(/\/*$/, "");
+		STRe_FilesOnServer.webDAVdir = this.settings["WebDAV"].value.trimEnd().replace(/\/*$/, "");
 		if (this.settings["enable"].value) {
 			STRe_FilesOnServer.enable();
 		} else {
@@ -250,7 +250,7 @@ class SettingGroupPoS extends SettingGroupBase {
 	}
 
 	apply() {
-		STRe_ProgressOnServer.webDAVdir =  this.settings["WebDAV"].value.trimEnd().replace(/\/*$/, "");
+		STRe_ProgressOnServer.webDAVdir = this.settings["WebDAV"].value.trimEnd().replace(/\/*$/, "");
 		STRe_ProgressOnServer.syncInterval = this.settings["interval"].value;
 		if (this.settings["enable"].value) {
 			STRe_ProgressOnServer.enable();
@@ -501,7 +501,7 @@ var STRe_ProgressOnServer = {
 // ------------------------------------------------
 class SettingGroupBookshelf extends SettingGroupBase {
 	constructor() {
-		super("setting-group-Bookshelf", "本地缓存书架");
+		super("setting-group-Bookshelf", "缓存书架");
 		this.settings["enable"] = new SettingCheckbox(this.id + "-enable", "启用", true);
 		this.settings["reopen"] = new SettingCheckbox(this.id + "-reopen", "启动时打开上次阅读书籍", true);
 	}
@@ -532,27 +532,23 @@ var STRe_Bookshelf = {
 	enabled: false,
 	db: null,
 
-	STRe_FILE: "STReFile",
+	STRe_FILENAME: "STRe-Filename",
 	STRe_CACHE_FLAG: "STRe-Cache-File",
-	// STRe_POS_CLOUD: "WebDAV",
-	// STRe_POS_LOCAL: "indexedDB",
-	STRe_TAG_CLOUD: "☁",
-	STRe_TAG_LOCAL: "💻",
 
-	async reopenFile() {
+	async reopenBook() {
 		if (this.enabled) {
 			// 获取之前的文件名，重新打开
-			let fname = localStorage.getItem(this.STRe_FILE);
+			let fname = localStorage.getItem(this.STRe_FILENAME);
 			if (fname) {
-				if (await STRe_Bookshelf.isFileExist(fname)) {
-					console.log("Reopen file on start: " + fname);
-					await STRe_Bookshelf.openFile(fname);
+				if (await STRe_Bookshelf.isBookExist(fname)) {
+					console.log("Reopen book on start: " + fname);
+					await STRe_Bookshelf.openBook(fname);
 				}
 			}
 		}
 	},
 
-	async openFile(fname) {
+	async openBook(fname) {
 		if (this.enabled) {
 			console.log("Open file from cache: " + fname);
 			showLoadingScreen();
@@ -566,7 +562,7 @@ var STRe_Bookshelf = {
 					return true;
 				} else {
 					alert("发生错误！");
-					throw new Error("openFile error! " + fname);
+					throw new Error("openBook error! " + fname);
 				}
 			} catch (e) {
 				console.log(e);
@@ -575,15 +571,17 @@ var STRe_Bookshelf = {
 		}
 	},
 
-	async saveFile(file) {
+	async saveBook(file) {
 		if (STRe_Bookshelf.enabled) {
 			if (file.type === "text/plain") {
 				if (file[STRe_Bookshelf.STRe_CACHE_FLAG]) {
-					console.log("Openning cache-file, so not save.");
+					console.log("Openning cache-book, so not save.");
 				} else {
-					console.log("saveFile: ", file.name);
+					console.log("saveBook: ", file.name);
 					// 先把文件保存到缓存db中
 					await STRe_Bookshelf.db.putBook(file.name, file);
+					if (!await bookshelf.db.isBookExist(file.name))
+						alert("保存到本地书架失败（缓存空间可能已满）");
 					// 刷新 Bookshelf in DropZone
 					await STRe_Bookshelf.refreshBookList();
 				}
@@ -592,7 +590,7 @@ var STRe_Bookshelf = {
 		return file;
 	},
 
-	async isFileExist(fname) {
+	async isBookExist(fname) {
 		if (this.enabled) {
 			return await this.db.isBookExist(fname);
 		} else {
@@ -600,7 +598,7 @@ var STRe_Bookshelf = {
 		}
 	},
 
-	async deleteFile(fname, onSucc = null) {
+	async deleteBook(fname, onSucc = null) {
 		if (this.enabled) {
 			this.db.deleteBook(fname).then(() => {
 				if (onSucc) onSucc();
@@ -608,21 +606,24 @@ var STRe_Bookshelf = {
 		}
 	},
 
-	genBookItem(name) {
-		let book = $(`<div class="book" data-filename="${name}">
+	genBookItem(bookInfo) {
+		let book = $(`<div class="book" data-filename="${bookInfo.name}">
 			<div style="height:1.5rem;line-height:1.5rem;"><span class="delete-btn" title="删除">&times;</span></div>
-			<div class="cover">${name}</div>
+			<div class="cover">
+				<div>${bookInfo.name}</div>
+				<div class="size">${(bookInfo.size/1000/1000).toFixed(2)} MB</div>
+			</div>
 			<div class="progress"></div></div>`);
 		book.find(".cover").click((evt) => {
 			evt.originalEvent.stopPropagation();
 			this.hide();
-			this.openFile(name);
+			this.openBook(bookInfo.name);
 		});
 		book.find(".delete-btn").click((evt) => {
 			evt.originalEvent.stopPropagation();
-			this.deleteFile(name, () => this.refreshBookList());
+			this.deleteBook(bookInfo.name, () => this.refreshBookList());
 		});
-		let progress = STReHelper.getLocalProgress(name); //localStorage.getItem(name);
+		let progress = STReHelper.getLocalProgress(bookInfo.name); //localStorage.getItem(name);
 		let pct = "?%";
 		if (progress) {
 			if (STRe_PROGRESS_RE.test(progress)) {
@@ -638,16 +639,19 @@ var STRe_Bookshelf = {
 
 	async refreshBookList() {
 		if (this.enabled) {
+			let container = $(".bookshelf .dlg-body");
+			container.html("");
+			let storageInfo = await navigator.storage.estimate();
+			if (storageInfo) container.append(`<div class="sub-title">【提示】书籍保存在浏览器缓存空间内，可能会被系统自动清除。<br/>
+                已用空间：${(storageInfo.usage / storageInfo.quota * 100).toFixed(1)}% (${(storageInfo.usage / 1000 / 1000).toFixed(2)} MB / ${(storageInfo.quota / 1000 / 1000).toFixed(2)} MB)<div>`);
 			let booklist = [];
 			try {
 				for (const book of await this.db.getAllBooks()) {
-					booklist.push(book.name);
+					booklist.push({name: book.name, size: book.data.size});
 				}
-				booklist.sort((a, b) => (a.localeCompare(b, "zh")));
-				let container = $(".bookshelf .dlg-body");
-				container.html("");
-				for (const name of booklist) {
-					container.append(this.genBookItem(name));
+				booklist.sort((a, b) => (a.name.localeCompare(b.name, "zh")));
+				for (const bookInfo of booklist) {
+					container.append(this.genBookItem(bookInfo));
 				}
 			} catch (e) {
 				console.log(e);
@@ -658,9 +662,7 @@ var STRe_Bookshelf = {
 	async show() {
 		if (this.enabled) {
 			$(`<div class="bookshelf">
-			<div class="dlg-cap">本地缓存书架
-				<div style="font-size:1rem;font-family:ui;text-align:center;">拖入文件 / 空白处双击</div>
-			</div>
+			<div class="dlg-cap">缓存书架</div>
 			<span class="dlg-body"></span>
 			</div>`).appendTo("#dropZone");
 			this.refreshBookList();
@@ -678,7 +680,7 @@ var STRe_Bookshelf = {
 
 	loop() {
 		if (this.enabled) {
-			localStorage.setItem(this.STRe_FILE, filename);
+			localStorage.setItem(this.STRe_FILENAME, filename);
 			setTimeout(() => this.loop(), 1000);
 		}
 	},
@@ -686,8 +688,8 @@ var STRe_Bookshelf = {
 	enable() {
 		if (!this.enabled) {
 			this.db = new STReLocalDB();
-			fileloadCallback.regBefore(this.saveFile);
-			STReHelper.replaceFunc(window, "resetUI", "resetUI__STReBookshelf_bak", function() {
+			fileloadCallback.regBefore(this.saveBook);
+			STReHelper.replaceFunc(window, "resetUI", "resetUI__STReBookshelf_bak", function () {
 				STRe_Bookshelf.refreshBookList();
 				resetUI__STReBookshelf_bak();
 			});
@@ -703,7 +705,7 @@ var STRe_Bookshelf = {
 	disable() {
 		if (this.enabled) {
 			STReHelper.replaceFunc(window, "resetUI", "resetUI__STReBookshelf_abandon", resetUI__STReBookshelf_bak);
-			fileloadCallback.unregBefore(this.saveFile);
+			fileloadCallback.unregBefore(this.saveBook);
 			$(".bookshelf").remove();
 			$("#STRe-bookshelf-btn").hide();
 			this.db = null;
@@ -718,7 +720,7 @@ var STRe_Bookshelf = {
 		<svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
 			<path stroke="none" d="M9 3v15h3V3H9m3 2l4 13l3-1l-4-13l-3 1M5 5v13h3V5H5M3 19v2h18v-2H3Z"/>
 		</svg></div>`)
-			.click(() => {this.refreshBookList(); resetUI();})
+			.click(() => { this.refreshBookList(); resetUI(); })
 			.prependTo($("#btnWrapper"))
 			.hide();
 
@@ -727,25 +729,18 @@ var STRe_Bookshelf = {
 	},
 };
 
-// STRe_Settings.init();
 STRe_Bookshelf.init();
 STRe_ProgressOnServer.init();
 STRe_FilesOnServer.init();
 
-// STRe_Settings.enable().load().apply();
-
 // 启动时打开上次阅读书籍
 if (settingMgr.groups["Bookshelf"].settings["reopen"].value) {
 	// if (STRe_Settings.settings.enableRos.val) {
-	STRe_Bookshelf.reopenFile();
+	STRe_Bookshelf.reopenBook();
 }
 
-// STRe_Bookshelf.enable().setMode(true);
-
-// STRe_FilesOnServer.enable();
-// STRe_ProgressOnServer.enable();
 if (DPR > 1) {
-	setCSS(`:root {font-size:${12 * DPR}px}`);
-	setCSS("dialog {height:100vh}");
-	setCSS("#settingDlg .setting-group-UI {grid-template-columns:max-content 1fr}");
+	setCSS(`:root`, `font-size`, `${12 * DPR}px`);
+	setCSS("dialog", "height", "100vh");
+	setCSS("#settingDlg .setting-group-UI", "grid-template-columns", "max-content 1fr");
 }

@@ -72,6 +72,14 @@
 
 * [*] 重新安排页面布局和改写相关函数
 
-* [+] 增加“键盘操作 toc 并跳转”的功能，Shift + Home/End/PgUp/PgDn/Up/Down/Left/Right/Space
+* [+] 增加“键盘操作 TOC 并跳转”的功能，Shift + Home/End/PgUp/PgDn/Up/Down/Space
 
   > 顺带发现 Chrome/Edge 的平滑滚动居然是要开的，而且不在 setting 里！`chrome://flags/#smooth-scrolling`
+
+* [+] 增加“浏览器缓存空间用量提示”
+
+* [+] 增加“保存到书架失败（缓存空间已满）判断”
+
+* [+] 书架书籍增加显示“数据文件大小”信息
+
+* [*] 书籍正文框居中

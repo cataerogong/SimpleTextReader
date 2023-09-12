@@ -43,13 +43,13 @@
                     <span>+ End: </span><span>末章</span>
                     <span>+ PgUp: </span><span>前十章</span>
                     <span>+ PgDn: </span><span>后十章</span>
-                    <span>+ ⇧/⇦: </span><span>前一章</span>
-                    <span>+ ⇩/⇨: </span><span>后一章</span>
-                    <span>+ Space: </span><span>选择</span>
+                    <span>+ ⇧: </span><span>前一章</span>
+                    <span>+ ⇩: </span><span>后一章</span>
+                    <span>+ Space: </span><span>选中/取消</span>
                     <span></span><span></span>
-                    <span>释放 Shift: </span><span>跳转选定章节</span>
+                    <span>释放 Shift: </span><span>跳转选中章节</span>
                 </div>
-                <div id="tocContent"></div>
+                <div id="tocContent" class="no-scrollbar"></div>
                 <div id="progress" class="uifont prevent-select">
                     <span id="progress-title"></span>
                     <br />
@@ -80,15 +80,15 @@
             </div>
         </div>
 
-        <div id="contentLayer" class="layer content-layer" style="visibility: hidden;">
+        <div id="contentLayer" class="layer content-layer no-interact" style="visibility: hidden;">
             <!-- Main text -->
-            <div id="content"></div>
+            <div id="content" class="interact"></div>
 
             <!-- Footnotes -->
             <ol id="footnote-content"></ol>
 
             <!-- Pagination -->
-            <div id="pagination" class="uifont prevent-select"></div>
+            <div id="pagination" class="uifont prevent-select interact"></div>
         </div>
 
         <script type="text/javascript" src="./scripts/jquery.min.js"></script>

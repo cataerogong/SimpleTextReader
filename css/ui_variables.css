@@ -47,15 +47,9 @@
     --ui_dropZoneText_EN: txt;
     --ui_readingProgress_CN: 阅读进度：;
     --ui_readingProgress_EN: Progress：;   /* Have to use chinese colon and replace it later */
-    --ui_contentWidth: 70;
-    --ui_windowLeftRightMargin: 2;
-    --ui_gapWidth: 2;
+    --ui_contentWidth: min(70%, 1000px);
     --ui_numPaginationItems: 9;
-    --ui_contentMarginLeft: 0;
-    --ui_tocWidth: 0;
-    --ui_tocHeight: 70;
-    --ui_paginationCenter: 0;
-    --ui_anchorTargetBefore: 1.6em;
+    --ui_tocHeight: 70%;
     --ui_dropZoneImgSize: 13em;
     --ui_loadingImgSize: 380px;
     --ui_footnoteImgSize: 12px;

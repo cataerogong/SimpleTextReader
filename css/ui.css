@@ -66,14 +66,14 @@ To Offset the anchor link to clear fixed header
 
 /* Main content */
 .content-layer {
+    display: block;
     overflow-y: auto;
     scroll-behavior: smooth;
+    justify-content: center;
 }
 #content {
-    /* width: 75%; */
-    /* height: 100vh; */
-    /* margin: 0 0 0 22%; */
-    display: block;
+    margin: 0 auto;
+    width: var(--ui_contentWidth);
     overflow-x: hidden;
     background-color: var(--bgColor);
 }
@@ -141,6 +141,7 @@ To Offset the anchor link to clear fixed header
 #pagination {
     position: fixed;
     bottom: 30px;
+    left: 50%;
     background-color: var(--bgColor);
     border: 1px dashed var(--borderColor);
     border-radius: 8px;
@@ -201,13 +202,14 @@ To Offset the anchor link to clear fixed header
 }
 .toc-panel {
     height: 100%;
+    max-width: 50vw;
     width: max-content;
-    padding-right: 2rem;
+    padding-right: 1rem;
+    padding-left: 1rem;
     display: grid;
     grid-template-rows: max-content 1fr max-content;
-    grid-template-columns: max-content;
     background-color: var(--bgColor);
-    transition: var(--darkMode_animation);
+    transition: all 1s;
 }
 .toc-panel:hover {
     border-right: 1px solid var(--borderColor);
@@ -230,31 +232,29 @@ To Offset the anchor link to clear fixed header
 .toc-panel:hover .toc-hint {
     visibility: visible;
 }
-.toc-hint span:nth-child(-n + 2) {
+/* .toc-hint span:nth-child(-n + 2) {
     visibility: visible;
-}
+} */
 #tocContent {
+    height: var(--ui_tocHeight);
     scroll-behavior: smooth;
     position: relative;
     line-height: 1em;
     font-size: 1em;
-    max-width: 70vw;
-    overflow-x: hidden;
     overflow-y: scroll;
     font-family:var(--fontFamily_title);
     padding: 1rem 0;
-    /* width: max-content; */
     display: grid;
     grid-auto-rows: max-content;
     grid-template-columns: max-content max-content;
     align-items: center;
     /* align-self: center; */
 }
-div#tocContent {
+.no-scrollbar {
     -ms-overflow-style: none;  /* IE and Edge */
     scrollbar-width: none;  /* Firefox */
 }
-div#tocContent::-webkit-scrollbar {
+.no-scrollbar::-webkit-scrollbar {
     display: none;
 }
 /* Credit: https://stackoverflow.com/questions/3874602/elements-to-look-like-a-bullet-point-list-inside-an-anchor-link */
@@ -272,8 +272,8 @@ div#tocContent::-webkit-scrollbar {
 }
 .toc-text {
     display: inline-block;
-    /*width: calc(100% - 0.9em - 1em);      /* 100% - width of .toc-bullet - margin-left of <a>*/
-    width: fit-content;
+    max-width: calc(50vw - 0.9em - 1em - 1rem);      /* 100% - width of .toc-bullet - margin-left of <a>*/
+    width: max-content;
     transition: visibility 1s, opacity 1s;
     visibility: hidden;
     opacity: 0;
@@ -296,7 +296,7 @@ a.title, a.title:link, a.title:visited {
 }
 a.toc-text, a.toc-text:link, a.toc-text:visited {
     color: var(--fontInfoColor);
-    margin: 0.3em 0 1.3em 1em;
+    margin: 0.3em 5px 1.3em 1em;
 }
 a.toc-text:hover {
     color: var(--mainColor);
@@ -365,14 +365,10 @@ img#seal_CN {
     width: min-content;
     height: min-content;
     right: 0;
-    bottom: 1rem;
-    transform: translateX(50%);
-    transition: var(--darkMode_animation);
+    bottom: 0;
+    padding: 1rem 10px;
 }
-.menu-panel:hover {
-    transform: translateX(0);
-}
-.menu-panel:hover .btn-icon {
+.menu-panel .btn-icon {
     box-shadow: var(--shadowV_args);
     -webkit-box-shadow: var(--webkit-shadowV_args);
     -moz-box-shadow: var(--moz-shadowV_args);
@@ -456,6 +452,10 @@ dialog input[type="checkbox"] {
 
 input:invalid {
     background-color: pink;
+}
+
+#settingDlg {
+    color: var(--ui_foreColor);
 }
 
 #settingDlg .sub-cap {

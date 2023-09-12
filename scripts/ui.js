@@ -57,6 +57,18 @@ let tocSelItem = -1;
 let tocFocused = false;
 let tocCurItem = -1;
 let tocNumPerPage = 10; // PgDn,PgUp 跳转章数
+function focusTocItem(tocItem, focused=true) {
+    if (!tocItem) return;
+    if (focused) {
+        tocItem.focus();
+        tocItem.style.setProperty("outline", "2px dotted var(--mainColor_focused)");
+        tocItem.style.setProperty("outline-offset", "2px");
+    } else {
+        tocItem.blur();
+        tocItem.style.removeProperty("outline");
+        tocItem.style.removeProperty("outline-offset");
+    }
+}
 function onDocKeydown(event) {
     if (!isElementVisible(contentContainer)) return;
     let handled = false;
@@ -81,8 +93,8 @@ function onDocKeydown(event) {
                     break;
                 }
             }
-            if ((tocSelItem >= 0) && tocFocused) {
-                tocItems[tocSelItem].focus();
+            if (tocSelItem >= 0) {
+                focusTocItem(tocItems[tocSelItem], tocFocused);
                 // tocNumPerPage = Math.floor(tocContainer.clientHeight / tocItems[tocFocusedItem].offsetHeight);
                 // console.log(tocNumPerPage)
             }
@@ -93,6 +105,7 @@ function onDocKeydown(event) {
         const tocItems = tocContainer.getElementsByClassName("toc-text");
         if (!tocItems.length) return;
         handled = true;
+        focusTocItem(tocItems[tocSelItem], false);
         switch (event.key) {
             case "Home":
                 tocSelItem = 0;
@@ -111,12 +124,10 @@ function onDocKeydown(event) {
                 tocFocused = true;
                 break;
             case "ArrowUp":
-            case "ArrowLeft":
                 tocSelItem = Math.max(tocSelItem - 1, 0);
                 tocFocused = true;
                 break;
             case "ArrowDown":
-            case "ArrowRight":
                 tocSelItem = Math.min(tocSelItem + 1, tocItems.length - 1);
                 tocFocused = true;
                 break;
@@ -127,12 +138,8 @@ function onDocKeydown(event) {
                 handled = false;
                 break;
         }
-        if (handled && (tocSelItem >= 0)) {
-            if (tocFocused) {
-                tocItems[tocSelItem].focus();
-            } else {
-                tocItems[tocSelItem].blur();
-            }
+        if (tocSelItem >= 0) {
+            focusTocItem(tocItems[tocSelItem], tocFocused);
         }
     } else { // content
         let lh = 1.5*emInPx;
@@ -151,14 +158,14 @@ function onDocKeydown(event) {
                 contentLayer.scrollTo(0, contentLayer.scrollHeight);
                 break;
             case "PageUp":
-                contentLayer.scrollBy(0, -contentLayer.clientHeight+lh);
+                contentLayer.scrollBy(0, -contentLayer.clientHeight + lh);
                 break;
             case "PageDown":
             case " ":
-                contentLayer.scrollBy(0, contentLayer.clientHeight-lh);
+                contentLayer.scrollBy(0, contentLayer.clientHeight - lh);
                 break;
             case "ArrowUp":
-                contentLayer.scrollBy(0, -lh*3);
+                contentLayer.scrollBy(0, -lh * 3);
                 break;
             case "ArrowDown":
                 contentLayer.scrollBy(0, lh * 3);
@@ -204,7 +211,7 @@ function onDocKeyup(event) {
                 if (tocFocused && (tocSelItem != tocCurItem)) {
                     tocItems[tocSelItem].click();
                 }
-                tocItems[tocSelItem].blur();
+                focusTocItem(tocItems[tocSelItem], false);
                 tocSelItem = -1;
                 tocFocused = false;
                 tocCurItem = -1;

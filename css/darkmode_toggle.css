@@ -22,14 +22,6 @@
     -webkit-font-smoothing: antialiased;
 } */
 
-/* #switch-btn label {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    cursor: pointer;
-} */
-
 #btnWrapper label .icons {
     display: flex;
     align-items: center;
@@ -46,13 +38,6 @@
     transform: translateX(-1.5rem);
 }
 
-/* #btnWrapper {
-    position: fixed;
-    bottom: 1rem;
-    right: 1rem;
-    z-index: 1005;
-} */
-
 .btn-group {
     display: grid;
     grid-auto-flow: row;
@@ -67,7 +52,6 @@
     border: 0.2rem solid;
     border-color: var(--lightMode_color);
     border-radius: 2rem;
-    background: var(--ui_bgColor);
     display: flex;
     align-items: center;
     justify-content: center;
