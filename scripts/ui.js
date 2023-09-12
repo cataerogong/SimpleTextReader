@@ -356,7 +356,7 @@ var fileloadCallback = {
         } catch (e) {
             console.log("fileloadCallback.before() error:", e);
         }
-        console.log("fileloadCallback.before() finished:", newF);
+        console.log("fileloadCallback.before() finished.") //, newF);
         return newF;
     },
 

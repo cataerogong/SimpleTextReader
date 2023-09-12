@@ -144,7 +144,6 @@ To Offset the anchor link to clear fixed header
     transform: translate(-50%);
     -webkit-transform: translate(-50%);
     font-size: 0.9em;
-    z-index: 1;
 }
 .pagination {
     list-style-type: none;
