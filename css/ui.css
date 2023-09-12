@@ -72,6 +72,7 @@ To Offset the anchor link to clear fixed header
     justify-content: center;
 }
 #content {
+    position: relative;
     margin: 0 auto;
     width: var(--ui_contentWidth);
     overflow-x: hidden;
@@ -82,18 +83,13 @@ To Offset the anchor link to clear fixed header
 /* Drop Zone */
 #dropZone {
     background: var(--bgColor);
-    /* z-index: 999; */
-    /* visibility: visible; */
     border: 0.5em dashed var(--mainColor);
     border-radius: 16px;
     box-sizing: border-box;
     -moz-box-sizing: border-box;
     -webkit-box-sizing: border-box;
-    /* transition: var(--darkMode_animation); */
 }
 #dropZoneText {
-    /* visibility: visible; */
-    /* z-index: 1000; */
     position: absolute;
     top: 50%;
     left: 50%;
@@ -103,8 +99,6 @@ To Offset the anchor link to clear fixed header
     font-size: 5em;
 }
 #dropZoneImg {
-    /* visibility: visible; */
-    /* z-index: 1000; */
     position: absolute;
     top: 50%;
     left: 50%;
@@ -123,7 +117,6 @@ To Offset the anchor link to clear fixed header
 /* Loading screen */
 #loading {
     background: var(--bgColor);
-    /* z-index: 999; */
     visibility: hidden;
 }
 #loading img {
@@ -148,8 +141,6 @@ To Offset the anchor link to clear fixed header
     box-shadow: var(--shadowV_args);
     -webkit-box-shadow: var(--webkit-shadowV_args);
     -moz-box-shadow: var(--moz-shadowV_args);
-    /* display: none; */
-    /* left: 61%; */
     transform: translate(-50%);
     -webkit-transform: translate(-50%);
     font-size: 0.9em;
@@ -160,7 +151,6 @@ To Offset the anchor link to clear fixed header
     display: flex;
     justify-content: center;
     align-items: center;
-    /* display: none; */
 }
 .pagination li {
     margin: 0 5px;
@@ -187,7 +177,6 @@ To Offset the anchor link to clear fixed header
 .jumpInput {
     color: black;
     border:0;
-    /* outline:0; */
     background-color: var(--bgColor) !important;
 }
 .disabledbutton {
@@ -197,21 +186,21 @@ To Offset the anchor link to clear fixed header
 
 
 /* TOC */
-.toc-layer:hover {
-    z-index: 1;
-}
 .toc-panel {
+    position: fixed;
+    top: 0;
+    left: 0;
     height: 100%;
     max-width: 50vw;
     width: max-content;
-    padding-right: 1rem;
-    padding-left: 1rem;
+    padding: 0 1rem;
     display: grid;
     grid-template-rows: max-content 1fr max-content;
     background-color: var(--bgColor);
-    transition: all 1s;
+    transition: box-shadow 1s, -webkit-box-shadow 1s, -moz-box-shadow 1s;
 }
 .toc-panel:hover {
+    z-index: 1;
     border-right: 1px solid var(--borderColor);
     box-shadow:var(--shadowH_args);
     -webkit-box-shadow: var(--webkit-shadowH_args);
@@ -232,9 +221,6 @@ To Offset the anchor link to clear fixed header
 .toc-panel:hover .toc-hint {
     visibility: visible;
 }
-/* .toc-hint span:nth-child(-n + 2) {
-    visibility: visible;
-} */
 #tocContent {
     height: var(--ui_tocHeight);
     scroll-behavior: smooth;
@@ -273,7 +259,7 @@ To Offset the anchor link to clear fixed header
 .toc-text {
     display: inline-block;
     max-width: calc(50vw - 0.9em - 1em - 1rem);      /* 100% - width of .toc-bullet - margin-left of <a>*/
-    width: max-content;
+    width: fit-content;
     transition: visibility 1s, opacity 1s;
     visibility: hidden;
     opacity: 0;
@@ -282,6 +268,7 @@ To Offset the anchor link to clear fixed header
     text-overflow: ellipsis;
     overflow-x: hidden;
     overflow-y: hidden;
+    padding-right: 5px;
 }
 /* Credit: https://www.taccgl.org/blog/css-transition-visibility.html */
 #tocPanel:hover .toc-text {
@@ -380,7 +367,7 @@ dialog {
     font-family: var(--fontFamily_ui);
     font-size: 1.2rem;
     background-color: var(--bgColor);
-    color: var(--mainColor_focused);
+    color: var(--ui_foreColor);
     display: grid;
     grid-template-rows: max-content 1fr max-content;
     box-shadow: 0px 0px 10px black;
@@ -419,7 +406,7 @@ dialog {
 .dlg-foot button {
     font-family: ui;
     padding: 2px 10px;
-    border: 1px solid var(--mainColor_focused);
+    border: 1px solid var(--ui_foreColor);
     border-radius: 5px;
     font-size: 1.2rem;
     color: var(--bgColor);
@@ -438,10 +425,10 @@ dialog {
 .dlg-body input,
 .dlg-body select {
     margin: 1px;
-    border: 1px solid var(--mainColor_focused);
+    border: 1px solid var(--ui_foreColor);
     font-family: ui;
     font-size: 1.2rem;
-    color: var(--mainColor_focused);
+    color: var(--ui_foreColor);
     background-color: var(--bgColor);
 }
 

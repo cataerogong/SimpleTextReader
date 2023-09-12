@@ -720,7 +720,7 @@ var STRe_Bookshelf = {
 		<svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
 			<path stroke="none" d="M9 3v15h3V3H9m3 2l4 13l3-1l-4-13l-3 1M5 5v13h3V5H5M3 19v2h18v-2H3Z"/>
 		</svg></div>`)
-			.click(() => { this.refreshBookList(); resetUI(); })
+			.click(() => { resetUI(); })
 			.prependTo($("#btnWrapper"))
 			.hide();
 

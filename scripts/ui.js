@@ -74,7 +74,7 @@ function onDocKeydown(event) {
     let handled = false;
     if (event.key == "Shift") { // activate toc
         if (event.repeat) return;
-        setCSS(".toc-layer", "z-index", "1");
+        setCSS(".toc-panel", "z-index", "1");
         setCSS(".toc-panel", "border-right", "1px solid var(--borderColor)");
         setCSS(".toc-panel", "box-shadow", "var(--shadowH_args)");
         setCSS(".toc-panel", "-webkit-box-shadow", "var(--webkit-shadowH_args)");
@@ -197,7 +197,7 @@ function onDocKeyup(event) {
     if (event.key == "Shift") {
         event.preventDefault();
         event.stopPropagation();
-        delCSS(".toc-layer", "z-index");
+        delCSS(".toc-panel", "z-index");
         delCSS(".toc-panel", "border-right");
         delCSS(".toc-panel", "box-shadow");
         delCSS(".toc-panel", "-webkit-box-shadow");

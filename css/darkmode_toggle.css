@@ -52,6 +52,7 @@
     border: 0.2rem solid;
     border-color: var(--lightMode_color);
     border-radius: 2rem;
+    background-color: var(--bgColor);
     display: flex;
     align-items: center;
     justify-content: center;

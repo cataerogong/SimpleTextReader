@@ -18,27 +18,17 @@ function setMainContentUI() {
 }
 
 function updateTOCUI(isIncreasing) {
-    // if (isVariableDefined(tocWrapper)) {
-    //   tocWrapper.style.height = style.ui_tocHeight + '%';
-    // }
-    // if (isVariableDefined(tocContainer)) {
-    //     tocContainer.style.height = 'auto';
-    //     if (tocContainer.scrollHeight > (window.innerHeight * 0.5)) {
-    //         tocContainer.style.height = '50%';
-    //     }
-    // }
-
     if (isVariableDefined(paginationContainer)) {
         if (!isIncreasing) {
-            // if (((paginationContainer.offsetWidth) > (contentContainer.offsetWidth * 0.5)) && (parseInt(style.ui_numPaginationItems) > 5)) {
-            if (((paginationContainer.offsetWidth) > (contentLayer.offsetWidth * 0.5)) && (parseInt(style.ui_numPaginationItems) > 5)) {
+            if (((paginationContainer.offsetWidth) > (contentContainer.offsetWidth * 0.5)) && (parseInt(style.ui_numPaginationItems) > 5)) {
+            // if (((paginationContainer.offsetWidth) > (contentLayer.offsetWidth * 0.5)) && (parseInt(style.ui_numPaginationItems) > 5)) {
                 style.ui_numPaginationItems = (parseInt(style.ui_numPaginationItems) - 2).toString();
                 style.ui_numPaginationItems = (Math.max(parseInt(style.ui_numPaginationItems), 5)).toString();
                 generatePagination();
             }
         } else {
-            // if (((paginationContainer.offsetWidth + 2*(paginationContainer.offsetWidth / (parseInt(style.ui_numPaginationItems) + 2))) < (contentContainer.offsetWidth * 0.5)) && (parseInt(style.ui_numPaginationItems) < 9)) {
-            if (((paginationContainer.offsetWidth + 2*(paginationContainer.offsetWidth / (parseInt(style.ui_numPaginationItems) + 2))) < (contentLayer.offsetWidth * 0.5)) && (parseInt(style.ui_numPaginationItems) < 9)) {
+            if (((paginationContainer.offsetWidth + 2*(paginationContainer.offsetWidth / (parseInt(style.ui_numPaginationItems) + 2))) < (contentContainer.offsetWidth * 0.5)) && (parseInt(style.ui_numPaginationItems) < 9)) {
+            // if (((paginationContainer.offsetWidth + 2*(paginationContainer.offsetWidth / (parseInt(style.ui_numPaginationItems) + 2))) < (contentLayer.offsetWidth * 0.5)) && (parseInt(style.ui_numPaginationItems) < 9)) {
                 style.ui_numPaginationItems = (parseInt(style.ui_numPaginationItems) + 2).toString();
                 style.ui_numPaginationItems = (Math.min(parseInt(style.ui_numPaginationItems), 9)).toString();
                 generatePagination();
@@ -49,24 +39,13 @@ function updateTOCUI(isIncreasing) {
 
 function showLayer(layer) {
     if (isVariableDefined(dropZone)) {
-        // dropZone.style.zIndex = "1";
         dropZone.style.visibility = (layer == "dropZone") ? "visible" : "hidden";
-        // dropZone.style.display = (layer == "dropZone") ? "" : "none";
     }
     if (isVariableDefined(loadingScreen)) {
-        // loadingScreen.style.zIndex = "1";
         loadingScreen.style.visibility = (layer == "loading") ? "visible" : "hidden";
-        // loadingScreen.style.display = (layer == "loading") ? "" : "none";
     }
     if (isVariableDefined(contentLayer)) {
-        // contentLayer.style.zIndex = "auto";
-        contentLayer.style.visibility = (layer == "reader") ? "visible" : "hidden";
-        // contentLayer.style.display = (layer == "reader") ? "" : "none";
-    }
-    if (isVariableDefined(tocLayer)) {
-        // tocLayer.style.zIndex = "auto";
-        // tocLayer.style.visibility = (layer == "reader") ? "visible" : "hidden";
-        tocLayer.style.display = (layer == "reader") ? "" : "none";
+        contentLayer.style.visibility = (layer == "content") ? "visible" : "hidden";
     }
 }
 
@@ -88,39 +67,12 @@ function showDropZone(focused=false) {
     }
 }
 
-function hideDropZone() {
-    throw new Error("no hideDropZone");
-    if (isVariableDefined(dropZone) && isVariableDefined(dropZoneText) && isVariableDefined(dropZoneImg)) {
-        dropZone.style.visibility = "hidden";
-        // dropZone.style.zIndex = "1";
-        dropZoneText.style.visibility = "hidden";
-        // dropZoneText.style.zIndex = "2";
-        dropZoneImg.style.visibility = "hidden";
-        // dropZoneImg.style.zIndex = "3";
-    }
-}
-
 function showLoadingScreen() {
     showLayer("loading");
 }
 
-function hideLoadingScreen() {
-    throw new Error("no hideLoadingScreen");
-    loadingScreen.style.visibility = "hidden";
-}
-
 function showContent() {
-    showLayer("reader");
-}
-
-function hideContent() {
-    throw new Error("no hideContent");
-    // contentContainer.style.visibility = "hidden";
-    contentLayer.style.visibility = "hidden";
-    // tocContainer.style.visibility = "hidden";
-    paginationContainer.style.visibility = "hidden";
-    // progressContainer.style.visibility = "hidden";
-    tocPanel.style.visibility = "hidden";
+    showLayer("content");
 }
 
 function resetUI() {
