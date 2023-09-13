@@ -1,8 +1,6 @@
 let STRe_PROGRESS_FN_RE = /^(?<name>.+)\.progress$/i; // 格式：filename.progress
 let STRe_PROGRESS_RE = /^(?<line>\d+)(\/(?<total>\d+))?$/i; // 格式：line/total，match() 的结果：[full, line, /total, total]
 
-let DPR = window.devicePixelRatio;
-
 var STReHelper = {
 	// hack helper
 	FUNC_RE: /^\s*(function)?\s*(?<name>\w*)\s*\((?<args>[^\)]*)\)[\s\r\n]*{(?<body>.*)}\s*$/si, // function F(a) {b}
@@ -734,10 +732,3 @@ STRe_FilesOnServer.init();
 
 // 启动时打开上次阅读书籍
 STRe_Bookshelf.reopenBook();
-
-if (DPR > 1) {
-	setCSS(":root", "font-size", (12 * DPR)+"px");
-	setCSS("dialog", "height", "100vh");
-	setCSS("#settingDlg .setting-group-UI", "grid-template-columns", "max-content 1fr");
-	style.ui_contentWidth = "100%";
-}
