@@ -213,3 +213,11 @@ function delCSS(sel, prop = "") {
     }
     return false;
 }
+
+function atPageTop() {
+    return (contentLayer.scrollTop == 0);
+}
+
+function atPageBottom() {
+    return (contentLayer.scrollTop + contentLayer.clientHeight == contentLayer.scrollHeight);
+}

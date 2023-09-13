@@ -517,6 +517,7 @@ class SettingGroupBookshelf extends SettingGroupBase {
 	}
 
 	apply() {
+		STRe_Bookshelf.reopenEnabled = this.settings["reopen"].value;
 		if (this.settings["enable"].value) {
 			STRe_Bookshelf.enable();
 		} else {
@@ -530,13 +531,14 @@ class SettingGroupBookshelf extends SettingGroupBase {
 var STRe_Bookshelf = {
 
 	enabled: false,
+	reopenEnabled : false,
 	db: null,
 
 	STRe_FILENAME: "STRe-Filename",
 	STRe_CACHE_FLAG: "STRe-Cache-File",
 
 	async reopenBook() {
-		if (this.enabled) {
+		if (this.enabled && this.reopenEnabled) {
 			// 获取之前的文件名，重新打开
 			let fname = localStorage.getItem(this.STRe_FILENAME);
 			if (fname) {
@@ -731,13 +733,11 @@ STRe_ProgressOnServer.init();
 STRe_FilesOnServer.init();
 
 // 启动时打开上次阅读书籍
-if (settingMgr.groups["Bookshelf"].settings["reopen"].value) {
-	// if (STRe_Settings.settings.enableRos.val) {
-	STRe_Bookshelf.reopenBook();
-}
+STRe_Bookshelf.reopenBook();
 
 if (DPR > 1) {
-	setCSS(`:root`, `font-size`, `${12 * DPR}px`);
+	setCSS(":root", "font-size", (12 * DPR)+"px");
 	setCSS("dialog", "height", "100vh");
 	setCSS("#settingDlg .setting-group-UI", "grid-template-columns", "max-content 1fr");
+	style.ui_contentWidth = "100%";
 }

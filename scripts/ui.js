@@ -70,7 +70,7 @@ function focusTocItem(tocItem, focused=true) {
     }
 }
 function onDocKeydown(event) {
-    if (!isElementVisible(contentContainer)) return;
+    if (!isElementVisible(contentLayer)) return;
     let handled = false;
     if (event.key == "Shift") { // activate toc
         if (event.repeat) return;
@@ -158,23 +158,39 @@ function onDocKeydown(event) {
                 contentLayer.scrollTo(0, contentLayer.scrollHeight);
                 break;
             case "PageUp":
-                contentLayer.scrollBy(0, -contentLayer.clientHeight + lh);
+                if (atPageTop() && (currentPage > 1)) {
+                    gotoPage(currentPage - 1, "bottom");
+                } else {
+                    contentLayer.scrollBy(0, -contentLayer.clientHeight + lh);
+                }
                 break;
             case "PageDown":
             case " ":
-                contentLayer.scrollBy(0, contentLayer.clientHeight - lh);
+                if (atPageBottom() && (currentPage < totalPages)) {
+                    gotoPage(currentPage + 1, "top");
+                } else {
+                    contentLayer.scrollBy(0, contentLayer.clientHeight - lh);
+                }
                 break;
             case "ArrowUp":
-                contentLayer.scrollBy(0, -lh * 3);
+                if (atPageTop() && (currentPage > 1)) {
+                    gotoPage(currentPage - 1, "bottom");
+                } else {
+                    contentLayer.scrollBy(0, -lh * 3);
+                }
                 break;
             case "ArrowDown":
-                contentLayer.scrollBy(0, lh * 3);
+                if (atPageBottom() && (currentPage < totalPages)) {
+                    gotoPage(currentPage + 1, "top");
+                } else {
+                    contentLayer.scrollBy(0, lh * 3);
+                }
                 break;
             case 'ArrowLeft':
                 gotoPage(currentPage - 1);
                 break;
             case 'ArrowRight':
-                gotoPage(currentPage+1);
+                gotoPage(currentPage + 1);
                 break;
             case 'Escape':
                 // console.log("Escape pressed:", no_ui);
@@ -194,6 +210,7 @@ function onDocKeydown(event) {
 };
 
 function onDocKeyup(event) {
+    if (!isElementVisible(contentLayer)) return;
     if (event.key == "Shift") {
         event.preventDefault();
         event.stopPropagation();
@@ -220,9 +237,25 @@ function onDocKeyup(event) {
     }
 }
 
+function onDocWheel(event) {
+    if (!isElementVisible(contentContainer)) return;
+    if (atPageTop() && (currentPage > 1) && (event.deltaY < 0)) {
+        gotoPage(currentPage - 1, "bottom");
+        event.preventDefault();
+        event.stopPropagation();
+    } else if (atPageBottom() && (currentPage < totalPages) && (event.deltaY > 0)) {
+        gotoPage(currentPage + 1, "top");
+        event.preventDefault();
+        event.stopPropagation();
+    }
+    return;
+}
+
 document.onkeyup = onDocKeyup;
 
 document.onkeydown = onDocKeydown;
+
+contentContainer.onwheel = onDocWheel;
 
 function openFileSelector(event) {
     event.preventDefault();
@@ -666,13 +699,13 @@ function processTOC() {
 
 
 // Helper functions
-function jumpToPageInputField(event, scrolltoTop=true) {
+function jumpToPageInputField(event, scrollto="top") {
     if (event.key === 'Enter') {
-        gotoPage(parseInt(event.currentTarget.value), scrolltoTop);
+        gotoPage(parseInt(event.currentTarget.value), scrollto);
     }
 }
 
-function gotoPage(page, scrolltoTop=true) {
+function gotoPage(page, scrollto="top") {
     if (!isNaN(page)) {
         // currentPage = (page > totalPages) ? totalPages : ((page < 1) ? 1 : page);
         currentPage = Math.min(Math.max(1, page), totalPages);
@@ -682,8 +715,13 @@ function gotoPage(page, scrolltoTop=true) {
     showCurrentPageContent();
     generatePagination();
 
-    if (scrolltoTop) {
-        contentLayer.scrollTo({top: 0, behavior: 'instant'});
+    switch (scrollto) {
+        case "top":
+            contentLayer.scrollTo({top: 0, behavior: 'instant'});
+            break;
+        case "bottom":
+            contentLayer.scrollTo({top: contentLayer.scrollHeight, behavior: 'instant'});
+            break;
     }
     GetScrollPositions();
 }
@@ -695,7 +733,7 @@ function gotoLine(lineNumber, isTitle=true) {
     needToGoPage = needToGoPage > totalPages ? totalPages : (needToGoPage < 1 ? 1 : needToGoPage);
     // console.log("needToGoPage: ", needToGoPage);
     if (needToGoPage !== currentPage) {
-        gotoPage(needToGoPage, false);
+        gotoPage(needToGoPage, "");
     }
 
     // scroll to the particular line
