@@ -2,28 +2,28 @@ let STRe_PROGRESS_FN_RE = /^(?<name>.+)\.progress$/i; // 格式：filename.progr
 let STRe_PROGRESS_RE = /^(?<line>\d+)(\/(?<total>\d+))?$/i; // 格式：line/total，match() 的结果：[full, line, /total, total]
 
 var STReHelper = {
-	// hack helper
-	FUNC_RE: /^\s*(function)?\s*(?<name>\w*)\s*\((?<args>[^\)]*)\)[\s\r\n]*{(?<body>.*)}\s*$/si, // function F(a) {b}
-	// FUNC_RE2: /^\s*\((?<args>[^\)]*)\)[\s\r\n]*=>[\s\r\n]*{?(?<body>.*)}?\s*$/is, // (a) => {b}
-	getFuncArgs(func) {
-		let r = this.FUNC_RE.exec(func.toString()); // || this.FUNC_RE2.exec(func.toString());
-		return r ? r.groups["args"] : "";
-	},
-	getFuncBody(func) {
-		let r = this.FUNC_RE.exec(func.toString()); // || this.FUNC_RE2.exec(func.toString());
-		return r ? r.groups["body"] : "";
-	},
-	replaceFunc(funcOwner, funcName, funcCopyName, newFunc) {
-		try {
-			funcOwner[funcCopyName] = new Function(this.getFuncArgs(funcOwner[funcName]), this.getFuncBody(funcOwner[funcName]));
-			funcOwner[funcName] = new Function(this.getFuncArgs(funcOwner[funcName]), this.getFuncBody(newFunc));
-		} catch (e) {
-			console.log(this.getFuncArgs(funcOwner[funcName]));
-			console.log(this.getFuncBody(funcOwner[funcName]));
-			console.log(this.getFuncBody(newFunc));
-			throw e;
-		}
-	},
+	// // hack helper
+	// FUNC_RE: /^\s*(function)?\s*(?<name>\w*)\s*\((?<args>[^\)]*)\)[\s\r\n]*{(?<body>.*)}\s*$/si, // function F(a) {b}
+	// // FUNC_RE2: /^\s*\((?<args>[^\)]*)\)[\s\r\n]*=>[\s\r\n]*{?(?<body>.*)}?\s*$/is, // (a) => {b}
+	// getFuncArgs(func) {
+	// 	let r = this.FUNC_RE.exec(func.toString()); // || this.FUNC_RE2.exec(func.toString());
+	// 	return r ? r.groups["args"] : "";
+	// },
+	// getFuncBody(func) {
+	// 	let r = this.FUNC_RE.exec(func.toString()); // || this.FUNC_RE2.exec(func.toString());
+	// 	return r ? r.groups["body"] : "";
+	// },
+	// replaceFunc(funcOwner, funcName, funcCopyName, newFunc) {
+	// 	try {
+	// 		funcOwner[funcCopyName] = new Function(this.getFuncArgs(funcOwner[funcName]), this.getFuncBody(funcOwner[funcName]));
+	// 		funcOwner[funcName] = new Function(this.getFuncArgs(funcOwner[funcName]), this.getFuncBody(newFunc));
+	// 	} catch (e) {
+	// 		console.log("replaceFunc() args:", this.getFuncArgs(funcOwner[funcName]));
+	// 		console.log("replaceFunc() old body:", this.getFuncBody(funcOwner[funcName]));
+	// 		console.log("replaceFunc() new body:", this.getFuncBody(newFunc));
+	// 		throw e;
+	// 	}
+	// },
 
 	isElmVisible(elm, pseudoElt = null) {
 		let styles = window.getComputedStyle(elm, pseudoElt);
@@ -31,9 +31,19 @@ var STReHelper = {
 	},
 
 	async fetchLink(link) {
-		let resp = await fetch(link, {
-			credentials: "include",
-		});
+		let args = {};
+		try {
+			if ((typeof browser == "undefined") &&
+				(typeof chrome == "undefined" || typeof chrome.extension == "undefined")) {
+				// 正常网页模式下 include credentials，这样可以访问一些需要登录的 WebDAV
+				// 浏览器扩展模式下，暂时不支持凭据
+				args.credentials = "include";
+			}
+		} catch (e) {
+			console.log(e);
+		}
+		console.log("fetch args:", args);
+		let resp = await fetch(link, args);
 		if (!resp.ok) throw new Error(`Fetch link <${link}> error! RESP: ${resp.status} ${resp.statusText}`);
 		return resp;
 	},
@@ -55,20 +65,6 @@ var STReHelper = {
 		return ret;
 	},
 };
-
-// 夹带点私货，我的小说命名规则是：书名.[作者]
-STReHelper.replaceFunc(window, "getBookNameAndAuthor", "getBookNameAndAuthor____copy", function (str) {
-	let current = str.trim();
-	current = current.replace(/（(校对|精校)版?全本[^）]*）/i, "");
-	let m = current.match(/^(?<name>.+)\.\[(?<author>.+)\]$/i);
-	if (m) {
-		return {
-			"bookName": m.groups["name"],
-			"author": m.groups["author"]
-		}
-	}
-	return getBookNameAndAuthor____copy(current);
-});
 
 
 // ------------------------------------------------
@@ -119,7 +115,7 @@ var STRe_FilesOnServer = {
 				} else {
 					console.log(`Unsupported file type: ${fname} (${blob.type})`);
 					alert("文件格式不支持");
-					hideLoadingScreen();
+					// hideLoadingScreen();
 				}
 			});
 		}).catch((e) => {
@@ -169,10 +165,11 @@ var STRe_FilesOnServer = {
 					this.openFile(fn);
 				}).appendTo(booklist);
 				let progress = STReHelper.getLocalProgress(fn); //localStorage.getItem(fn);
-				let pct = "?%";
 				if (progress) {
-					if (STRe_PROGRESS_RE.test(progress)) {
-						pct = (eval(progress) * 100).toFixed(0) + "%";
+					let pct = "?%";
+					let m = STRe_PROGRESS_RE.exec(progress);
+					if (m && m.groups["total"]) {
+						pct = ((m.groups["line"] / m.groups["total"]) * 100).toFixed(0) + "%";
 						book.addClass("read").css("--read-progress", pct);
 					}
 					book.attr("title", "阅读进度：" + pct + " (" + progress + ")");
@@ -555,7 +552,6 @@ var STRe_Bookshelf = {
 			try {
 				let book = await this.db.getBook(fname);
 				if (book) {
-					book.name = fname;
 					book[this.STRe_CACHE_FLAG] = true;
 					resetVars();
 					handleSelectedFile([book]);
@@ -580,7 +576,7 @@ var STRe_Bookshelf = {
 					console.log("saveBook: ", file.name);
 					// 先把文件保存到缓存db中
 					await STRe_Bookshelf.db.putBook(file.name, file);
-					if (!await bookshelf.db.isBookExist(file.name))
+					if (!await STRe_Bookshelf.db.isBookExist(file.name))
 						alert("保存到本地书架失败（缓存空间可能已满）");
 					// 刷新 Bookshelf in DropZone
 					await STRe_Bookshelf.refreshBookList();
@@ -606,6 +602,29 @@ var STRe_Bookshelf = {
 		}
 	},
 
+	// 更新书籍阅读进度
+	updateBookProgressInfo(fname, bookElm = null) {
+		if (!bookElm) {
+			bookElm = $(`.bookshelf .book[data-filename="${fname}"]`);
+			if (bookElm.length <= 0) {
+				return;
+			}
+		}
+		let progress = STReHelper.getLocalProgress(fname);
+		if (progress) {
+			let pct = "?%";
+			let m = STRe_PROGRESS_RE.exec(progress);
+			if (m && m.groups["total"]) {
+				pct = ((m.groups["line"] / m.groups["total"]) * 100).toFixed(1) + "%";
+			}
+			bookElm.addClass("read").css("--read-progress", pct);
+			bookElm.find(".progress").html("进度：" + pct).attr("title", progress);
+		} else {
+			bookElm.removeClass("read").css("--read-progress", "");
+			bookElm.find(".progress").html("进度：无");
+		}
+	},
+
 	genBookItem(bookInfo) {
 		let book = $(`<div class="book" data-filename="${bookInfo.name}">
 			<div style="height:1.5rem;line-height:1.5rem;"><span class="delete-btn" title="删除">&times;</span></div>
@@ -622,17 +641,7 @@ var STRe_Bookshelf = {
 			evt.originalEvent.stopPropagation();
 			this.deleteBook(bookInfo.name, () => this.refreshBookList());
 		});
-		let progress = STReHelper.getLocalProgress(bookInfo.name); //localStorage.getItem(name);
-		let pct = "?%";
-		if (progress) {
-			if (STRe_PROGRESS_RE.test(progress)) {
-				pct = (eval(progress) * 100).toFixed(1) + "%";
-				book.addClass("read").css("--read-progress", pct);
-			}
-			book.find(".progress").html("进度：" + pct).attr("title", progress);
-		} else {
-			book.find(".progress").html("进度：无");
-		}
+		this.updateBookProgressInfo(bookInfo.name, book);
 		return book;
 	},
 
@@ -678,6 +687,7 @@ var STRe_Bookshelf = {
 	loop() {
 		if (this.enabled) {
 			localStorage.setItem(this.STRe_FILENAME, filename);
+			if (filename) this.updateBookProgressInfo(filename);
 			setTimeout(() => this.loop(), 1000);
 		}
 	},
@@ -686,10 +696,6 @@ var STRe_Bookshelf = {
 		if (!this.enabled) {
 			this.db = new STReLocalDB();
 			fileloadCallback.regBefore(this.saveBook);
-			STReHelper.replaceFunc(window, "resetUI", "resetUI__STReBookshelf_bak", function () {
-				STRe_Bookshelf.refreshBookList();
-				resetUI__STReBookshelf_bak();
-			});
 			$("#STRe-bookshelf-btn").show();
 			this.enabled = true;
 			this.show();
@@ -701,7 +707,6 @@ var STRe_Bookshelf = {
 
 	disable() {
 		if (this.enabled) {
-			STReHelper.replaceFunc(window, "resetUI", "resetUI__STReBookshelf_abandon", resetUI__STReBookshelf_bak);
 			fileloadCallback.unregBefore(this.saveBook);
 			$(".bookshelf").remove();
 			$("#STRe-bookshelf-btn").hide();

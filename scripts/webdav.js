@@ -22,12 +22,23 @@ var WebDAV = {
 
     async request(verb, url, headers, data, type) {
         headers["Content-Type"] = "text/xml; charset=UTF-8";
-        let resp = await fetch(url, {
-            credentials: "include",
+		let args = {
             method: verb,
             headers: headers,
             body: data
-        });
+        };
+		try {
+			if ((typeof browser == "undefined") &&
+				(typeof chrome == "undefined" || typeof chrome.extension == "undefined")) {
+				// 正常网页模式下 include credentials，这样可以访问一些需要登录的 WebDAV
+				// 浏览器扩展模式下，暂时不支持凭据
+				args.credentials = "include";
+			}
+		} catch (e) {
+			console.log(e);
+		}
+		console.log("fetch args:", args);
+        let resp = await fetch(url, args);
         if (!resp.ok) throw new Error(`Network response was not ok. ${resp.status} ${resp.statusText}`);
         let body = await resp.text();
         if (type == "xml") {

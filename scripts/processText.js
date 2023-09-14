@@ -168,7 +168,16 @@ function getTitle(str) {
 
 function getBookNameAndAuthor(str) {
     let current = str.trim();
-    current = current.replace("（校对版全本）", "");
+    // 增加书籍文件命名规则：书名.[作者]
+    // current = current.replace("（校对版全本）", "");
+	current = current.replace(/（(校对|精校)版?全本[^）]*）/i, "");
+	let m = current.match(/^(?<name>.+)\.\[(?<author>.+)\]$/i);
+	if (m) {
+		return {
+			"bookName": m.groups["name"],
+			"author": m.groups["author"]
+		}
+	}
     if (regex_isEastern.test(current)) {
         let pos = current.toLowerCase().indexOf("作者");
         if (pos !== -1) {

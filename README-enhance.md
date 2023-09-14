@@ -87,3 +87,11 @@
 ## v1.3.1
 
 * [+] 增加：页面到顶或到底时，若继续向上或向下（PgUp/PgDn/Up/Down/WheelUp/WheelDn）则自动翻页
+
+## v1.3.2
+
+* [*] 适配 Firefox / Chrome / Edge 插件正常界面版
+
+* [*] 由于插件环境下 eval() 受限，将原先 hack 的代码改为直接修改源代码，或采用替代方式实现功能
+
+* [!] bugfix

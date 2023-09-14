@@ -47,6 +47,9 @@ function showLayer(layer) {
     if (isVariableDefined(contentLayer)) {
         contentLayer.style.visibility = (layer == "content") ? "visible" : "hidden";
     }
+    if (isVariableDefined(tocPanel)) {
+        tocPanel.style.display = (layer == "content") ? "" : "none";
+    }
 }
 
 function showDropZone(focused=false) {
