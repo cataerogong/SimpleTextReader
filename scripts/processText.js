@@ -170,7 +170,7 @@ function getBookNameAndAuthor(str) {
     let current = str.trim();
     // 增加书籍文件命名规则：书名.[作者]
     // current = current.replace("（校对版全本）", "");
-	current = current.replace(/（(校对|精校)版?全本[^）]*）/i, "");
+	current = current.replace(/（(校对|精校)[^）]*）/i, "");
 	let m = current.match(/^(?<name>.+)\.\[(?<author>.+)\]$/i);
 	if (m) {
 		return {

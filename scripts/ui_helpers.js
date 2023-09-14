@@ -40,15 +40,15 @@ function updateTOCUI(isIncreasing) {
 function showLayer(layer) {
     if (isVariableDefined(dropZone)) {
         dropZone.style.visibility = (layer == "dropZone") ? "visible" : "hidden";
+        dropZone.style.zIndex = (layer == "dropZone") * 1;
     }
     if (isVariableDefined(loadingScreen)) {
         loadingScreen.style.visibility = (layer == "loading") ? "visible" : "hidden";
+        loadingScreen.style.zIndex = (layer == "loading") * 1;
     }
     if (isVariableDefined(contentLayer)) {
         contentLayer.style.visibility = (layer == "content") ? "visible" : "hidden";
-    }
-    if (isVariableDefined(tocPanel)) {
-        tocPanel.style.display = (layer == "content") ? "" : "none";
+        contentLayer.style.zIndex = (layer == "content") * 1;
     }
 }
 

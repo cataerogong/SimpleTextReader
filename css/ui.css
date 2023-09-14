@@ -70,6 +70,7 @@ To Offset the anchor link to clear fixed header
     overflow-y: auto;
     scroll-behavior: smooth;
     justify-content: center;
+    background-color: var(--bgColor);
 }
 #content {
     position: relative;
@@ -117,7 +118,6 @@ To Offset the anchor link to clear fixed header
 /* Loading screen */
 #loading {
     background: var(--bgColor);
-    visibility: hidden;
 }
 #loading img {
     position: absolute;
