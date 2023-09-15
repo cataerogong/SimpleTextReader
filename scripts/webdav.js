@@ -37,7 +37,7 @@ var WebDAV = {
 		} catch (e) {
 			console.log(e);
 		}
-		console.log("fetch args:", args);
+		// console.log("fetch args:", args);
         let resp = await fetch(url, args);
         if (!resp.ok) throw new Error(`Network response was not ok. ${resp.status} ${resp.statusText}`);
         let body = await resp.text();

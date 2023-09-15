@@ -42,7 +42,7 @@ var STReHelper = {
 		} catch (e) {
 			console.log(e);
 		}
-		console.log("fetch args:", args);
+		// console.log("fetch args:", args);
 		let resp = await fetch(link, args);
 		if (!resp.ok) throw new Error(`Fetch link <${link}> error! RESP: ${resp.status} ${resp.statusText}`);
 		return resp;
@@ -104,7 +104,7 @@ var STRe_FilesOnServer = {
 	webDAVdir: "", // http://WebDAV/books
 
 	openFile(fname) {
-		console.log("STRe_FilesOnServer.openFile: " + fname);
+		// console.log("STRe_FilesOnServer.openFile: " + fname);
 		showLoadingScreen();
 		STReHelper.fetchLink(this.webDAVdir + "/" + fname).then((resp) => {
 			resp.blob().then((blob) => {
@@ -115,13 +115,13 @@ var STRe_FilesOnServer = {
 				} else {
 					console.log(`Unsupported file type: ${fname} (${blob.type})`);
 					alert("文件格式不支持");
-					// hideLoadingScreen();
+					resetUI();
 				}
 			});
 		}).catch((e) => {
 			console.log("", e);
 			alert("打开云端书籍出错");
-			hideLoadingScreen();
+			resetUI();
 		});
 	},
 
@@ -284,7 +284,7 @@ var STRe_ProgressOnServer = {
 			}
 			let line = getTopLineNumber(filename);
 			if ((filename + ":" + line) != this.STReFileLine) {
-				console.log("Save progress on server: " + filename + ":" + line + "/" + fileContentChunks.length);
+				// console.log("Save progress on server: " + filename + ":" + line + "/" + fileContentChunks.length);
 				try {
 					await this.setProgress(filename, line + "/" + fileContentChunks.length);
 				} catch (e) {
@@ -299,7 +299,7 @@ var STRe_ProgressOnServer = {
 		if (!STRe_ProgressOnServer.enabled) return;
 		if (!STRe_ProgressOnServer.syncOnFileLoad) return;
 		if (filename) {
-			console.log("Check progress on server: " + filename);
+			// console.log("Check progress on server: " + filename);
 			try {
 				let progress = await STRe_ProgressOnServer.getProgress(filename);
 				let m = STRe_PROGRESS_RE.exec(progress);
@@ -346,7 +346,7 @@ var STRe_ProgressOnServer = {
 
 	async upload() {
 		if (this.enabled) {
-			console.log("Uploading progress.");
+			// console.log("Uploading progress.");
 			for (p of STReHelper.getLocalProgressAll()) {
 				if (STRe_PROGRESS_RE.test(p.progress)) {
 					try {
@@ -361,7 +361,7 @@ var STRe_ProgressOnServer = {
 
 	async download() {
 		if (this.enabled) {
-			console.log("Downloading progress.");
+			// console.log("Downloading progress.");
 			try {
 				for (const f of await WebDAV.Fs("").dir(this.webDAVdir).children()) {
 					let m = decodeURIComponent(f.name).match(STRe_PROGRESS_FN_RE);
@@ -390,6 +390,7 @@ var STRe_ProgressOnServer = {
 			}
 		}
 		for (const p of STReHelper.getLocalProgressAll()) {
+			if (p.progress.startsWith("0/")) continue;
 			let bk = progList.find(e => e.filename == p.name);
 			if (bk) {
 				bk.progress_local = p.progress;
@@ -547,7 +548,7 @@ var STRe_Bookshelf = {
 
 	async openBook(fname) {
 		if (this.enabled) {
-			console.log("Open file from cache: " + fname);
+			// console.log("Open file from cache: " + fname);
 			showLoadingScreen();
 			try {
 				let book = await this.db.getBook(fname);
@@ -571,7 +572,7 @@ var STRe_Bookshelf = {
 		if (STRe_Bookshelf.enabled) {
 			if (file.type === "text/plain") {
 				if (file[STRe_Bookshelf.STRe_CACHE_FLAG]) {
-					console.log("Openning cache-book, so not save.");
+					// console.log("Openning cache-book, so not save.");
 				} else {
 					console.log("saveBook: ", file.name);
 					// 先把文件保存到缓存db中
@@ -696,7 +697,7 @@ var STRe_Bookshelf = {
 		if (!this.enabled) {
 			this.db = new STReLocalDB();
 			fileloadCallback.regBefore(this.saveBook);
-			$("#STRe-bookshelf-btn").show();
+			// $("#STRe-bookshelf-btn").show();
 			this.enabled = true;
 			this.show();
 			console.log("Module <Bookshelf> enabled.");
@@ -709,7 +710,7 @@ var STRe_Bookshelf = {
 		if (this.enabled) {
 			fileloadCallback.unregBefore(this.saveBook);
 			$(".bookshelf").remove();
-			$("#STRe-bookshelf-btn").hide();
+			// $("#STRe-bookshelf-btn").hide();
 			this.db = null;
 			this.enabled = false;
 			console.log("Module <Bookshelf> disabled.");
@@ -718,13 +719,13 @@ var STRe_Bookshelf = {
 	},
 
 	init() {
-		$(`<div id="STRe-bookshelf-btn" class="btn-icon">
-		<svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-			<path stroke="none" d="M9 3v15h3V3H9m3 2l4 13l3-1l-4-13l-3 1M5 5v13h3V5H5M3 19v2h18v-2H3Z"/>
-		</svg></div>`)
-			.click(() => { resetUI(); })
-			.prependTo($("#btnWrapper"))
-			.hide();
+		// $(`<div id="STRe-bookshelf-btn" class="btn-icon">
+		// <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+		// 	<path stroke="none" d="M9 3v15h3V3H9m3 2l4 13l3-1l-4-13l-3 1M5 5v13h3V5H5M3 19v2h18v-2H3Z"/>
+		// </svg></div>`)
+		// 	.click(() => { resetUI(); })
+		// 	.prependTo($("#btnWrapper"))
+		// 	.hide();
 
 		settingMgr.groups["Bookshelf"] = new SettingGroupBookshelf();
 		settingMgr.load("Bookshelf").apply("Bookshelf");
