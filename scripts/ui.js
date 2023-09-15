@@ -187,10 +187,10 @@ function onDocKeydown(event) {
                 }
                 break;
             case 'ArrowLeft':
-                gotoPage(currentPage - 1);
+                if (currentPage > 1) gotoPage(currentPage - 1);
                 break;
             case 'ArrowRight':
-                gotoPage(currentPage + 1);
+                if (currentPage < totalPages) gotoPage(currentPage + 1);
                 break;
             case 'Escape':
                 // console.log("Escape pressed:", no_ui);

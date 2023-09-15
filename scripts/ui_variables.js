@@ -45,4 +45,4 @@ var darkModeToggle = document.getElementById("switch");
 
 var contentLayer = document.getElementById("contentLayer");
 
-const _STRe_VER_ = "1.3.3";
+const _STRe_VER_ = "1.4.0-wip";

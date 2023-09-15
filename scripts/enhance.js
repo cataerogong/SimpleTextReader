@@ -103,17 +103,17 @@ var STRe_FilesOnServer = {
 	enabled: false,
 	webDAVdir: "", // http://WebDAV/books
 
-	openFile(fname) {
+	openFile(file) {
 		// console.log("STRe_FilesOnServer.openFile: " + fname);
 		showLoadingScreen();
-		STReHelper.fetchLink(this.webDAVdir + "/" + fname).then((resp) => {
+		STReHelper.fetchLink(file.url).then((resp) => {
 			resp.blob().then((blob) => {
 				if (blob.type.startsWith("text/plain")) { // firefox type: "text/plain; charset=UTF-8"
-					let f = new File([blob], fname, { type: "text/plain" });
+					let f = new File([blob], file.name, { type: "text/plain" });
 					resetVars();
 					handleSelectedFile([f]);
 				} else {
-					console.log(`Unsupported file type: ${fname} (${blob.type})`);
+					console.log(`Unsupported file type: ${file.name} (${blob.type})`);
 					alert("文件格式不支持");
 					resetUI();
 				}
@@ -125,10 +125,68 @@ var STRe_FilesOnServer = {
 		});
 	},
 
+	async lsDir(url, level = 0) {
+		$("#serverDir").html(decodeURI(url));
+		let dir = WebDAV.Fs("").dir(url);
+		let container = $("#serverFilesDlg").find(".dlg-body");
+		let dir_list = [];
+		let file_list = [];
+		try {
+			// for (const f of fs.dir("/books").children()) {
+			for (const c of await dir.children()) {
+				c.name = decodeURIComponent(c.name);
+				if (c.type == "file") {
+					if (c.name.toLowerCase().endsWith(".txt"))
+						file_list.push(c);
+				} else if (c.type == "dir") {
+					dir_list.push(c);
+				}
+			}
+		} catch (e) {
+			console.log(e);
+			container.html(`<div>获取云端书籍列表发生错误！</div><div>WebDAV 地址：${dir.url}</div><div>错误信息：${e.message}</div>`);
+			return;
+		}
+		dir_list.sort((a, b) => (a.name.localeCompare(b.name, "zh")));
+		file_list.sort((a, b) => (a.name.localeCompare(b.name, "zh"))); // 拼音序
+		container.html("");
+		if (level) {
+			let m = dir.url.match(/^(?<up>.+)\/[^\/]+$/);
+			if (m) {
+				$(`<div class="item up-level" data-filename="">UP LEVEL</div>`).click(() => {
+					this.lsDir(m.groups["up"], level - 1);
+				}).appendTo(container);
+			}
+		}
+		for (const d of dir_list) {
+			$(`<div class="item dir" data-filename="${d.name}">${d.name}</div>`).click(() => {
+				this.lsDir(d.url, level + 1);
+			}).appendTo(container);
+		}
+		for (const f of file_list) {
+			let bookElm = $(`<div class="item book" data-filename="${f.name}">${f.name}</div>`).click(() => {
+				this.hide();
+				this.openFile(f);
+			}).appendTo(container);
+			let progress = STReHelper.getLocalProgress(f.name);
+			if (progress) {
+				let pct = "?%";
+				let m = STRe_PROGRESS_RE.exec(progress);
+				if (m && m.groups["total"]) {
+					pct = ((m.groups["line"] / m.groups["total"]) * 100).toFixed(1) + "%";
+				}
+				bookElm.addClass("read").css("--read-progress", pct);
+				bookElm.attr("title", `进度：${pct} (${progress})`);
+			}
+		}
+	},
+
 	async show() {
 		if (this.enabled) {
 			let dlg = $(`<dialog id="serverFilesDlg" class="files-on-server-dlg">
-				<div class="dlg-cap">云端书库</div>
+				<div class="dlg-cap">云端书库
+					<div class="cur-dir" id="serverDir"></div>
+				</div>
 				<span class="dlg-body">
 					<img src="./images/loading_geometry.gif" style="display:block;width:30vw;filter:var(--mainColor_filter); "/>
 				</span>
@@ -139,44 +197,7 @@ var STRe_FilesOnServer = {
 			dlg.appendTo("body");
 			dlg[0].showModal();
 
-			// let fs = WebDAV.Fs(_STRe_SERVER_);
-			let dir = WebDAV.Fs("").dir(this.webDAVdir);
-			let fname_list = [];
-			try {
-				// for (const f of fs.dir("/books").children()) {
-				for (const f of await dir.children()) {
-					let fname = decodeURIComponent(f.name);
-					// if (fname.toLowerCase().endsWith(".txt"))
-					fname_list.push(fname);
-				}
-			} catch (e) {
-				console.log(e);
-				dlg.find(".dlg-body").html(`<div>获取云端书籍列表发生错误！</div><div>WebDAV 地址：${this.webDAVdir}</div><div>错误信息：${e.message}</div>`);
-				return this;
-			}
-			fname_list.sort((a, b) => (a[0].localeCompare(b[0], "zh"))); // 拼音序
-			let booklist = dlg.find(".dlg-body");
-			booklist.html("");
-			for (const fn of fname_list) {
-				// booklist.append(`<div class="book-item ${fn[1] ? "book-read" : ""}" style="--book-progress:${fn[2]};"
-				// title="${"进度：" + (fn[1] ? (fn[2] + " (" + fn[1] + ")") : "无")}" data-book-filename="${fn[0]}">${fn[0]}</div>`);
-				let book = $(`<div class="book" data-filename="${fn}">${fn}</div>`).click(() => {
-					this.hide();
-					this.openFile(fn);
-				}).appendTo(booklist);
-				let progress = STReHelper.getLocalProgress(fn); //localStorage.getItem(fn);
-				if (progress) {
-					let pct = "?%";
-					let m = STRe_PROGRESS_RE.exec(progress);
-					if (m && m.groups["total"]) {
-						pct = ((m.groups["line"] / m.groups["total"]) * 100).toFixed(0) + "%";
-						book.addClass("read").css("--read-progress", pct);
-					}
-					book.attr("title", "阅读进度：" + pct + " (" + progress + ")");
-				} else {
-					book.attr("title", "阅读进度：无");
-				}
-			}
+			await this.lsDir(this.webDAVdir);
 		}
 		return this;
 	},
