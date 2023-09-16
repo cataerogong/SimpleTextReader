@@ -32,6 +32,7 @@ var STReHelper = {
 
 	async fetchLink(link) {
 		let args = {};
+		// args.headers = { "If-Modified-Since": "0" };
 		try {
 			if ((typeof browser == "undefined") &&
 				(typeof chrome == "undefined" || typeof chrome.extension == "undefined")) {
@@ -126,7 +127,7 @@ var STRe_FilesOnServer = {
 	},
 
 	async lsDir(url, level = 0) {
-		$("#serverDir").html(decodeURI(url));
+		$("#serverDir").html("🪐 " + decodeURI(url));
 		let dir = WebDAV.Fs("").dir(url);
 		let container = $("#serverFilesDlg").find(".dlg-body");
 		let dir_list = [];
@@ -153,18 +154,18 @@ var STRe_FilesOnServer = {
 		if (level) {
 			let m = dir.url.match(/^(?<up>.+)\/[^\/]+$/);
 			if (m) {
-				$(`<div class="item up-level" data-filename="">UP LEVEL</div>`).click(() => {
+				$(`<div class="item up-level" data-filename="">⬆ UP LEVEL ⬆</div>`).click(() => {
 					this.lsDir(m.groups["up"], level - 1);
 				}).appendTo(container);
 			}
 		}
 		for (const d of dir_list) {
-			$(`<div class="item dir" data-filename="${d.name}">${d.name}</div>`).click(() => {
+			$(`<div class="item dir" data-filename="${d.name}">📁 ${d.name}</div>`).click(() => {
 				this.lsDir(d.url, level + 1);
 			}).appendTo(container);
 		}
 		for (const f of file_list) {
-			let bookElm = $(`<div class="item book" data-filename="${f.name}">${f.name}</div>`).click(() => {
+			let bookElm = $(`<div class="item book" data-filename="${f.name}">📓 ${f.name}</div>`).click(() => {
 				this.hide();
 				this.openFile(f);
 			}).appendTo(container);

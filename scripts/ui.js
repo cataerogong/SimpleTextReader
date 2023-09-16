@@ -458,7 +458,8 @@ async function handleSelectedFile(fileList) {
 
             // Get all titles and process all footnotes
             allTitles.push([((style.ui_LANG === "EN") ? "TITLE PAGE" : "扉页"), 0]);
-            titlePageLineNumberOffset = (bookAndAuthor.author !== "") ? 3 : 2;
+            allTitles.push([((style.ui_LANG === "EN") ? "TEXT" : "正文"), 1]);
+            titlePageLineNumberOffset = 1; // (bookAndAuthor.author !== "") ? 3 : 2;
             for (var i in fileContentChunks) {
                 if (fileContentChunks[i].trim() !== '') {
                     // get all titles
@@ -478,14 +479,20 @@ async function handleSelectedFile(fileList) {
 
             // Add title page
             let sealRotation = (style.ui_LANG === "EN") ? `transform:rotate(${randomFloatFromInterval(-50, 80)}deg)` : "";
-            // fileContentChunks.unshift(`<div id=line${(titlePageLineNumberOffset - 1)} class='prevent-select seal'><img id='seal_${style.ui_LANG}' src='images/seal_${style.ui_LANG}.png' style='left:calc(${randomFloatFromInterval(0, 1)} * (100% - ${eval(`style.seal_width_${style.ui_LANG}`)})); ${sealRotation}'/></div>`);
-            fileContentChunks.unshift(`<div id=line${(titlePageLineNumberOffset - 1)} class='prevent-select seal'><img id='seal_${style.ui_LANG}' src='images/seal_${style.ui_LANG}.png' style='left:calc(${randomFloatFromInterval(0, 1)} * (100% - ${style.ui_LANG === 'CN' ? style.seal_width_CN : style.seal_width_EN})); ${sealRotation}'/></div>`);
-            if (bookAndAuthor.author !== "") {
-                fileContentChunks.unshift(`<h1 id=line1 style='margin-top:0; margin-bottom:${(parseFloat(style.h1_lineHeight)/2)}em'>${bookAndAuthor.author}</h1>`);
-                fileContentChunks.unshift(`<h1 id=line0 style='margin-bottom:0'>${bookAndAuthor.bookName}</h1>`);
-            } else {
-                fileContentChunks.unshift(`<h1 id=line0 style='margin-bottom:${(parseFloat(style.h1_lineHeight)/2)}em'>${bookAndAuthor.bookName}</h1>`);
-            }
+            // // fileContentChunks.unshift(`<div id=line${(titlePageLineNumberOffset - 1)} class='prevent-select seal'><img id='seal_${style.ui_LANG}' src='images/seal_${style.ui_LANG}.png' style='left:calc(${randomFloatFromInterval(0, 1)} * (100% - ${eval(`style.seal_width_${style.ui_LANG}`)})); ${sealRotation}'/></div>`);
+            // fileContentChunks.unshift(`<div id=line${(titlePageLineNumberOffset - 1)} class='prevent-select seal'><img id='seal_${style.ui_LANG}' src='images/seal_${style.ui_LANG}.png' style='left:calc(${randomFloatFromInterval(0, 1)} * (100% - ${style.ui_LANG === 'CN' ? style.seal_width_CN : style.seal_width_EN})); ${sealRotation}'/></div>`);
+            // if (bookAndAuthor.author !== "") {
+            //     fileContentChunks.unshift(`<h1 id=line1 style='margin-top:0; margin-bottom:${(parseFloat(style.h1_lineHeight)/2)}em'>${bookAndAuthor.author}</h1>`);
+            //     fileContentChunks.unshift(`<h1 id=line0 style='margin-bottom:0'>${bookAndAuthor.bookName}</h1>`);
+            // } else {
+            //     fileContentChunks.unshift(`<h1 id=line0 style='margin-bottom:${(parseFloat(style.h1_lineHeight)/2)}em'>${bookAndAuthor.bookName}</h1>`);
+            // }
+            let titlePage = `<div id="line0">
+            <h1 style='margin-bottom:0'>${bookAndAuthor.bookName}</h1>
+            <h1 style='margin-top:0; margin-bottom:${(parseFloat(style.h1_lineHeight)/2)}em'>${bookAndAuthor.author}</h1>
+            <div class='prevent-select seal'><img id='seal_${style.ui_LANG}' src='images/seal_${style.ui_LANG}.png' style='left:calc(${randomFloatFromInterval(0, 1)} * (100% - ${style.ui_LANG === 'CN' ? style.seal_width_CN : style.seal_width_EN})); ${sealRotation}'/></div>
+            </div>`;
+            fileContentChunks.unshift(titlePage);
 
             // Update the title of webpage
             document.title = bookAndAuthor.bookName;
@@ -536,8 +543,10 @@ async function handleSelectedFile(fileList) {
 }
 
 function showCurrentPageContent() {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
+    // const startIndex = (currentPage - 1) * itemsPerPage;
+    // const endIndex = startIndex + itemsPerPage;
+    const startIndex =  Math.max((currentPage - 2) * itemsPerPage + 1, 0); // 从 (p-2)*N+1；首页首行会从 -N+1 开始，改为从 0 开始
+    const endIndex = (currentPage - 1) * itemsPerPage + 1; // 到 (p-1)*N+1
     contentContainer.innerHTML = "";
     let to_drop_cap = false;
 
@@ -729,7 +738,8 @@ function gotoPage(page, scrollto="top") {
 function gotoLine(lineNumber, isTitle=true) {
     // Find the page number to jump to
     // console.log(`lineNumber: ${lineNumber}, isTitle: ${isTitle}`);
-    let needToGoPage = lineNumber % itemsPerPage === 0 ? (lineNumber / itemsPerPage + 1) : (Math.ceil(lineNumber / itemsPerPage));
+    // let needToGoPage = lineNumber % itemsPerPage === 0 ? (lineNumber / itemsPerPage + 1) : (Math.ceil(lineNumber / itemsPerPage));
+    let needToGoPage = Math.ceil(lineNumber / itemsPerPage) + 1;
     needToGoPage = needToGoPage > totalPages ? totalPages : (needToGoPage < 1 ? 1 : needToGoPage);
     // console.log("needToGoPage: ", needToGoPage);
     if (needToGoPage !== currentPage) {

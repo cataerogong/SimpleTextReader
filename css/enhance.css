@@ -17,10 +17,6 @@
     padding-left: 2rem;
 }
 
-#serverFilesDlg .cur-dir::before {
-    content: "🪐 ";
-}
-
 #serverFilesDlg .item {
     cursor: pointer;
     border: 1px gray dotted;
@@ -35,22 +31,8 @@
 }
 
 #serverFilesDlg .up-level {
-    background-color: var(--mainColor);
-}
-
-#serverFilesDlg .up-level::before {
-    content: "⬆ ";
-}
-#serverFilesDlg .up-level::after {
-    content: " ⬆";
-}
-
-#serverFilesDlg .book::before {
-    content: "📓 ";
-}
-
-#serverFilesDlg .dir::before {
-    content: "📁 ";
+    color: black;
+    background-color: darkgray;
 }
 
 .bookshelf {
