@@ -81,7 +81,7 @@ class SettingNumber extends SettingText {
     }
     getInputVal() {
         super.getInputVal();
-        this.value = parseFloat(this.value) || this.defaultValue;
+        this.value = isNaN(this.value) ? this.defaultValue : parseFloat(this.value);
         return this;
     }
 }
@@ -91,14 +91,14 @@ class SettingInt extends SettingText {
     type = "number";
 
     constructor(id, desc, defaultValue) {
-        super(id, desc, isNaN(defaultValue) ? 0 : Math.floor(parseFloat(defaultValue)));
+        super(id, desc, isNaN(defaultValue) ? 0 : Math.trunc(parseFloat(defaultValue)));
     }
     genInputElm(attrs = "") {
         return super.genInputElm(`step="1" ` + attrs);
     }
     getInputVal() {
         super.getInputVal();
-        this.value = Math.floor(parseFloat(this.value)) || this.defaultValue;
+        this.value = isNaN(this.value) ? this.defaultValue : Math.trunc(parseFloat(this.value));
         return this;
     }
 }
