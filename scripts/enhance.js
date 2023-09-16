@@ -641,28 +641,32 @@ var STRe_Bookshelf = {
 				pct = ((m.groups["line"] / m.groups["total"]) * 100).toFixed(1) + "%";
 			}
 			bookElm.addClass("read").css("--read-progress", pct);
-			bookElm.find(".progress").html("进度：" + pct).attr("title", progress);
+			bookElm.find(".progress").html(pct).attr("title", progress);
 		} else {
 			bookElm.removeClass("read").css("--read-progress", "");
-			bookElm.find(".progress").html("进度：无");
+			bookElm.find(".progress").html("&nbsp;");
 		}
 	},
 
 	genBookItem(bookInfo) {
 		let book = $(`<div class="book" data-filename="${bookInfo.name}">
-			<div style="height:1.5rem;line-height:1.5rem;"><span class="delete-btn" title="删除">&times;</span></div>
-			<div class="cover">
-				<div>${bookInfo.name}</div>
-				<div class="size">${(bookInfo.size/1000/1000).toFixed(2)} MB</div>
-			</div>
-			<div class="progress"></div></div>`);
+			<div class="btn-bar"><span class="delete-btn" title="删除">&times;</span></div>
+			<div class="cover">${bookInfo.name}</div>
+			<div>
+			<div class="size">${(bookInfo.size/1000/1000).toFixed(2)} MB</div>
+			<div class="progress"></div></div></div>`);
 		book.find(".cover").click((evt) => {
 			evt.originalEvent.stopPropagation();
 			this.openBook(bookInfo.name);
 		});
 		book.find(".delete-btn").click((evt) => {
 			evt.originalEvent.stopPropagation();
-			this.deleteBook(bookInfo.name, () => this.refreshBookList());
+			this.deleteBook(bookInfo.name, () => {
+				// this.refreshBookList()
+				let b = $(evt.currentTarget).parents(".book");
+				// b.fadeOut(500, () => b.remove());
+				b.animate({width: 0, opacity: 0}, 500, () => b.remove());
+			});
 		});
 		this.updateBookProgressInfo(bookInfo.name, book);
 		return book;

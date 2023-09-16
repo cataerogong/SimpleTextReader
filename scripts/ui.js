@@ -493,6 +493,7 @@ async function handleSelectedFile(fileList) {
             <div class='prevent-select seal'><img id='seal_${style.ui_LANG}' src='images/seal_${style.ui_LANG}.png' style='left:calc(${randomFloatFromInterval(0, 1)} * (100% - ${style.ui_LANG === 'CN' ? style.seal_width_CN : style.seal_width_EN})); ${sealRotation}'/></div>
             </div>`;
             fileContentChunks.unshift(titlePage);
+            totalPages += 1;  // 总页数加上单独的扉页
 
             // Update the title of webpage
             document.title = bookAndAuthor.bookName;
