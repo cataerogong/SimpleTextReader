@@ -221,3 +221,34 @@ function atPageTop() {
 function atPageBottom() {
     return (contentLayer.scrollTop + contentLayer.clientHeight == contentLayer.scrollHeight);
 }
+
+// 获取当前加载的行号范围
+// return {begin: 起始行号 | NaN, end: 结束行号 | NaN}
+function getLoadedLineRange() {
+    let begin = NaN, end = NaN, total = NaN;
+    if (contentContainer.firstElementChild)
+        begin = parseInt(contentContainer.firstElementChild.id.replace("line", ""));
+    if (contentContainer.lastElementChild)
+        end = parseInt(contentContainer.lastElementChild.id.replace("line", ""));
+    total = contentContainer.children.length;
+    return {begin: begin, end: end, total: total};
+}
+
+function safeLineNum(line) {
+    return Math.min(Math.max(line, 0), fileContentChunks.length - 1);
+}
+
+function getPagesRange(first, last = 0) {
+    last = last || first;
+    if ((last < 1) || (first > totalPages) || (first > last))
+        return null;
+    return {
+        begin: safeLineNum((first - 2) * itemsPerPage + 1), // 从 (first-2)*N+1
+        end: safeLineNum(((last||first) - 1) * itemsPerPage) // 到 (last-1)*N
+    };
+}
+
+function updateCurrentPage() {
+    currentPage = Math.ceil(getTopLineNumber() / itemsPerPage) + 1;
+    return currentPage;
+}

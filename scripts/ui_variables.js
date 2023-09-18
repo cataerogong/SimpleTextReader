@@ -20,6 +20,10 @@ var historyLineNumber = 0;
 var storePrevWindowWidth = window.innerWidth;
 var titlePageLineNumberOffset = 0;
 
+var flowMode = false;
+var preloadPageBegin = 0;
+var preloadPageEnd = 0;
+
 // document.title = eval(`style.ui_title_${style.ui_LANG}`);
 if (!isVariableDefined(document.title)) {
     document.title = (style.ui_LANG === "CN" ? style.ui_title_CN : style.ui_title_EN) || "易笺";
@@ -45,4 +49,4 @@ var darkModeToggle = document.getElementById("switch");
 
 var contentLayer = document.getElementById("contentLayer");
 
-const _STRe_VER_ = "1.4.1";
+const _STRe_VER_ = "1.5.0-wip";

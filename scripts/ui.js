@@ -46,9 +46,13 @@ window.addEventListener('dragenter', function(event) {
 });
 
 // window.onscroll = function(event) {
-contentLayer.onscroll = function(event) {
+contentLayer.onscrollend = function(event) {
     event.preventDefault();
     if (!init) {
+        if (flowMode) {
+            updateCurrentPage();
+            loadCurrentPageContentFlow();
+        }
         GetScrollPositions();
     }
 };
@@ -142,65 +146,108 @@ function onDocKeydown(event) {
             focusTocItem(tocItems[tocSelItem], tocFocused);
         }
     } else { // content
-        let lh = 1.5*emInPx;
+        let lh = (1.5 + 1) * 1.4 * emInPx; // line-height + margin
         if (isElementVisible(contentContainer)) {
             let p = contentContainer.getElementsByTagName("p");
             if (p.length) {
-                lh = parseInt((p[0].currentStyle || window.getComputedStyle(p[0])).lineHeight) || lh;
+                lh = parseInt((p[0].currentStyle || window.getComputedStyle(p[0])).lineHeight) || (1.5 * 1.4 * emInPx);
+                lh += parseInt((p[0].currentStyle || window.getComputedStyle(p[0])).marginTop) || (1.4 * emInPx);
             }
         }
         handled = true;
-        switch (event.key) {
-            case "Home":
-                contentLayer.scrollTo(0, 0);
-                break;
-            case "End":
-                contentLayer.scrollTo(0, contentLayer.scrollHeight);
-                break;
-            case "PageUp":
-                if (atPageTop() && (currentPage > 1)) {
-                    gotoPage(currentPage - 1, "bottom");
-                } else {
-                    contentLayer.scrollBy(0, -contentLayer.clientHeight + lh);
-                }
-                break;
-            case "PageDown":
-            case " ":
-                if (atPageBottom() && (currentPage < totalPages)) {
-                    gotoPage(currentPage + 1, "top");
-                } else {
-                    contentLayer.scrollBy(0, contentLayer.clientHeight - lh);
-                }
-                break;
-            case "ArrowUp":
-                if (atPageTop() && (currentPage > 1)) {
-                    gotoPage(currentPage - 1, "bottom");
-                } else {
-                    contentLayer.scrollBy(0, -lh * 3);
-                }
-                break;
-            case "ArrowDown":
-                if (atPageBottom() && (currentPage < totalPages)) {
-                    gotoPage(currentPage + 1, "top");
-                } else {
-                    contentLayer.scrollBy(0, lh * 3);
-                }
-                break;
-            case 'ArrowLeft':
-                if (currentPage > 1) gotoPage(currentPage - 1);
-                break;
-            case 'ArrowRight':
-                if (currentPage < totalPages) gotoPage(currentPage + 1);
-                break;
-            case 'Escape':
-                // console.log("Escape pressed:", no_ui);
-                if (isVariableDefined(dropZone)) {
-                    resetUI();
-                }
-                break;
-            default:
-                handled = false;
-                break;
+        if (flowMode) {
+            // updateCurrentPage();
+            switch (event.key) {
+                case "Home":
+                    gotoLine(0);
+                    break;
+                case "End":
+                    gotoLine(fileContentChunks.length - 1);
+                    break;
+                case "PageUp":
+                    contentLayer.scrollBy({top: -contentLayer.clientHeight + lh, behavior: "instant"});
+                    break;
+                case "PageDown":
+                case " ":
+                    contentLayer.scrollBy({top: contentLayer.clientHeight - lh, behavior: "instant"});
+                    break;
+                case "ArrowUp":
+                    // contentLayer.scrollBy(0, -lh * 3);
+                    contentLayer.scrollBy({top: -lh * 3, behavior: "smooth"});
+                    break;
+                case "ArrowDown":
+                    // contentLayer.scrollBy(0, lh * 3);
+                    contentLayer.scrollBy({top: lh * 3, behavior: "smooth"});
+                    break;
+                case 'ArrowLeft':
+                    // if (currentPage > 1) gotoPage(currentPage - 1);
+                    break;
+                case 'ArrowRight':
+                    // if (currentPage < totalPages) gotoPage(currentPage + 1);
+                    break;
+                case 'Escape':
+                    // console.log("Escape pressed:", no_ui);
+                    if (isVariableDefined(dropZone)) {
+                        resetUI();
+                    }
+                    break;
+                default:
+                    handled = false;
+                    break;
+            }
+        } else {
+            switch (event.key) {
+                case "Home":
+                    contentLayer.scrollTo(0, 0);
+                    break;
+                case "End":
+                    contentLayer.scrollTo(0, contentLayer.scrollHeight);
+                    break;
+                case "PageUp":
+                    if (atPageTop() && (currentPage > 1)) {
+                        gotoPage(currentPage - 1, "bottom");
+                    } else {
+                        contentLayer.scrollBy({top: -contentLayer.clientHeight + lh, behavior: "smooth"});
+                    }
+                    break;
+                case "PageDown":
+                case " ":
+                    if (atPageBottom() && (currentPage < totalPages)) {
+                        gotoPage(currentPage + 1, "top");
+                    } else {
+                        contentLayer.scrollBy({top: contentLayer.clientHeight - lh, behavior: "smooth"});
+                    }
+                    break;
+                case "ArrowUp":
+                    if (atPageTop() && (currentPage > 1)) {
+                        gotoPage(currentPage - 1, "bottom");
+                    } else {
+                        contentLayer.scrollBy({top: -lh * 3, behavior: "smooth"});
+                    }
+                    break;
+                case "ArrowDown":
+                    if (atPageBottom() && (currentPage < totalPages)) {
+                        gotoPage(currentPage + 1, "top");
+                    } else {
+                        contentLayer.scrollBy({top: lh * 3, behavior: "smooth"});
+                    }
+                    break;
+                case 'ArrowLeft':
+                    if (currentPage > 1) gotoPage(currentPage - 1);
+                    break;
+                case 'ArrowRight':
+                    if (currentPage < totalPages) gotoPage(currentPage + 1);
+                    break;
+                case 'Escape':
+                    // console.log("Escape pressed:", no_ui);
+                    if (isVariableDefined(dropZone)) {
+                        resetUI();
+                    }
+                    break;
+                default:
+                    handled = false;
+                    break;
+            }
         }
     }
     if (handled) {
@@ -239,14 +286,21 @@ function onDocKeyup(event) {
 
 function onDocWheel(event) {
     if (!isElementVisible(contentContainer)) return;
-    if (atPageTop() && (currentPage > 1) && (event.deltaY < 0)) {
-        gotoPage(currentPage - 1, "bottom");
-        event.preventDefault();
-        event.stopPropagation();
-    } else if (atPageBottom() && (currentPage < totalPages) && (event.deltaY > 0)) {
-        gotoPage(currentPage + 1, "top");
-        event.preventDefault();
-        event.stopPropagation();
+    if (flowMode) {
+        if (event.deltaY != 0) {
+            updateCurrentPage();
+            loadCurrentPageContentFlow();
+        }
+    } else {
+        if (atPageTop() && (currentPage > 1) && (event.deltaY < 0)) {
+            gotoPage(currentPage - 1, "bottom");
+            event.preventDefault();
+            event.stopPropagation();
+        } else if (atPageBottom() && (currentPage < totalPages) && (event.deltaY > 0)) {
+            gotoPage(currentPage + 1, "top");
+            event.preventDefault();
+            event.stopPropagation();
+        }
     }
     return;
 }
@@ -500,8 +554,12 @@ async function handleSelectedFile(fileList) {
 
             // Show content
             init = false;
-            showCurrentPageContent();
-            generatePagination();
+            if (flowMode) {
+                loadCurrentPageContentFlow();
+            } else {
+                showCurrentPageContent();
+                generatePagination();
+            }
             updateTOCUI(false);
 
             // Retrieve reading history if exists
@@ -516,25 +574,18 @@ async function handleSelectedFile(fileList) {
 
         fileReader.onloadstart = function (event) {
             event.preventDefault();
-            // hideDropZone();
             showLoadingScreen();
-            // hideContent();
         };
 
         fileReader.onprogress = function (event) {
             event.preventDefault();
-            // hideDropZone();
             showLoadingScreen();
-            // hideContent();
         };
 
         fileReader.onloadend = function (event) {
             event.preventDefault();
-            // hideDropZone();
-            // hideLoadingScreen();
             showContent();
             fileloadCallback.after();
-            // GetScrollPositions(false);
         };
 
         fileReader.readAsArrayBuffer(fileList[0]);
@@ -581,6 +632,11 @@ function showCurrentPageContent() {
 }
 
 function generatePagination() {
+    if (flowMode) {
+        paginationContainer.style.display = "none";
+        return;
+    }
+    paginationContainer.style.display = "";
     paginationContainer.innerHTML = "";
     const paginationList = document.createElement("div");
     paginationList.classList.add("pagination");
@@ -709,9 +765,9 @@ function processTOC() {
 
 
 // Helper functions
-function jumpToPageInputField(event, scrollto="top") {
+function jumpToPageInputField(event) {
     if (event.key === 'Enter') {
-        gotoPage(parseInt(event.currentTarget.value), scrollto);
+        gotoPage(parseInt(event.currentTarget.value));
     }
 }
 
@@ -722,7 +778,11 @@ function gotoPage(page, scrollto="top") {
     } else {
         console.log(`Not a valid page number: ${page}, so goto <currentPage:${currentPage}>.`);
     }
-    showCurrentPageContent();
+    if (flowMode) {
+        loadCurrentPageContentFlow();
+    } else {
+        showCurrentPageContent();
+    }
     generatePagination();
 
     switch (scrollto) {
@@ -825,18 +885,19 @@ function GetScrollPositions(toSetHistory=true) {
     readingProgressText = style.ui_LANG === "CN" ? readingProgressText : readingProgressText.replace("：", ":");
     
     // progressContainer.innerHTML = `<span style='text-decoration:underline'>${bookAndAuthor.bookName}</span><br/>${readingProgressText} ${((curLineNumber + 1) / fileContentChunks.length * 100).toFixed(1)}%`;
-    let pastPageLines = (currentPage - 1) * itemsPerPage;
-    let curItemsPerPage = Math.min(itemsPerPage, (fileContentChunks.length - pastPageLines));
-    let curPagePercentage = (curLineNumber + 1 - pastPageLines) / (curItemsPerPage - getBottomLineNumber() + curLineNumber);
-    let scalePercentage = curItemsPerPage / fileContentChunks.length;
-    let pastPagePercentage = pastPageLines / fileContentChunks.length;
-    let totalPercentage = (curPagePercentage * scalePercentage + pastPagePercentage) * 100;
-    if ((curLineNumber === 0) && (currentPage === 1) && (window.scrollY <= 5)) {
-        totalPercentage = 0;
-    }
+    // let pastPageLines = (currentPage - 1) * itemsPerPage;
+    // let curItemsPerPage = Math.min(itemsPerPage, (fileContentChunks.length - pastPageLines));
+    // let curPagePercentage = (curLineNumber + 1 - pastPageLines) / (curItemsPerPage - getBottomLineNumber() + curLineNumber);
+    // let scalePercentage = curItemsPerPage / fileContentChunks.length;
+    // let pastPagePercentage = pastPageLines / fileContentChunks.length;
+    // let totalPercentage = (curPagePercentage * scalePercentage + pastPagePercentage) * 100;
+    let totalPercentage = curLineNumber / fileContentChunks.length * 100;
+    // if ((curLineNumber === 0) && (currentPage === 1) && (window.scrollY <= 5)) {
+    //     totalPercentage = 0;
+    // }
     // progressContainer.innerHTML = `<span style='text-decoration:underline'>${bookAndAuthor.bookName}</span><br/>${readingProgressText} ${totalPercentage.toFixed(1).replace(".0", "")}%`;
-    document.getElementById("progress-title").innerText = bookAndAuthor.bookName;
-    document.getElementById("progress-content").innerText = `${readingProgressText} ${totalPercentage.toFixed(1).replace(".0", "")}%`;
+    progressTitle.innerText = bookAndAuthor.bookName;
+    progressContent.innerText = `${readingProgressText} ${totalPercentage.toFixed(1).replace(".0", "")}%`;
 
     gotoTitle_Clicked = false;
 }
@@ -927,4 +988,77 @@ function freezeContent() {
 function unfreezeContent() {
     document.onkeydown = onDocKeydown;
     // $("body").css("overflow-y", "auto");
+}
+
+function loadCurrentPageContentFlow() {
+    // console.log(`Load page content in flow-mode. target: ${currentPage}, Current preload range: ${preloadPageBegin}~${preloadPageEnd}`);
+    let loadRange = null;
+    let unloadRange = null;
+    let insertBefore = null;
+    if (currentPage < preloadPageBegin || currentPage > preloadPageEnd) { // 不在 preload 范围内，重新加载
+        // console.log("Not in preload range, reloading.");
+        preloadPageBegin  = currentPage - 1;
+        preloadPageEnd = currentPage + 1;
+        loadRange = getPagesRange(preloadPageBegin, preloadPageEnd);
+        insertBefore = null;
+        contentContainer.innerHTML = "";
+    }
+    else if (currentPage == preloadPageEnd && preloadPageEnd < totalPages) { // preload 末页，向后加载一页，向前卸载一页
+        // console.log("In preload range, appending.");
+        // if (preloadPageBegin >= 1)
+            unloadRange = getPagesRange(preloadPageBegin);
+        preloadPageBegin = currentPage - 1;
+        preloadPageEnd = currentPage + 1;
+        loadRange = getPagesRange(preloadPageEnd);
+        insertBefore = null;
+        removeDir = -1;
+    } else if (currentPage == preloadPageBegin && preloadPageBegin > 1) { // preload 首页，向前加载一页，向后卸载一页
+        // console.log("In preload range, prepending.");
+        preloadPageBegin--;
+        loadRange = getPagesRange(preloadPageBegin);
+        // if (preloadPageEnd <= totalPages)
+            unloadRange = getPagesRange(preloadPageEnd);
+        preloadPageEnd--;
+        insertBefore = contentContainer.firstElementChild;
+        removeDir = 1;
+    } else {
+        // console.log("In preload range, skip.");
+        return;
+    }
+    // console.log("Loading range", loadRange);
+    let to_drop_cap = false;
+    // process line by line - fast
+    for (var j = loadRange.begin; j <= loadRange.end; j++) {
+        if (fileContentChunks[j].trim() !== '') {
+            let processedResult = process(fileContentChunks[j], j, to_drop_cap);
+            to_drop_cap = processedResult[1] === 'h' ? true : false;
+            contentContainer.insertBefore(processedResult[0], insertBefore);
+        }
+    }
+    // console.log("Unloading range", unloadRange);
+    if (unloadRange) {
+        for (let i = unloadRange.begin; i <= unloadRange.end; i++) {
+            let elm = document.getElementById("line" + i);
+            if (elm) elm.remove();
+        }
+    }
+    console.log("Preload range: ", preloadPageBegin, preloadPageEnd, getLoadedLineRange());
+
+    // process 20 line at a time - fast
+    // const line_step = 20;
+    // for (var j = startIndex; j < endIndex && j < fileContentChunks.length; j+=line_step) {
+    //     const preElement = document.createElement("pre");
+    //     preElement.style.whiteSpace = 'pre-wrap'; // Enable word wrapping
+    //     preElement.innerHTML = process_batch(fileContentChunks.slice(j, j+line_step).join('\n'));
+    //     contentContainer.appendChild(preElement);
+    // }
+
+    // process one page at a time - slow
+    // const preElement = document.createElement("pre");
+    // preElement.style.whiteSpace = 'pre-wrap'; // Enable word wrapping
+    // preElement.innerHTML = process_batch(fileContentChunks.join('\n'));
+    // contentContainer.appendChild(preElement);
+
+    // set up footnote
+    Footnotes.setup();
 }

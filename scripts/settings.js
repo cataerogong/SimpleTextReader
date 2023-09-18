@@ -335,6 +335,7 @@ class SettingGroupUI extends SettingGroupBase {
         this.settings["dark_bgColor"] = new SettingCSS(this.id + "-dark_bgColor", "夜间背景色", `[data-theme="dark"]`, "--bgColor");
         this.settings["pagination_bottom"] = new SettingCSS(this.id + "-pagination_bottom", "分页条与底部距离", "#pagination", "bottom");
         this.settings["pagination_opacity"] = new SettingCSS(this.id + "-pagination_opacity", "分页条透明度(0.0~1.0)", "#pagination", "opacity", "1");
+        this.settings["enable-flow-mode"] = new SettingCheckbox(this.id + "-enable-flow-mode", "启用“无限流”阅读模式（取消分页）", true);
     }
 
     genHTML() {
@@ -342,7 +343,10 @@ class SettingGroupUI extends SettingGroupBase {
         html += `<div class="setting-group setting-group-UI">`;
         for (const k in this.settings) {
             let st = this.settings[k];
-            html += st.genLabelElm() + st.genInputElm(`style="width:6rem;"`);
+            if (st instanceof SettingCSS)
+                html += st.genLabelElm() + st.genInputElm(`style="width:6rem;"`);
+            else if (st instanceof SettingCheckbox)
+                html += `<div class="row">${st.genInputElm()} ${st.genLabelElm()}</div>`;
         }
         html += "</div>";
         return html;
@@ -350,8 +354,12 @@ class SettingGroupUI extends SettingGroupBase {
 
     apply() {
         for (const k in this.settings) {
-            this.settings[k].setCSS();
+            let st = this.settings[k];
+            if (st instanceof SettingCSS)
+                st.setCSS();
         }
+        flowMode = this.settings["enable-flow-mode"].value;
+        generatePagination();
         return this;
     }
 }
