@@ -100,6 +100,9 @@ function resetVars() {
     storePrevWindowWidth = window.innerWidth;
     titlePageLineNumberOffset = 0;
 
+    preloadPageBegin = 0;
+    preloadPageEnd = 0;
+
     // document.title = eval(`style.ui_title_${style.ui_LANG}`);
     document.title = style.ui_LANG == "CN" ? style.ui_title_CN : style.ui_title_EN;
     contentContainer.innerHTML = "";

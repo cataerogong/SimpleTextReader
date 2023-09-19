@@ -359,7 +359,19 @@ class SettingGroupUI extends SettingGroupBase {
                 st.setCSS();
         }
         flowMode = this.settings["enable-flow-mode"].value;
-        generatePagination();
+        if (isElementVisible(contentLayer)) {
+            // generatePagination();
+            let curLine = getTopLineNumber();
+            currentPage = getPageNum(curLine);
+            if (flowMode) {
+                $(contentLayer).addClass("no-scrollbar");
+                preloadContentFlow();
+            } else {
+                $(contentLayer).removeClass("no-scrollbar");
+                showCurrentPageContent();
+            }
+            gotoLine(curLine, false);
+        }
         return this;
     }
 }

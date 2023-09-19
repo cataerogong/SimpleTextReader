@@ -197,6 +197,8 @@ To Offset the anchor link to clear fixed header
     grid-template-rows: max-content 1fr max-content;
     background-color: var(--bgColor);
     transition: box-shadow 1s, -webkit-box-shadow 1s, -moz-box-shadow 1s;
+    --toc-full-vis: hidden;
+    --toc-full-opacity: 0;
 }
 .toc-panel:hover {
     z-index: 1;
@@ -204,6 +206,8 @@ To Offset the anchor link to clear fixed header
     box-shadow:var(--shadowH_args);
     -webkit-box-shadow: var(--webkit-shadowH_args);
     -moz-box-shadow: var(--moz-shadowH_args);
+    --toc-full-vis: visible;
+    --toc-full-opacity: 1;
 }
 .toc-hint {
     height: fit-content;
@@ -215,10 +219,9 @@ To Offset the anchor link to clear fixed header
     grid-template-columns: max-content max-content max-content max-content;
     align-self: center;
     margin: 1rem 0;
-    visibility: hidden;
-}
-.toc-panel:hover .toc-hint {
-    visibility: visible;
+    visibility: var(--toc-full-vis);
+    opacity: var(--toc-full-opacity);
+    transition: opacity 1s;
 }
 #tocContent {
     height: var(--ui_tocHeight);
@@ -260,8 +263,8 @@ To Offset the anchor link to clear fixed header
     max-width: calc(50vw - 0.9em - 1em - 1rem);      /* 100% - width of .toc-bullet - margin-left of <a>*/
     width: fit-content;
     transition: visibility 1s, opacity 1s;
-    visibility: hidden;
-    opacity: 0;
+    visibility: var(--toc-full-vis);
+    opacity: var(--toc-full-opacity);
     text-decoration: none;
     white-space: nowrap;
     text-overflow: ellipsis;
@@ -271,8 +274,8 @@ To Offset the anchor link to clear fixed header
 }
 /* Credit: https://www.taccgl.org/blog/css-transition-visibility.html */
 #tocPanel:hover .toc-text {
-    visibility: visible;
-    opacity: 1;
+    /* visibility: visible; */
+    /* opacity: 1; */
 }
 a, a:link, a:visited, a:hover, a:active {
     text-decoration: none;
@@ -310,6 +313,31 @@ a.toc-active::before {
     font-size: 0.8rem;
 }
 
+/* flow-mode vertical progress */
+.flow-progress {
+    position: fixed;
+    width: 95vh;
+    right: 5rem;
+    top: 1vh;
+    transform: rotate(90deg) translate(50%, -45vh);
+    opacity: 0.5;
+
+    /* ui-range param */
+    --min: 0;
+    --max: 100;
+    --step: 0.1;
+    --suffix: "%";
+    --primary-color: var(--mainColor);
+    --show-min-max: none;
+    --value-font: 0.8rem var(--fontFamily_ui);
+}
+.flow-progress:hover {
+    opacity: 1;
+}
+.flow-progress.range-slider>input+output {
+    transform: translateX(-50%) rotate(-90deg) translateX(-50%) translateX(calc(var(--thumb-size) * -1));
+    --pos: calc((var(--value) - var(--min))/(var(--max) - var(--min)) * (100% - var(--thumb-size)) + var(--thumb-size) / 2);
+}
 
 /* Footnote */
 img.footnote_img {

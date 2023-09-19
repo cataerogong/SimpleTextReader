@@ -46,13 +46,9 @@ window.addEventListener('dragenter', function(event) {
 });
 
 // window.onscroll = function(event) {
-contentLayer.onscrollend = function(event) {
+contentLayer.onscroll = function(event) {
     event.preventDefault();
     if (!init) {
-        if (flowMode) {
-            updateCurrentPage();
-            loadCurrentPageContentFlow();
-        }
         GetScrollPositions();
     }
 };
@@ -83,9 +79,8 @@ function onDocKeydown(event) {
         setCSS(".toc-panel", "box-shadow", "var(--shadowH_args)");
         setCSS(".toc-panel", "-webkit-box-shadow", "var(--webkit-shadowH_args)");
         setCSS(".toc-panel", "-moz-box-shadow", "var(--moz-shadowH_args)");
-        setCSS(".toc-text", "visibility", "visible");
-        setCSS(".toc-text", "opacity", "1");
-        setCSS(".toc-hint", "visibility", "visible");
+        setCSS(".toc-panel", "--toc-full-vis", "visible");
+        setCSS(".toc-panel", "--toc-full-opacity", "1");
         const tocItems = tocContainer.getElementsByClassName("toc-text");
         tocSelItem = -1;
         if (tocItems) {
@@ -156,7 +151,6 @@ function onDocKeydown(event) {
         }
         handled = true;
         if (flowMode) {
-            // updateCurrentPage();
             switch (event.key) {
                 case "Home":
                     gotoLine(0);
@@ -165,19 +159,21 @@ function onDocKeydown(event) {
                     gotoLine(fileContentChunks.length - 1);
                     break;
                 case "PageUp":
+                    preloadContentFlow();
                     contentLayer.scrollBy({top: -contentLayer.clientHeight + lh, behavior: "instant"});
                     break;
                 case "PageDown":
                 case " ":
+                    preloadContentFlow();
                     contentLayer.scrollBy({top: contentLayer.clientHeight - lh, behavior: "instant"});
                     break;
                 case "ArrowUp":
-                    // contentLayer.scrollBy(0, -lh * 3);
-                    contentLayer.scrollBy({top: -lh * 3, behavior: "smooth"});
+                    // preloadContentFlow();
+                    // contentLayer.scrollBy({top: -lh * 3, behavior: "smooth"});
                     break;
                 case "ArrowDown":
-                    // contentLayer.scrollBy(0, lh * 3);
-                    contentLayer.scrollBy({top: lh * 3, behavior: "smooth"});
+                    // preloadContentFlow();
+                    // contentLayer.scrollBy({top: lh * 3, behavior: "smooth"});
                     break;
                 case 'ArrowLeft':
                     // if (currentPage > 1) gotoPage(currentPage - 1);
@@ -266,9 +262,8 @@ function onDocKeyup(event) {
         delCSS(".toc-panel", "box-shadow");
         delCSS(".toc-panel", "-webkit-box-shadow");
         delCSS(".toc-panel", "-moz-box-shadow");
-        setCSS(".toc-text", "visibility", "hidden");
-        setCSS(".toc-text", "opacity", "0");
-        setCSS(".toc-hint", "visibility", "hidden");
+        setCSS(".toc-panel", "--toc-full-vis", "hidden");
+        setCSS(".toc-panel", "--toc-full-opacity", "0");
         const tocItems = tocContainer.getElementsByClassName("toc-text");
         if (tocItems.length) {
             if (tocSelItem >= 0) {
@@ -287,10 +282,12 @@ function onDocKeyup(event) {
 function onDocWheel(event) {
     if (!isElementVisible(contentContainer)) return;
     if (flowMode) {
-        if (event.deltaY != 0) {
-            updateCurrentPage();
-            loadCurrentPageContentFlow();
-        }
+        event.preventDefault();
+        event.stopPropagation();
+        // if (event.deltaY != 0) {
+        //     updateCurrentPage();
+        //     preloadContentFlow();
+        // }
     } else {
         if (atPageTop() && (currentPage > 1) && (event.deltaY < 0)) {
             gotoPage(currentPage - 1, "bottom");
@@ -304,6 +301,17 @@ function onDocWheel(event) {
     }
     return;
 }
+
+function onFlowProgressChanged(evt) {
+    if (!flowMode) return;
+    let prog = parseFloat(flowProgress.value);
+    if (!isNaN(prog)) {
+        evt.stopPropagation();
+        gotoLine(safeLineNum(Math.trunc((fileContentChunks.length * prog / 100))), false);
+    }
+}
+
+flowProgress.onmouseup = onFlowProgressChanged;
 
 document.onkeyup = onDocKeyup;
 
@@ -336,14 +344,12 @@ function handleDragEnter(event) {
     dragCounter++;
     event.preventDefault();
     showDropZone(focused=true);
-    // contentContainer.style.display = "none";
 }
 
 function handleDragOver(event) {
     // console.log("Drag over");
     event.preventDefault();
     showDropZone(focused=true);
-    // contentContainer.style.display = "none";
 }
 
 function handleDragLeave(event) {
@@ -354,11 +360,8 @@ function handleDragLeave(event) {
         if (contentContainer.innerHTML === "") {
             // no file loaded, show dropZone
             showDropZone();
-            // contentContainer.style.display = "none";
         } else {
             // file loaded, revert back to normal
-            // hideDropZone();
-            // contentContainer.style.display = "block";
             showContent();
             gotoLine(historyLineNumber, false);
             init = false;
@@ -368,8 +371,6 @@ function handleDragLeave(event) {
 
 function handleDrop(event) {
     event.preventDefault();
-    // hideDropZone();
-    // contentContainer.style.display = "block";
     resetVars();
     // setTOC_onRatio(initial=true);
 
@@ -555,7 +556,7 @@ async function handleSelectedFile(fileList) {
             // Show content
             init = false;
             if (flowMode) {
-                loadCurrentPageContentFlow();
+                preloadContentFlow();
             } else {
                 showCurrentPageContent();
                 generatePagination();
@@ -602,6 +603,9 @@ function showCurrentPageContent() {
     contentContainer.innerHTML = "";
     let to_drop_cap = false;
 
+    preloadPageBegin = 0;
+    preloadPageEnd = 0;
+
     // process line by line - fast
     for (var j = startIndex; j < endIndex && j < fileContentChunks.length; j++) {
         if (fileContentChunks[j].trim() !== '') {
@@ -634,9 +638,14 @@ function showCurrentPageContent() {
 function generatePagination() {
     if (flowMode) {
         paginationContainer.style.display = "none";
+        flowProgressContainer.style.display = "";
         return;
+    } else {
+        preloadPageBegin = 0;
+        preloadPageEnd = 0;
+        flowProgressContainer.style.display = "none";
+        paginationContainer.style.display = "";
     }
-    paginationContainer.style.display = "";
     paginationContainer.innerHTML = "";
     const paginationList = document.createElement("div");
     paginationList.classList.add("pagination");
@@ -779,29 +788,30 @@ function gotoPage(page, scrollto="top") {
         console.log(`Not a valid page number: ${page}, so goto <currentPage:${currentPage}>.`);
     }
     if (flowMode) {
-        loadCurrentPageContentFlow();
+        preloadContentFlow();
     } else {
         showCurrentPageContent();
-    }
-    generatePagination();
+        generatePagination();
 
-    switch (scrollto) {
-        case "top":
-            contentLayer.scrollTo({top: 0, behavior: 'instant'});
-            break;
-        case "bottom":
-            contentLayer.scrollTo({top: contentLayer.scrollHeight, behavior: 'instant'});
-            break;
+        switch (scrollto) {
+            case "top":
+                contentLayer.scrollTo({top: 0, behavior: 'instant'});
+                break;
+            case "bottom":
+                contentLayer.scrollTo({top: contentLayer.scrollHeight, behavior: 'instant'});
+                break;
+        }
     }
-    GetScrollPositions();
+    GetScrollPositions(!!scrollto);
 }
 
 function gotoLine(lineNumber, isTitle=true) {
     // Find the page number to jump to
     // console.log(`lineNumber: ${lineNumber}, isTitle: ${isTitle}`);
     // let needToGoPage = lineNumber % itemsPerPage === 0 ? (lineNumber / itemsPerPage + 1) : (Math.ceil(lineNumber / itemsPerPage));
-    let needToGoPage = Math.ceil(lineNumber / itemsPerPage) + 1;
-    needToGoPage = needToGoPage > totalPages ? totalPages : (needToGoPage < 1 ? 1 : needToGoPage);
+    // let needToGoPage = Math.ceil(lineNumber / itemsPerPage) + 1;
+    // needToGoPage = needToGoPage > totalPages ? totalPages : (needToGoPage < 1 ? 1 : needToGoPage);
+    let needToGoPage = getPageNum(lineNumber);
     // console.log("needToGoPage: ", needToGoPage);
     if (needToGoPage !== currentPage) {
         gotoPage(needToGoPage, "");
@@ -898,6 +908,10 @@ function GetScrollPositions(toSetHistory=true) {
     // progressContainer.innerHTML = `<span style='text-decoration:underline'>${bookAndAuthor.bookName}</span><br/>${readingProgressText} ${totalPercentage.toFixed(1).replace(".0", "")}%`;
     progressTitle.innerText = bookAndAuthor.bookName;
     progressContent.innerText = `${readingProgressText} ${totalPercentage.toFixed(1).replace(".0", "")}%`;
+    flowProgress.value = totalPercentage.toFixed(1);
+    // flowProgress.title = totalPercentage.toFixed(1).replace(".0", "") + "%";
+    flowProgressContainer.style.setProperty("--value", flowProgress.value);
+    flowProgressContainer.style.setProperty("--text-value", `"${flowProgress.value}"`);
 
     gotoTitle_Clicked = false;
 }
@@ -990,7 +1004,7 @@ function unfreezeContent() {
     // $("body").css("overflow-y", "auto");
 }
 
-function loadCurrentPageContentFlow() {
+function preloadContentFlow() {
     // console.log(`Load page content in flow-mode. target: ${currentPage}, Current preload range: ${preloadPageBegin}~${preloadPageEnd}`);
     let loadRange = null;
     let unloadRange = null;
@@ -1005,22 +1019,18 @@ function loadCurrentPageContentFlow() {
     }
     else if (currentPage == preloadPageEnd && preloadPageEnd < totalPages) { // preload 末页，向后加载一页，向前卸载一页
         // console.log("In preload range, appending.");
-        // if (preloadPageBegin >= 1)
-            unloadRange = getPagesRange(preloadPageBegin);
-        preloadPageBegin = currentPage - 1;
-        preloadPageEnd = currentPage + 1;
-        loadRange = getPagesRange(preloadPageEnd);
+        preloadPageEnd++;
+        loadRange = getPagesRange(preloadPageEnd, preloadPageEnd);
+        unloadRange = getPagesRange(preloadPageBegin, preloadPageBegin);
+        preloadPageBegin++;
         insertBefore = null;
-        removeDir = -1;
     } else if (currentPage == preloadPageBegin && preloadPageBegin > 1) { // preload 首页，向前加载一页，向后卸载一页
         // console.log("In preload range, prepending.");
         preloadPageBegin--;
-        loadRange = getPagesRange(preloadPageBegin);
-        // if (preloadPageEnd <= totalPages)
-            unloadRange = getPagesRange(preloadPageEnd);
+        loadRange = getPagesRange(preloadPageBegin, preloadPageBegin);
+        unloadRange = getPagesRange(preloadPageEnd, preloadPageEnd);
         preloadPageEnd--;
         insertBefore = contentContainer.firstElementChild;
-        removeDir = 1;
     } else {
         // console.log("In preload range, skip.");
         return;
@@ -1042,7 +1052,7 @@ function loadCurrentPageContentFlow() {
             if (elm) elm.remove();
         }
     }
-    console.log("Preload range: ", preloadPageBegin, preloadPageEnd, getLoadedLineRange());
+    console.log(`preload: cur:${currentPage} range:${preloadPageBegin}-${preloadPageEnd}`, getLoadedLineRange());
 
     // process 20 line at a time - fast
     // const line_step = 20;

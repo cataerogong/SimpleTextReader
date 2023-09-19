@@ -238,9 +238,8 @@ function safeLineNum(line) {
     return Math.min(Math.max(line, 0), fileContentChunks.length - 1);
 }
 
-function getPagesRange(first, last = 0) {
-    last = last || first;
-    if ((last < 1) || (first > totalPages) || (first > last))
+function getPagesRange(first, last) {
+    if (isNaN(first) || isNaN(last) || (last < 1) || (first > totalPages) || (first > last))
         return null;
     return {
         begin: safeLineNum((first - 2) * itemsPerPage + 1), // 从 (first-2)*N+1
@@ -248,7 +247,6 @@ function getPagesRange(first, last = 0) {
     };
 }
 
-function updateCurrentPage() {
-    currentPage = Math.ceil(getTopLineNumber() / itemsPerPage) + 1;
-    return currentPage;
+function getPageNum(line = -1) {
+    return Math.min(Math.ceil(((line >= 0) ? line : getTopLineNumber()) / itemsPerPage) + 1, totalPages);
 }

@@ -48,5 +48,7 @@ var darkModeActualButton = document.getElementById("switch-btn");   // just for 
 var darkModeToggle = document.getElementById("switch");
 
 var contentLayer = document.getElementById("contentLayer");
+let flowProgressContainer = document.getElementById("flowProgressContainer");
+let flowProgress = document.getElementById("flowProgress");
 
 const _STRe_VER_ = "1.5.0-wip";
