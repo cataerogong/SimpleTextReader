@@ -335,7 +335,10 @@ class SettingGroupUI extends SettingGroupBase {
         this.settings["dark_bgColor"] = new SettingCSS(this.id + "-dark_bgColor", "夜间背景色", `[data-theme="dark"]`, "--bgColor");
         this.settings["pagination_bottom"] = new SettingCSS(this.id + "-pagination_bottom", "分页条与底部距离", "#pagination", "bottom");
         this.settings["pagination_opacity"] = new SettingCSS(this.id + "-pagination_opacity", "分页条透明度(0.0~1.0)", "#pagination", "opacity", "1");
-        this.settings["enable-flow-mode"] = new SettingCheckbox(this.id + "-enable-flow-mode", "启用“无限流”阅读模式（取消分页）", true);
+        if (supportScrollEnd) {
+            console.log("Browser supports 'scrollend' event, so 'flow-mode' is available.")
+            this.settings["enable-flow-mode"] = new SettingCheckbox(this.id + "-enable-flow-mode", "启用“无限流”阅读模式（取消分页）", true);
+        }
     }
 
     genHTML() {
@@ -358,19 +361,28 @@ class SettingGroupUI extends SettingGroupBase {
             if (st instanceof SettingCSS)
                 st.setCSS();
         }
-        flowMode = this.settings["enable-flow-mode"].value;
-        if (isElementVisible(contentLayer)) {
-            // generatePagination();
-            let curLine = getTopLineNumber();
-            currentPage = getPageNum(curLine);
+        if (supportScrollEnd) {
+            flowMode = this.settings["enable-flow-mode"].value;
             if (flowMode) {
-                $(contentLayer).addClass("no-scrollbar");
-                preloadContentFlow();
+                // $(contentLayer).addClass("no-scrollbar");
+                // $(contentContainer).addClass("no-scrollbar");
+                $(progressBarContainer).removeClass("page-progress");
             } else {
-                $(contentLayer).removeClass("no-scrollbar");
-                showCurrentPageContent();
+                // $(contentLayer).removeClass("no-scrollbar");
+                // $(contentContainer).removeClass("no-scrollbar");
+                $(progressBarContainer).addClass("page-progress");
             }
-            gotoLine(curLine, false);
+            if (isElementVisible(contentLayer)) {
+                generatePagination();
+                let curLine = getTopLineNumber();
+                currentPage = getPageNum(curLine);
+                if (flowMode) {
+                    preloadContentFlow();
+                } else {
+                    showCurrentPageContent();
+                }
+                gotoLine(curLine, false);
+            }
         }
         return this;
     }

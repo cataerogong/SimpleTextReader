@@ -46,12 +46,22 @@ window.addEventListener('dragenter', function(event) {
 });
 
 // window.onscroll = function(event) {
-contentLayer.onscroll = function(event) {
+contentContainer.onscroll = function(event) {
     event.preventDefault();
     if (!init) {
         GetScrollPositions();
     }
 };
+
+if (supportScrollEnd) {
+    contentContainer.onscrollend = function(evt) {
+        evt.preventDefault();
+        if (flowMode) {
+            currentPage = getPageNum();
+            preloadContentFlow();
+        }
+    }
+}
 
 let tocSelItem = -1;
 let tocFocused = false;
@@ -69,11 +79,9 @@ function focusTocItem(tocItem, focused=true) {
         tocItem.style.removeProperty("outline-offset");
     }
 }
-function onDocKeydown(event) {
+function showTOC(vis) {
     if (!isElementVisible(contentLayer)) return;
-    let handled = false;
-    if (event.key == "Shift") { // activate toc
-        if (event.repeat) return;
+    if (vis) {
         setCSS(".toc-panel", "z-index", "1");
         setCSS(".toc-panel", "border-right", "1px solid var(--borderColor)");
         setCSS(".toc-panel", "box-shadow", "var(--shadowH_args)");
@@ -81,6 +89,22 @@ function onDocKeydown(event) {
         setCSS(".toc-panel", "-moz-box-shadow", "var(--moz-shadowH_args)");
         setCSS(".toc-panel", "--toc-full-vis", "visible");
         setCSS(".toc-panel", "--toc-full-opacity", "1");
+    } else {
+        delCSS(".toc-panel", "z-index");
+        delCSS(".toc-panel", "border-right");
+        delCSS(".toc-panel", "box-shadow");
+        delCSS(".toc-panel", "-webkit-box-shadow");
+        delCSS(".toc-panel", "-moz-box-shadow");
+        setCSS(".toc-panel", "--toc-full-vis", "hidden");
+        setCSS(".toc-panel", "--toc-full-opacity", "0");
+    }
+}
+function onDocKeydown(event) {
+    if (!isElementVisible(contentLayer)) return;
+    let handled = false;
+    if (event.key == "Shift") { // activate toc
+        if (event.repeat) return;
+        showTOC(true);
         const tocItems = tocContainer.getElementsByClassName("toc-text");
         tocSelItem = -1;
         if (tocItems) {
@@ -150,100 +174,58 @@ function onDocKeydown(event) {
             }
         }
         handled = true;
-        if (flowMode) {
-            switch (event.key) {
-                case "Home":
-                    gotoLine(0);
-                    break;
-                case "End":
-                    gotoLine(fileContentChunks.length - 1);
-                    break;
-                case "PageUp":
-                    preloadContentFlow();
-                    contentLayer.scrollBy({top: -contentLayer.clientHeight + lh, behavior: "instant"});
-                    break;
-                case "PageDown":
-                case " ":
-                    preloadContentFlow();
-                    contentLayer.scrollBy({top: contentLayer.clientHeight - lh, behavior: "instant"});
-                    break;
-                case "ArrowUp":
-                    // preloadContentFlow();
-                    // contentLayer.scrollBy({top: -lh * 3, behavior: "smooth"});
-                    break;
-                case "ArrowDown":
-                    // preloadContentFlow();
-                    // contentLayer.scrollBy({top: lh * 3, behavior: "smooth"});
-                    break;
-                case 'ArrowLeft':
-                    // if (currentPage > 1) gotoPage(currentPage - 1);
-                    break;
-                case 'ArrowRight':
-                    // if (currentPage < totalPages) gotoPage(currentPage + 1);
-                    break;
-                case 'Escape':
-                    // console.log("Escape pressed:", no_ui);
-                    if (isVariableDefined(dropZone)) {
-                        resetUI();
-                    }
-                    break;
-                default:
-                    handled = false;
-                    break;
-            }
-        } else {
-            switch (event.key) {
-                case "Home":
-                    contentLayer.scrollTo(0, 0);
-                    break;
-                case "End":
-                    contentLayer.scrollTo(0, contentLayer.scrollHeight);
-                    break;
-                case "PageUp":
-                    if (atPageTop() && (currentPage > 1)) {
-                        gotoPage(currentPage - 1, "bottom");
-                    } else {
-                        contentLayer.scrollBy({top: -contentLayer.clientHeight + lh, behavior: "smooth"});
-                    }
-                    break;
-                case "PageDown":
-                case " ":
-                    if (atPageBottom() && (currentPage < totalPages)) {
-                        gotoPage(currentPage + 1, "top");
-                    } else {
-                        contentLayer.scrollBy({top: contentLayer.clientHeight - lh, behavior: "smooth"});
-                    }
-                    break;
-                case "ArrowUp":
-                    if (atPageTop() && (currentPage > 1)) {
-                        gotoPage(currentPage - 1, "bottom");
-                    } else {
-                        contentLayer.scrollBy({top: -lh * 3, behavior: "smooth"});
-                    }
-                    break;
-                case "ArrowDown":
-                    if (atPageBottom() && (currentPage < totalPages)) {
-                        gotoPage(currentPage + 1, "top");
-                    } else {
-                        contentLayer.scrollBy({top: lh * 3, behavior: "smooth"});
-                    }
-                    break;
-                case 'ArrowLeft':
-                    if (currentPage > 1) gotoPage(currentPage - 1);
-                    break;
-                case 'ArrowRight':
-                    if (currentPage < totalPages) gotoPage(currentPage + 1);
-                    break;
-                case 'Escape':
-                    // console.log("Escape pressed:", no_ui);
-                    if (isVariableDefined(dropZone)) {
-                        resetUI();
-                    }
-                    break;
-                default:
-                    handled = false;
-                    break;
-            }
+        let behavior = event.repeat ? "instant" : "smooth";
+        switch (event.key) {
+            case "Home":
+                flowMode ? gotoLine(0) : contentContainer.scrollTo({top: 0,  behavior: "instant"});
+                break;
+            case "End":
+                flowMode ? gotoLine(fileContentChunks.length - 1) : contentContainer.scrollTo({top: contentContainer.scrollHeight, behavior: "instant"});
+                break;
+            case "PageUp":
+                if (atPageTop() && (currentPage > 1)) {
+                    gotoPage(currentPage - 1, "bottom");
+                } else {
+                    contentContainer.scrollBy({top: -contentContainer.clientHeight + lh, behavior: behavior});
+                }
+                break;
+            case "PageDown":
+            case " ":
+                if (atPageBottom() && (currentPage < totalPages)) {
+                    gotoPage(currentPage + 1, "top");
+                } else {
+                    contentContainer.scrollBy({top: contentContainer.clientHeight - lh, behavior: behavior});
+                }
+                break;
+            case "ArrowUp":
+                if (atPageTop() && (currentPage > 1)) {
+                    gotoPage(currentPage - 1, "bottom");
+                } else {
+                    contentContainer.scrollBy({top: -lh * 3, behavior: behavior});
+                }
+                break;
+            case "ArrowDown":
+                if (atPageBottom() && (currentPage < totalPages)) {
+                    gotoPage(currentPage + 1, "top");
+                } else {
+                    contentContainer.scrollBy({top: lh * 3, behavior: behavior});
+                }
+                break;
+            case 'ArrowLeft':
+                if (!flowMode && currentPage > 1) gotoPage(currentPage - 1);
+                break;
+            case 'ArrowRight':
+                if (!flowMode && currentPage < totalPages) gotoPage(currentPage + 1);
+                break;
+            case 'Escape':
+                // console.log("Escape pressed:", no_ui);
+                if (isVariableDefined(dropZone)) {
+                    resetUI();
+                }
+                break;
+            default:
+                handled = false;
+                break;
         }
     }
     if (handled) {
@@ -257,13 +239,7 @@ function onDocKeyup(event) {
     if (event.key == "Shift") {
         event.preventDefault();
         event.stopPropagation();
-        delCSS(".toc-panel", "z-index");
-        delCSS(".toc-panel", "border-right");
-        delCSS(".toc-panel", "box-shadow");
-        delCSS(".toc-panel", "-webkit-box-shadow");
-        delCSS(".toc-panel", "-moz-box-shadow");
-        setCSS(".toc-panel", "--toc-full-vis", "hidden");
-        setCSS(".toc-panel", "--toc-full-opacity", "0");
+        showTOC(false);
         const tocItems = tocContainer.getElementsByClassName("toc-text");
         if (tocItems.length) {
             if (tocSelItem >= 0) {
@@ -282,12 +258,12 @@ function onDocKeyup(event) {
 function onDocWheel(event) {
     if (!isElementVisible(contentContainer)) return;
     if (flowMode) {
-        event.preventDefault();
-        event.stopPropagation();
-        // if (event.deltaY != 0) {
-        //     updateCurrentPage();
-        //     preloadContentFlow();
-        // }
+        // event.preventDefault();
+        // event.stopPropagation();
+        if (event.deltaY != 0) {
+            // updateCurrentPage();
+            preloadContentFlow();
+        }
     } else {
         if (atPageTop() && (currentPage > 1) && (event.deltaY < 0)) {
             gotoPage(currentPage - 1, "bottom");
@@ -303,15 +279,18 @@ function onDocWheel(event) {
 }
 
 function onFlowProgressChanged(evt) {
-    if (!flowMode) return;
-    let prog = parseFloat(flowProgress.value);
+    let prog = parseFloat(progressBar.value);
     if (!isNaN(prog)) {
         evt.stopPropagation();
-        gotoLine(safeLineNum(Math.trunc((fileContentChunks.length * prog / 100))), false);
+        if (flowMode) {
+            gotoLine(safeLineNum(Math.trunc((fileContentChunks.length * prog / 100))), false);
+        } else {
+            contentContainer.scrollTo({top: (contentContainer.scrollHeight - contentContainer.clientHeight) * prog / 100, behavior: "instant"});
+        }
     }
 }
 
-flowProgress.onmouseup = onFlowProgressChanged;
+progressBar.onmouseup = onFlowProgressChanged;
 
 document.onkeyup = onDocKeyup;
 
@@ -638,13 +617,13 @@ function showCurrentPageContent() {
 function generatePagination() {
     if (flowMode) {
         paginationContainer.style.display = "none";
-        flowProgressContainer.style.display = "";
+        // progressBarContainer.style.display = "";
         return;
     } else {
         preloadPageBegin = 0;
         preloadPageEnd = 0;
-        flowProgressContainer.style.display = "none";
-        paginationContainer.style.display = "";
+        // progressBarContainer.style.display = "none";
+        // paginationContainer.style.display = "";
     }
     paginationContainer.innerHTML = "";
     const paginationList = document.createElement("div");
@@ -795,10 +774,10 @@ function gotoPage(page, scrollto="top") {
 
         switch (scrollto) {
             case "top":
-                contentLayer.scrollTo({top: 0, behavior: 'instant'});
+                contentContainer.scrollTo({top: 0, behavior: 'instant'});
                 break;
             case "bottom":
-                contentLayer.scrollTo({top: contentLayer.scrollHeight, behavior: 'instant'});
+                contentContainer.scrollTo({top: contentContainer.scrollHeight, behavior: 'instant'});
                 break;
         }
     }
@@ -821,13 +800,13 @@ function gotoLine(lineNumber, isTitle=true) {
     try {
         const line = document.getElementById(`line${lineNumber}`);
         // console.log(line.offsetTop)
-        contentLayer.scrollTo({top: line.offsetTop, behavior: "instant"});
+        contentContainer.scrollTo({top: line.offsetTop, behavior: "instant"});
         // console.log("line.tagName: ", line.tagName);
         if (line.tagName === "H1" || line.tagName === "H2") {
             // // scroll back to show the title and margin
             // let style = line.currentStyle /* for IE */ || window.getComputedStyle(line);
             // let top_margin = parseFloat(style.marginTop);
-            // contentLayer.scrollBy(0, -top_margin+1);
+            // contentContainer.scrollBy(0, -top_margin+1);
 
             // Set the title in the TOC as active
             setTitleActive(lineNumber);
@@ -908,10 +887,16 @@ function GetScrollPositions(toSetHistory=true) {
     // progressContainer.innerHTML = `<span style='text-decoration:underline'>${bookAndAuthor.bookName}</span><br/>${readingProgressText} ${totalPercentage.toFixed(1).replace(".0", "")}%`;
     progressTitle.innerText = bookAndAuthor.bookName;
     progressContent.innerText = `${readingProgressText} ${totalPercentage.toFixed(1).replace(".0", "")}%`;
-    flowProgress.value = totalPercentage.toFixed(1);
-    // flowProgress.title = totalPercentage.toFixed(1).replace(".0", "") + "%";
-    flowProgressContainer.style.setProperty("--value", flowProgress.value);
-    flowProgressContainer.style.setProperty("--text-value", `"${flowProgress.value}"`);
+    if (flowMode) {
+        progressBar.value = totalPercentage.toFixed(2);
+        // flowProgress.title = totalPercentage.toFixed(1).replace(".0", "") + "%";
+        progressBarContainer.style.setProperty("--value", progressBar.value);
+        progressBarContainer.style.setProperty("--text-value", `"${progressBar.value}"`);
+    } else {
+        progressBar.value = (contentContainer.scrollTop / (contentContainer.scrollHeight - contentContainer.clientHeight) * 100).toFixed(1);
+        progressBarContainer.style.setProperty("--value", progressBar.value);
+        progressBarContainer.style.setProperty("--text-value", `"${progressBar.value}"`);
+    }
 
     gotoTitle_Clicked = false;
 }

@@ -76,6 +76,7 @@ To Offset the anchor link to clear fixed header
     position: relative;
     margin: 0 auto;
     width: var(--ui_contentWidth);
+    height: 100%;
     overflow-x: hidden;
     background-color: var(--bgColor);
 }
@@ -313,13 +314,13 @@ a.toc-active::before {
     font-size: 0.8rem;
 }
 
-/* flow-mode vertical progress */
-.flow-progress {
+/* vertical progress bar */
+.progress-bar {
     position: fixed;
     width: 95vh;
-    right: 5rem;
+    right: calc(50% - var(--ui_contentWidth) / 2 - 2rem);
     top: 1vh;
-    transform: rotate(90deg) translate(50%, -45vh);
+    transform: rotate(90deg) translateX(50%) translateY(-45vh);
     opacity: 0.5;
 
     /* ui-range param */
@@ -327,16 +328,35 @@ a.toc-active::before {
     --max: 100;
     --step: 0.1;
     --suffix: "%";
-    --primary-color: var(--mainColor);
+    --prefix: "全书进度";
+    --primary-color: var(--mainColor_focused);
+    --progress-background: var(--mainColor);
+    /* --value-background: var(--mainColor_focused); */
     --show-min-max: none;
     --value-font: 0.8rem var(--fontFamily_ui);
+    --flip-y: 1;
 }
-.flow-progress:hover {
+.progress-bar:hover {
     opacity: 1;
 }
-.flow-progress.range-slider>input+output {
-    transform: translateX(-50%) rotate(-90deg) translateX(-50%) translateX(calc(var(--thumb-size) * -1));
+.progress-bar.page-progress {
+    --prefix: "";
+    --thumb-color: var(--fontInfoColor);
+    --primary-color: var(--borderColor);
+    --progress-background: var(--borderColor);
+}
+.progress-bar.page-progress.range-slider>input+output {
+    display: none;
+}
+.progress-bar.range-slider>input+output {
+    white-space: nowrap;
+    color: var(--fontColor);
+    /* color: var(--value-active-color); */
+    transform: translateX(-50%) rotate(-90deg) translateX(50%) translateX(calc(var(--thumb-size) * 1));
     --pos: calc((var(--value) - var(--min))/(var(--max) - var(--min)) * (100% - var(--thumb-size)) + var(--thumb-size) / 2);
+}
+.progress-bar.range-slider>input:hover+output {
+    color: var(--value-active-color);
 }
 
 /* Footnote */

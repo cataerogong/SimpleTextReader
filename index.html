@@ -62,10 +62,10 @@
                 <div class="toc-hint">
                     <span>按住 Shift:</span><span>激活目录操作</span>
                     <span></span><span></span>
-                    <span>+ ⇧: </span><span>前一章</span>
-                    <span>+ ⇩: </span><span>后一章</span>
-                    <span>+ PgUp: </span><span>前十章</span>
-                    <span>+ PgDn: </span><span>后十章</span>
+                    <span>+ ⇧: </span><span>上一章</span>
+                    <span>+ ⇩: </span><span>下一章</span>
+                    <span>+ PgUp: </span><span>上十章</span>
+                    <span>+ PgDn: </span><span>下十章</span>
                     <span>+ Home: </span><span>扉页</span>
                     <span>+ End: </span><span>末章</span>
                     <span>+ Space: </span><span>选中/取消</span>
@@ -80,7 +80,7 @@
                 </div>
             </div>
             <!-- Main text -->
-            <div id="content"></div>
+            <div id="content" class="no-scrollbar"></div>
 
             <!-- Footnotes -->
             <ol id="footnote-content"></ol>
@@ -88,9 +88,9 @@
             <!-- Pagination -->
             <div id="pagination" class="uifont prevent-select"></div>
 
-            <!-- Flow-mode progress -->
-            <div id="flowProgressContainer" class="flow-progress range-slider">
-                <input type="range" id="flowProgress" min="0" max="100" step="0.1"
+            <!-- Vertical progress bar -->
+            <div id="progressBarContainer" class="progress-bar range-slider page-progress">
+                <input type="range" id="progressBar" min="0" max="100" step="0.1"
                     oninput="this.parentNode.style.setProperty('--value',this.value); this.parentNode.style.setProperty('--text-value', JSON.stringify(this.value))">
                 <output></output>
                 <div class='range-slider__progress'></div>

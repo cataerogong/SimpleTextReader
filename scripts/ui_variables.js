@@ -20,6 +20,8 @@ var historyLineNumber = 0;
 var storePrevWindowWidth = window.innerWidth;
 var titlePageLineNumberOffset = 0;
 
+var supportScrollEnd = ("onscrollend" in document.documentElement);
+
 var flowMode = false;
 var preloadPageBegin = 0;
 var preloadPageEnd = 0;
@@ -48,7 +50,7 @@ var darkModeActualButton = document.getElementById("switch-btn");   // just for 
 var darkModeToggle = document.getElementById("switch");
 
 var contentLayer = document.getElementById("contentLayer");
-let flowProgressContainer = document.getElementById("flowProgressContainer");
-let flowProgress = document.getElementById("flowProgress");
+let progressBarContainer = document.getElementById("progressBarContainer");
+let progressBar = document.getElementById("progressBar");
 
 const _STRe_VER_ = "1.5.0-wip";

@@ -215,11 +215,11 @@ function delCSS(sel, prop = "") {
 }
 
 function atPageTop() {
-    return (contentLayer.scrollTop == 0);
+    return (contentContainer.scrollTop == 0);
 }
 
 function atPageBottom() {
-    return (contentLayer.scrollTop + contentLayer.clientHeight == contentLayer.scrollHeight);
+    return (contentContainer.scrollTop + contentContainer.clientHeight == contentContainer.scrollHeight);
 }
 
 // 获取当前加载的行号范围
