@@ -73,8 +73,10 @@ To Offset the anchor link to clear fixed header
     background-color: var(--bgColor);
 }
 #content {
-    position: relative;
-    margin: 0 auto;
+    /* position: relative;
+    margin: 0 auto; */
+    position: absolute;
+    right: calc(50% - var(--ui_contentWidth) / 2);
     width: var(--ui_contentWidth);
     height: 100%;
     overflow-x: hidden;
@@ -492,7 +494,7 @@ input:invalid {
     color: var(--ui_foreColor);
 }
 
-#settingDlg .sub-cap {
+.setting-group .sub-cap {
     color: var(--bgColor);
     background-color: var(--mainColor_focused);
     margin: 1rem 0;
@@ -500,16 +502,40 @@ input:invalid {
     text-align: center;
 }
 
-#settingDlg .setting-group {
+.setting-group .setting-group-settings {
     display: grid;
     grid-gap: 0.5rem;
     grid-template-columns: max-content 1fr;
 }
 
-#settingDlg .setting-group .row {
+.setting-group .setting-group-settings .row {
     grid-column: 1 / -1;
 }
 
-#settingDlg .setting-group-UI {
+.setting-group#settingMgr_UI .setting-group-settings {
     grid-template-columns: repeat(2, max-content 1fr);
+}
+
+/* show line num */
+#content {
+    box-sizing: border-box;
+    padding-left: calc(3em * var(--show-line-num, 0));
+    width: calc(var(--ui_contentWidth) + 3rem * var(--show-line-num, 0));
+}
+#content>p {
+    box-sizing: border-box;
+}
+/* #content>span::before, */
+#content>div::before,
+#content>h1::before,
+#content>h2:before,
+#content>p::before {
+    content: attr(data-line-num);
+    position: absolute;
+    left: 10px;
+    text-indent: 0;
+    opacity: var(--show-line-num, 0);
+    font-family: var(--fontFamily_ui);
+    font-size: 0.8em;
+    color: var(--fontInfoColor);
 }

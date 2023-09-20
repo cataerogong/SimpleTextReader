@@ -73,24 +73,24 @@ var STReHelper = {
 // ------------------------------------------------
 class SettingGroupFoS extends SettingGroupBase {
 	constructor() {
-		super("setting-group-FoS", "云端书库");
-		this.settings["enable"] = new SettingCheckbox(this.id + "-enable", "启用", false);
-		this.settings["WebDAV"] = new SettingText(this.id + "-WebDAV", "WebDAV 地址", "/books");
+		super("FoS", "云端书库");
+		this.add(new SettingCheckbox("enable", "启用", false));
+		this.add(new SettingText("WebDAV", "WebDAV 地址", "/books"));
 	}
 
 	genHTML() {
 		let sts = this.settings;
-		let html = `<div class="sub-cap">${this.desc}</div>
-            <div class="setting-group setting-group-fos">
+		let html = `<div id="${this.full_id}" class="setting-group"><div class="sub-cap">${this.desc}</div>
+            <div class="setting-group-settings">
             <div class="row">${sts["enable"].genInputElm()} ${sts["enable"].genLabelElm()}</div>
             ${sts["WebDAV"].genLabelElm()} ${sts["WebDAV"].genInputElm()}
-            </div>`;
+            </div></div>`;
 		return html;
 	}
 
 	apply() {
-		STRe_FilesOnServer.webDAVdir = this.settings["WebDAV"].value.trimEnd().replace(/\/*$/, "");
-		if (this.settings["enable"].value) {
+		STRe_FilesOnServer.webDAVdir = this.get("WebDAV").value.trimEnd().replace(/\/*$/, "");
+		if (this.get("enable").value) {
 			STRe_FilesOnServer.enable();
 		} else {
 			STRe_FilesOnServer.disable();
@@ -239,8 +239,7 @@ var STRe_FilesOnServer = {
 			.prependTo($("#btnWrapper"))
 			.hide();
 
-		settingMgr.groups["FoS"] = new SettingGroupFoS();
-		settingMgr.load("FoS").apply("FoS");
+		settingMgr.add(new SettingGroupFoS());
 	},
 };
 
@@ -249,27 +248,26 @@ var STRe_FilesOnServer = {
 // ------------------------------------------------
 class SettingGroupPoS extends SettingGroupBase {
 	constructor() {
-		super("setting-group-PoS", "云端进度");
-		this.settings["enable"] = new SettingCheckbox(this.id + "-enable", "启用", false);
-		this.settings["WebDAV"] = new SettingText(this.id + "-WebDAV", "WebDAV 地址", "/progress");
-		this.settings["interval"] = new SettingInt(this.id + "-interval", "自动同步间隔", 5);
+		super("PoS", "云端进度");
+		this.add(new SettingCheckbox("enable", "启用", false));
+		this.add(new SettingText("WebDAV", "WebDAV 地址", "/progress"));
+		this.add(new SettingInt("interval", "自动同步间隔", 5));
 	}
 
 	genHTML() {
-		let sts = this.settings;
-		let html = `<div class="sub-cap">${this.desc}</div>
-            <div class="setting-group setting-group-pos">
-            <div class="row">${sts["enable"].genInputElm()} ${sts["enable"].genLabelElm()}</div>
-            ${sts["WebDAV"].genLabelElm()} ${sts["WebDAV"].genInputElm()}
-            ${sts["interval"].genLabelElm()} <span>${sts["interval"].genInputElm(`style="width:3rem;"`)}秒（0 表示关闭自动同步）</span>
-            </div>`;
+		let html = `<div id="${this.full_id}" class="setting-group"><div class="sub-cap">${this.desc}</div>
+            <div class="setting-group-settings">
+            <div class="row">${this.get("enable").genInputElm()} ${this.get("enable").genLabelElm()}</div>
+            ${this.get("WebDAV").genLabelElm()} ${this.get("WebDAV").genInputElm()}
+            ${this.get("interval").genLabelElm()} <span>${this.get("interval").genInputElm(`style="width:3rem;"`)}秒（0 表示关闭自动同步）</span>
+            </div></div>`;
 		return html;
 	}
 
 	apply() {
-		STRe_ProgressOnServer.webDAVdir = this.settings["WebDAV"].value.trimEnd().replace(/\/*$/, "");
-		STRe_ProgressOnServer.syncInterval = this.settings["interval"].value;
-		if (this.settings["enable"].value) {
+		STRe_ProgressOnServer.webDAVdir = this.get("WebDAV").value.trimEnd().replace(/\/*$/, "");
+		STRe_ProgressOnServer.syncInterval = this.get("interval").value;
+		if (this.get("enable").value) {
 			STRe_ProgressOnServer.enable();
 		} else {
 			STRe_ProgressOnServer.disable();
@@ -508,8 +506,7 @@ var STRe_ProgressOnServer = {
 			.prependTo($("#btnWrapper"))
 			.hide();
 
-		settingMgr.groups["PoS"] = new SettingGroupPoS();
-		settingMgr.load("PoS").apply("PoS");
+		settingMgr.add(new SettingGroupPoS());
 	},
 };
 
@@ -519,24 +516,23 @@ var STRe_ProgressOnServer = {
 // ------------------------------------------------
 class SettingGroupBookshelf extends SettingGroupBase {
 	constructor() {
-		super("setting-group-Bookshelf", "缓存书架");
-		this.settings["enable"] = new SettingCheckbox(this.id + "-enable", "启用", true);
-		this.settings["reopen"] = new SettingCheckbox(this.id + "-reopen", "启动时打开上次阅读书籍", true);
+		super("bookshelf", "缓存书架");
+		this.add(new SettingCheckbox("enable", "启用", true));
+		this.add(new SettingCheckbox("reopen", "启动时打开上次阅读书籍", true));
 	}
 
 	genHTML() {
-		let sts = this.settings;
-		let html = `<div class="sub-cap">${this.desc}</div>
-            <div class="setting-group setting-group-bookshelf">
-            <div class="row">${sts["enable"].genInputElm()} ${sts["enable"].genLabelElm()}</div>
-            <div class="row">${sts["reopen"].genInputElm()} ${sts["reopen"].genLabelElm()}</div>
-            </div>`;
+		let html = `<div id="setting-group-${this.full_id}" class="setting-group"><div class="sub-cap">${this.desc}</div>
+            <div class="setting-group-settings">
+            <div>${this.get("enable").genInputElm()} ${this.get("enable").genLabelElm()}</div>
+            <div>${this.get("reopen").genInputElm()} ${this.get("reopen").genLabelElm()}</div>
+            </div></div>`;
 		return html;
 	}
 
 	apply() {
-		STRe_Bookshelf.reopenEnabled = this.settings["reopen"].value;
-		if (this.settings["enable"].value) {
+		STRe_Bookshelf.reopenEnabled = this.get("reopen").value;
+		if (this.get("enable").value) {
 			STRe_Bookshelf.enable();
 		} else {
 			STRe_Bookshelf.disable();
@@ -590,7 +586,7 @@ var STRe_Bookshelf = {
 		}
 	},
 
-	async saveBook(file) {
+	async saveBook(file, refreshBookshelf = true) {
 		if (STRe_Bookshelf.enabled) {
 			if (file.type === "text/plain") {
 				if (file[STRe_Bookshelf.STRe_CACHE_FLAG]) {
@@ -602,7 +598,8 @@ var STRe_Bookshelf = {
 					if (!await STRe_Bookshelf.db.isBookExist(file.name))
 						alert("保存到本地书架失败（缓存空间可能已满）");
 					// 刷新 Bookshelf in DropZone
-					await STRe_Bookshelf.refreshBookList();
+					if (refreshBookshelf)
+						await STRe_Bookshelf.refreshBookList();
 				}
 			}
 		}
@@ -753,8 +750,7 @@ var STRe_Bookshelf = {
 		// 	.prependTo($("#btnWrapper"))
 		// 	.hide();
 
-		settingMgr.groups["Bookshelf"] = new SettingGroupBookshelf();
-		settingMgr.load("Bookshelf").apply("Bookshelf");
+		settingMgr.add(new SettingGroupBookshelf());
 	},
 };
 

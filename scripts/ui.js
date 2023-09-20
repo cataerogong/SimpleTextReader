@@ -223,6 +223,29 @@ function onDocKeydown(event) {
                     resetUI();
                 }
                 break;
+            case "f": {
+                let s = prompt(`请输入搜索词:`);
+                if (s) {
+                    const n = getTopLineNumber() + 1;
+                    for (let i = 0; i < fileContentChunks.length; i++) {
+                        let j = (i + n) % fileContentChunks.length;
+                        if (fileContentChunks[j].includes(s)) {
+                            gotoLine(safeLineNum(j));
+                            break;
+                        }
+                    }
+                }
+                break;
+            }
+            case "g": {
+                let s = prompt(`请输入要跳转的行号 (0-${fileContentChunks.length - 1}) \n或进度 (0%-100%):`);
+                if (/^\d+$/.test(s)) {
+                    gotoLine(safeLineNum(parseInt(s)), false);
+                } else if (/^\d+(\.\d*)?%$/.test(s)) {
+                    gotoLine(safeLineNum(Math.trunc((fileContentChunks.length * parseFloat(s) / 100))), false);
+                }
+                break;
+            }
             default:
                 handled = false;
                 break;
@@ -348,13 +371,19 @@ function handleDragLeave(event) {
     }
 }
 
-function handleDrop(event) {
+async function handleDrop(event) {
     event.preventDefault();
     resetVars();
     // setTOC_onRatio(initial=true);
 
     var fileList = event.dataTransfer.files;
-    handleSelectedFile(fileList);
+    if (fileList.length > 1 && typeof STRe_Bookshelf != "undefined") {
+        for (let f of fileList)
+            await STRe_Bookshelf.saveBook(f, false);
+        await STRe_Bookshelf.refreshBookList();
+    } else {
+        handleSelectedFile(fileList);
+    }
 }
 
 // by cataerogong:
@@ -588,7 +617,7 @@ function showCurrentPageContent() {
     // process line by line - fast
     for (var j = startIndex; j < endIndex && j < fileContentChunks.length; j++) {
         if (fileContentChunks[j].trim() !== '') {
-            let processedResult = process(fileContentChunks[j], j, to_drop_cap);
+            let processedResult = processNew(fileContentChunks[j], j, to_drop_cap);
             to_drop_cap = processedResult[1] === 'h' ? true : false;
             // contentContainer.innerHTML += processedResult[0];
             contentContainer.appendChild(processedResult[0]);
@@ -1025,7 +1054,7 @@ function preloadContentFlow() {
     // process line by line - fast
     for (var j = loadRange.begin; j <= loadRange.end; j++) {
         if (fileContentChunks[j].trim() !== '') {
-            let processedResult = process(fileContentChunks[j], j, to_drop_cap);
+            let processedResult = processNew(fileContentChunks[j], j, to_drop_cap);
             to_drop_cap = processedResult[1] === 'h' ? true : false;
             contentContainer.insertBefore(processedResult[0], insertBefore);
         }
@@ -1056,4 +1085,12 @@ function preloadContentFlow() {
 
     // set up footnote
     Footnotes.setup();
+}
+
+function processNew(str, lineNumber, to_drop_cap) {
+    let ret = process(str, lineNumber, to_drop_cap);
+    if (ret && ret[0]) {
+        ret[0].setAttribute("data-line-num", lineNumber);
+    }
+    return ret;
 }

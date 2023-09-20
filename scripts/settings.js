@@ -6,20 +6,40 @@ class SettingBase {
     type = "";
 
     constructor(id, desc, defaultValue) {
+        this._id_prefix = "";
         this.id = id;
         this.desc = desc;
         this.defaultValue = defaultValue;
         this.value = defaultValue;
     };
 
+    /**
+     * @returns {string}
+     */
+    get full_id() {
+        return this._id_prefix + this.id;
+    }
+    /**
+     * @param {string} id_prefix
+     */
+    set id_prefix(id_prefix) {
+        this._id_prefix = id_prefix;
+    }
+    /**
+     * @returns {string}
+     */
+    get id_prefix() {
+        return this._id_prefix;
+    }
+
     genInputElm(attrs = "") {
-        return `<input type="${this.type}" id="${this.id}" value="${this.value}" ${attrs} />`;
+        return `<input type="${this.type}" id="${this.full_id}" value="${this.value}" ${attrs} />`;
     }
     genLabelElm(attrs = "") {
-        return `<span id="${this.id}-lbl" ${attrs}>${this.desc}</span>`;
+        return `<span id="${this.full_id}-lbl" ${attrs}>${this.desc}</span>`;
     }
     getInputVal() {
-        this.value = document.getElementById(this.id).value || this.defaultValue;
+        this.value = document.getElementById(this.full_id).value || this.defaultValue;
         return this;
     }
     setVal(value) {
@@ -40,13 +60,13 @@ class SettingCheckbox extends SettingBase {
     }
     genInputElm(attrs = "") {
         if (this.value == null) this.value = this.defaultValue;
-        return `<input type="${this.type}" id="${this.id}" ${this.value ? "checked" : ""} ${attrs} />`;
+        return `<input type="${this.type}" id="${this.full_id}" ${this.value ? "checked" : ""} ${attrs} />`;
     }
     genLabelElm(attrs = "") {
-        return `<label id="${this.id}-lbl" for="${this.id}" ${attrs}>${this.desc}</label>`;
+        return `<label id="${this.full_id}-lbl" for="${this.full_id}" ${attrs}>${this.desc}</label>`;
     }
     getInputVal() {
-        this.value = document.getElementById(this.id).checked;
+        this.value = document.getElementById(this.full_id).checked;
         return this;
     }
 }
@@ -60,7 +80,7 @@ class SettingSelect extends SettingText {
     }
     genInputElm(attrs = "") {
         if (this.value == null) this.value = this.defaultValue;
-        let str = `<select id="${this.id}" ${attrs}>`;
+        let str = `<select id="${this.full_id}" ${attrs}>`;
         for (const k in this.options) {
             str += `<option value="${k}" ${(k == this.value) ? "selected" : ""}>${this.options[k]}<option>`;
         }
@@ -104,31 +124,51 @@ class SettingInt extends SettingText {
 }
 
 class SettingGroupBase {
-    id = "";
-    desc = "";
-    settings = {};
-
     constructor(id, desc) {
+        this._id_prefix = "";
         this.id = id;
         this.desc = desc;
+        this.settings = {};
+    }
+
+    /**
+     * @returns {string}
+     */
+    get full_id() {
+        return this._id_prefix + this.id;
+    }
+    /**
+     * @param {string} prefix
+     */
+    set id_prefix(prefix) {
+        this._id_prefix = prefix;
+        for (const k in this.settings) {
+            this.get(k).id_prefix = this.full_id + "_";
+        }
+    }
+    /**
+     * @returns {string}
+     */
+    get id_prefix() {
+        return this._id_prefix;
     }
 
     getInputVals() {
         for (const k in this.settings) {
-            this.settings[k].getInputVal();
+            this.get(k).getInputVal();
         }
         return this;
     }
     exportValues() {
         let stObj = {};
         for (const k in this.settings) {
-            stObj[k] = this.settings[k].value;
+            stObj[k] = this.get(k).value;
         }
         return stObj;
     }
     importValues(stObj) {
         for (const k in this.settings) {
-            this.settings[k].setVal((k in stObj) ? stObj[k] : null);
+            this.get(k).setVal((k in stObj) ? stObj[k] : null);
         }
         return this;
     }
@@ -138,6 +178,26 @@ class SettingGroupBase {
     }
     apply() {
         throw new Error(`SettingGroup ${this.id}(${this.desc}) apply() not implicated!`);
+    }
+
+    /**
+     * 
+     * @param {SettingBase} settingInstance
+     * @returns {this}
+     */
+    add(settingInstance) {
+        if (!settingInstance instanceof SettingBase)
+            throw new TypeError("Not a SettingBase instance.");
+        if (!settingInstance.id)
+            throw new Error("Setting id is empty.");
+        if (settingInstance.id in this.settings)
+            throw new Error("Setting already exists. Id: " + settingInstance.id);
+        settingInstance.id_prefix = this.full_id + "_";
+        this.settings[settingInstance.id] = settingInstance;
+        return this;
+    }
+    get(settingId) {
+        return this.settings[settingId];
     }
 }
 
@@ -162,8 +222,7 @@ var settingMgr = {
             dlg.find(".dlg-foot").append($(`<button style="float:right;">恢复默认</button>`).click(() => this.reset().apply().hide()));
             let container = dlg.find(".dlg-body");
             for (k in this.groups) {
-                let sg = this.groups[k];
-                container.append(sg.genHTML());
+                container.append(this.get(k).genHTML());
             }
             freezeContent();
             dlg.appendTo("body");
@@ -180,15 +239,15 @@ var settingMgr = {
         return this;
     },
 
-    load(group = "") {
+    load(groupId = "") {
         let stObj = JSON.parse(localStorage.getItem(this.ITEM_SETTINGS)) || {};
-        if (group) {
-            if (group in this.groups) {
-                this.groups[group].importValues(stObj[group] || {});
+        if (groupId) {
+            if (groupId in this.groups) {
+                this.get(groupId).importValues(stObj[groupId] || {});
             }
         } else {
             for (const grp in this.groups) {
-                this.groups[grp].importValues(stObj[grp] || {});
+                this.get(grp).importValues(stObj[grp] || {});
             }
         }
         return this;
@@ -197,7 +256,7 @@ var settingMgr = {
     save() {
         let stObj = {};
         for (const grp in this.groups) {
-            stObj[grp] = this.groups[grp].getInputVals().exportValues();
+            stObj[grp] = this.get(grp).getInputVals().exportValues();
         }
         localStorage.setItem(this.ITEM_SETTINGS, JSON.stringify(stObj));
         return this;
@@ -211,15 +270,15 @@ var settingMgr = {
         return this;
     },
 
-    apply(group = "") {
+    apply(groupId = "") {
         if (this.enabled) {
-            if (group) {
-                if (group in this.groups) {
-                    this.groups[group].apply();
+            if (groupId) {
+                if (groupId in this.groups) {
+                    this.get(groupId).apply();
                 }
             } else {
                 for (const grp in this.groups) {
-                    this.groups[grp].apply();
+                    this.get(grp).apply();
                 }
             }
         }
@@ -245,6 +304,10 @@ var settingMgr = {
         return this;
     },
 
+    /**
+     * 
+     * @returns {ThisObj}
+     */
     init() {
         $(`<div id="STRe-setting-btn" class="btn-icon">
 		<svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
@@ -254,6 +317,39 @@ var settingMgr = {
             .prependTo($("#btnWrapper"))
             .hide();
         return this;
+    },
+
+    /**
+     * 
+     * @param {SettingGroupBase} groupInstance 
+     * @param {Boolean} loadAfterAdd 
+     * @param {Boolean} applyAfterLoad 
+     * @returns {ThisObj}
+     */
+    add(groupInstance, loadAfterAdd = true, applyAfterLoad = true) {
+        if (!groupInstance instanceof SettingGroupBase)
+            throw new TypeError("Not a SettingGroupBase instance.");
+        if (!groupInstance.id)
+            throw new Error("Group id is empty.");
+        if (groupInstance.id in this.groups)
+            throw new Error("Group already exists. Id: " + groupInstance.id);
+        groupInstance.id_prefix = "settingMgr_";
+        this.groups[groupInstance.id] = groupInstance;
+        if (loadAfterAdd) {
+            this.load(groupInstance.id);
+            if (applyAfterLoad)
+                this.apply(groupInstance.id);
+        }
+        return this;
+    },
+
+    /**
+     * 
+     * @param {string} groupId 
+     * @returns {SettingGroupBase}
+     */
+    get(groupId) {
+        return this.groups[groupId];
     },
 }
 
@@ -326,68 +422,89 @@ class SettingCSS extends SettingText {
 
 class SettingGroupUI extends SettingGroupBase {
     constructor() {
-        super("setting-group-UI", "界面参数");
-        this.settings["p_lineHeight"] = new SettingCSS(this.id + "-p_lineHeight", "行高", ":root", "--p_lineHeight");
-        this.settings["p_fontSize"] = new SettingCSS(this.id + "-p_fontSize", "字号", ":root", "--p_fontSize");
-        this.settings["fontColor"] = new SettingCSS(this.id + "-fontColor", "日间字符色", ":root", "--fontColor");
-        this.settings["bgColor"] = new SettingCSS(this.id + "-bgColor", "日间背景色", ":root", "--bgColor");
-        this.settings["dark_fontColor"] = new SettingCSS(this.id + "-dark_fontColor", "夜间字符色", `[data-theme="dark"]`, "--fontColor");
-        this.settings["dark_bgColor"] = new SettingCSS(this.id + "-dark_bgColor", "夜间背景色", `[data-theme="dark"]`, "--bgColor");
-        this.settings["pagination_bottom"] = new SettingCSS(this.id + "-pagination_bottom", "分页条与底部距离", "#pagination", "bottom");
-        this.settings["pagination_opacity"] = new SettingCSS(this.id + "-pagination_opacity", "分页条透明度(0.0~1.0)", "#pagination", "opacity", "1");
-        if (supportScrollEnd) {
-            console.log("Browser supports 'scrollend' event, so 'flow-mode' is available.")
-            this.settings["enable-flow-mode"] = new SettingCheckbox(this.id + "-enable-flow-mode", "启用“无限流”阅读模式（取消分页）", true);
-        }
+        super("UI", "界面参数");
+        this.add(new SettingCSS("p_lineHeight", "行高", ":root", "--p_lineHeight"));
+        this.add(new SettingCSS("p_fontSize", "字号", ":root", "--p_fontSize"));
+        this.add(new SettingCSS("fontColor", "日间字符色", ":root", "--fontColor"));
+        this.add(new SettingCSS("bgColor", "日间背景色", ":root", "--bgColor"));
+        this.add(new SettingCSS("dark_fontColor", "夜间字符色", `[data-theme="dark"]`, "--fontColor"));
+        this.add(new SettingCSS("dark_bgColor", "夜间背景色", `[data-theme="dark"]`, "--bgColor"));
+        this.add(new SettingCSS("pagination_bottom", "分页条与底部距离", "#pagination", "bottom"));
+        this.add(new SettingCSS("pagination_opacity", "分页条透明度(0.0~1.0)", "#pagination", "opacity", "1"));
     }
 
     genHTML() {
-        let html = `<div class="sub-cap">${this.desc}</div>`;
-        html += `<div class="setting-group setting-group-UI">`;
+        let html = `<div id="${this.full_id}" class="setting-group"><div class="sub-cap">${this.desc}</div>`;
+        html += `<div class="setting-group-settings">`;
         for (const k in this.settings) {
-            let st = this.settings[k];
+            let st = this.get(k);
             if (st instanceof SettingCSS)
                 html += st.genLabelElm() + st.genInputElm(`style="width:6rem;"`);
-            else if (st instanceof SettingCheckbox)
-                html += `<div class="row">${st.genInputElm()} ${st.genLabelElm()}</div>`;
         }
-        html += "</div>";
+        html += "</div></div>";
         return html;
     }
 
     apply() {
         for (const k in this.settings) {
-            let st = this.settings[k];
+            let st = this.get(k);
             if (st instanceof SettingCSS)
                 st.setCSS();
-        }
-        if (supportScrollEnd) {
-            flowMode = this.settings["enable-flow-mode"].value;
-            if (flowMode) {
-                // $(contentLayer).addClass("no-scrollbar");
-                // $(contentContainer).addClass("no-scrollbar");
-                $(progressBarContainer).removeClass("page-progress");
-            } else {
-                // $(contentLayer).removeClass("no-scrollbar");
-                // $(contentContainer).removeClass("no-scrollbar");
-                $(progressBarContainer).addClass("page-progress");
-            }
-            if (isElementVisible(contentLayer)) {
-                generatePagination();
-                let curLine = getTopLineNumber();
-                currentPage = getPageNum(curLine);
-                if (flowMode) {
-                    preloadContentFlow();
-                } else {
-                    showCurrentPageContent();
-                }
-                gotoLine(curLine, false);
-            }
         }
         return this;
     }
 }
 
 // 加载“界面参数”设置
-settingMgr.groups["UI"] = new SettingGroupUI();
-settingMgr.load("UI").apply("UI");
+settingMgr.add(new SettingGroupUI());
+
+
+class SettingGroupMode extends SettingGroupBase {
+    constructor() {
+        super("mode", "阅读模式");
+        if (supportScrollEnd) {
+            console.log("Browser supports 'scrollend' event, so 'flow-mode' is available.")
+            this.add(new SettingCheckbox("enable-flow-mode", "启用“无限流”阅读模式（取消分页）", true));
+        }
+        this.add(new SettingCheckbox("show-line-num", "显示行号", false));
+    }
+
+    genHTML() {
+        let html = `<div id="${this.full_id}" class="setting-group"><div class="sub-cap">${this.desc}</div>
+        <div class="setting-group-settings">
+        <div class="row">${this.get("enable-flow-mode").genInputElm()} ${this.get("enable-flow-mode").genLabelElm()}</div>
+        <div class="row">${this.get("show-line-num").genInputElm()} ${this.get("show-line-num").genLabelElm()}</div>
+        </div></div>`;
+        return html;
+    }
+
+    apply() {
+        let curLine = getTopLineNumber();
+        currentPage = getPageNum(curLine);
+        let refresh = false;
+        if (supportScrollEnd) {
+            refresh = (flowMode != this.get("enable-flow-mode").value);
+            flowMode = this.get("enable-flow-mode").value;
+            if (flowMode) {
+                $(progressBarContainer).removeClass("page-progress");
+            } else {
+                $(progressBarContainer).addClass("page-progress");
+            }
+            if (isElementVisible(contentLayer)) {
+                generatePagination();
+                if (flowMode) {
+                    preloadContentFlow();
+                } else {
+                    showCurrentPageContent();
+                }
+            }
+        }
+        contentContainer.style.setProperty("--show-line-num", this.get("show-line-num").value ? "1" : "0");
+
+        if (refresh) gotoLine(curLine, false);
+        return this;
+    }
+}
+
+// 加载“阅读模式”设置
+settingMgr.add(new SettingGroupMode());

@@ -122,8 +122,11 @@
 }
 
 .bookshelf .book .cover {
+    box-sizing: border-box;
+    padding: 5px 10px;
     font-family: ui;
     text-align: left;
+    overflow-wrap: anywhere;
     color: var(--bgColor);
     cursor: pointer;
 }
