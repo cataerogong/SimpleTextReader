@@ -73,6 +73,7 @@ To Offset the anchor link to clear fixed header
     background-color: var(--bgColor);
 }
 #content {
+    box-sizing: border-box;
     /* position: relative;
     margin: 0 auto; */
     position: absolute;
@@ -517,25 +518,23 @@ input:invalid {
 }
 
 /* show line num */
-#content {
-    box-sizing: border-box;
-    padding-left: calc(3em * var(--show-line-num, 0));
-    width: calc(var(--ui_contentWidth) + 3rem * var(--show-line-num, 0));
-}
-#content>p {
+#content>:is(div, h1, h2, p) {
     box-sizing: border-box;
 }
-/* #content>span::before, */
-#content>div::before,
-#content>h1::before,
-#content>h2:before,
-#content>p::before {
-    content: attr(data-line-num);
+#content[data-show-line-num="true"] {
+    /* box-sizing: border-box; */
+}
+#content[data-show-line-num="true"]>:is(div, h1, h2, p, span) {
+    /* text-indent: 0; */
+}
+#content[data-show-line-num="true"]>:is(div, h1, h2, p, span)::before {
+    content: "<" attr(data-line-num) ">";
     position: absolute;
-    left: 10px;
+    left: 0;
     text-indent: 0;
-    opacity: var(--show-line-num, 0);
+    transform: translateY(-1.5rem);
+    /* opacity: var(--show-line-num, 0); */
     font-family: var(--fontFamily_ui);
-    font-size: 0.8em;
+    font-size: 0.8rem;
     color: var(--fontInfoColor);
 }

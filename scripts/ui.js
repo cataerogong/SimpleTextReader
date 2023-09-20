@@ -45,7 +45,6 @@ window.addEventListener('dragenter', function(event) {
     // }
 });
 
-// window.onscroll = function(event) {
 contentContainer.onscroll = function(event) {
     event.preventDefault();
     if (!init) {
@@ -57,8 +56,11 @@ if (supportScrollEnd) {
     contentContainer.onscrollend = function(evt) {
         evt.preventDefault();
         if (flowMode) {
-            currentPage = getPageNum();
-            preloadContentFlow();
+            updateCurPos();
+            preloadContentFlow(currentPage);
+        }
+        if (!init) {
+            GetScrollPositions();
         }
     }
 }
@@ -177,39 +179,45 @@ function onDocKeydown(event) {
         let behavior = event.repeat ? "instant" : "smooth";
         switch (event.key) {
             case "Home":
-                flowMode ? gotoLine(0) : contentContainer.scrollTo({top: 0,  behavior: "instant"});
+                flowMode ? gotoLine(0, false) : contentContainer.scrollTo({top: 0,  behavior: "instant"});
                 break;
             case "End":
-                flowMode ? gotoLine(fileContentChunks.length - 1) : contentContainer.scrollTo({top: contentContainer.scrollHeight, behavior: "instant"});
+                flowMode ? gotoLine(fileContentChunks.length - 1, false) : contentContainer.scrollTo({top: contentContainer.scrollHeight, behavior: "instant"});
                 break;
             case "PageUp":
-                if (atPageTop() && (currentPage > 1)) {
-                    gotoPage(currentPage - 1, "bottom");
-                } else {
-                    contentContainer.scrollBy({top: -contentContainer.clientHeight + lh, behavior: behavior});
+                if (flowMode && !supportScrollEnd && nearPageTop()) {
+                    let line = currentLine;
+                    preloadContentFlow(currentPage - 1);
+                    gotoLine(line, false);
                 }
+                contentContainer.scrollBy({top: -contentContainer.clientHeight + lh, behavior: behavior});
                 break;
             case "PageDown":
             case " ":
-                if (atPageBottom() && (currentPage < totalPages)) {
-                    gotoPage(currentPage + 1, "top");
-                } else {
-                    contentContainer.scrollBy({top: contentContainer.clientHeight - lh, behavior: behavior});
+                if (flowMode && !supportScrollEnd && nearPageBottom()) {
+                    let line = currentLine;
+                    console.log("preload pagedown")
+                    break
+                    // preloadContentFlow(currentPage + 1);
+                    // gotoLine(line, false);
                 }
+                contentContainer.scrollBy({top: contentContainer.clientHeight - lh, behavior: behavior});
                 break;
             case "ArrowUp":
-                if (atPageTop() && (currentPage > 1)) {
-                    gotoPage(currentPage - 1, "bottom");
-                } else {
-                    contentContainer.scrollBy({top: -lh * 3, behavior: behavior});
+                if (flowMode && !supportScrollEnd && nearPageTop()) {
+                    let line = currentLine;
+                    preloadContentFlow(currentPage - 1);
+                    gotoLine(line, false);
                 }
+                contentContainer.scrollBy({top: -lh * 3, behavior: behavior});
                 break;
             case "ArrowDown":
-                if (atPageBottom() && (currentPage < totalPages)) {
-                    gotoPage(currentPage + 1, "top");
-                } else {
-                    contentContainer.scrollBy({top: lh * 3, behavior: behavior});
+                if (flowMode && !supportScrollEnd && nearPageBottom()) {
+                    let line = currentLine;
+                    preloadContentFlow(currentPage + 1);
+                    gotoLine(line, false);
                 }
+                contentContainer.scrollBy({top: lh * 3, behavior: behavior});
                 break;
             case 'ArrowLeft':
                 if (!flowMode && currentPage > 1) gotoPage(currentPage - 1);
@@ -230,7 +238,7 @@ function onDocKeydown(event) {
                     for (let i = 0; i < fileContentChunks.length; i++) {
                         let j = (i + n) % fileContentChunks.length;
                         if (fileContentChunks[j].includes(s)) {
-                            gotoLine(safeLineNum(j));
+                            gotoLine(safeLineNum(j), false);
                             break;
                         }
                     }
@@ -280,23 +288,17 @@ function onDocKeyup(event) {
 
 function onDocWheel(event) {
     if (!isElementVisible(contentContainer)) return;
-    if (flowMode) {
+    if (flowMode && !supportScrollEnd // 不支持 scrollend event，接近边界时 preload
+        && ((nearPageTop() && (event.deltaY < 0))
+            || (nearPageBottom() && (event.deltaY > 0)))
+    ) {
+        // console.log("preload on wheel")
+        // updateCurPos();
+        // let line = currentLine;
+        preloadContentFlow(currentPage);
+        // gotoLine(line, false);
         // event.preventDefault();
         // event.stopPropagation();
-        if (event.deltaY != 0) {
-            // updateCurrentPage();
-            preloadContentFlow();
-        }
-    } else {
-        if (atPageTop() && (currentPage > 1) && (event.deltaY < 0)) {
-            gotoPage(currentPage - 1, "bottom");
-            event.preventDefault();
-            event.stopPropagation();
-        } else if (atPageBottom() && (currentPage < totalPages) && (event.deltaY > 0)) {
-            gotoPage(currentPage + 1, "top");
-            event.preventDefault();
-            event.stopPropagation();
-        }
     }
     return;
 }
@@ -564,19 +566,19 @@ async function handleSelectedFile(fileList) {
             // Show content
             init = false;
             if (flowMode) {
-                preloadContentFlow();
+                preloadContentFlow(currentPage);
             } else {
-                showCurrentPageContent();
+                showPageContent(currentPage);
                 generatePagination();
             }
             updateTOCUI(false);
 
             // Retrieve reading history if exists
             // removeAllHistory();    // for debugging
-            let curLineNumber = getHistory(filename);
-            if ((currentPage === 1) && (curLineNumber === 0) && (window.scrollY === 0)) {
+            currentLine = getHistory(filename);
+            if ((currentPage === 1) && (currentLine === 0) && (window.scrollY === 0)) {
                 // if the first line is a header, it will show up in TOC
-                setTitleActive(curLineNumber);
+                setTitleActive(currentLine);
             }
             GetScrollPositions(false);
         };
@@ -603,16 +605,13 @@ async function handleSelectedFile(fileList) {
     }
 }
 
-function showCurrentPageContent() {
+function showPageContent(page) {
     // const startIndex = (currentPage - 1) * itemsPerPage;
     // const endIndex = startIndex + itemsPerPage;
-    const startIndex =  Math.max((currentPage - 2) * itemsPerPage + 1, 0); // 从 (p-2)*N+1；首页首行会从 -N+1 开始，改为从 0 开始
-    const endIndex = (currentPage - 1) * itemsPerPage + 1; // 到 (p-1)*N+1
+    const startIndex =  Math.max((page - 2) * itemsPerPage + 1, 0); // 从 (p-2)*N+1；首页首行会从 -N+1 开始，改为从 0 开始
+    const endIndex = (page - 1) * itemsPerPage + 1; // 到 (p-1)*N+1
     contentContainer.innerHTML = "";
     let to_drop_cap = false;
-
-    preloadPageBegin = 0;
-    preloadPageEnd = 0;
 
     // process line by line - fast
     for (var j = startIndex; j < endIndex && j < fileContentChunks.length; j++) {
@@ -790,15 +789,16 @@ function jumpToPageInputField(event) {
 
 function gotoPage(page, scrollto="top") {
     if (!isNaN(page)) {
-        // currentPage = (page > totalPages) ? totalPages : ((page < 1) ? 1 : page);
-        currentPage = Math.min(Math.max(1, page), totalPages);
+        page = safePageNum(page);
     } else {
         console.log(`Not a valid page number: ${page}, so goto <currentPage:${currentPage}>.`);
+        page = currentPage;
     }
     if (flowMode) {
-        preloadContentFlow();
+        console.log("preload in gotoPage")
+        preloadContentFlow(page);
     } else {
-        showCurrentPageContent();
+        showPageContent(page);
         generatePagination();
 
         switch (scrollto) {
@@ -857,6 +857,11 @@ function gotoLine(lineNumber, isTitle=true) {
     return 0;
 }
 
+function updateCurPos() {
+    currentLine = getTopLineNumber();
+    currentPage = getPageNum(currentLine);
+}
+
 function GetScrollPositions(toSetHistory=true) {
     // console.log("GetScrollPositions() called, gotoTitle_Clicked: ", gotoTitle_Clicked);
     // console.log(GetScrollPositions.caller)
@@ -866,26 +871,27 @@ function GetScrollPositions(toSetHistory=true) {
     // console.log(`Top: ${scrollTop}px`);
 
     // Get the line number on top of the viewport
-    let curLineNumber = getTopLineNumber();
-    // console.log("Current line: ", curLineNumber);
+    // currentLine = getTopLineNumber();
+    // console.log("Current line: ", currentLine);
+    updateCurPos();
 
     if (!gotoTitle_Clicked) {
         // Remember the line number in history
         if (toSetHistory) {
-            setHistory(filename, curLineNumber);
+            setHistory(filename, currentLine);
         }
 
         // Get the title the detectected line belongs to
         let curTitleID = 0;
         for (var i = 0; i < allTitles.length; i++) {
             if (i < allTitles.length - 1) {
-                if (curLineNumber >= allTitles[i][1] && curLineNumber < allTitles[i+1][1]) {
+                if (currentLine >= allTitles[i][1] && currentLine < allTitles[i+1][1]) {
                     // console.log("Current title: ", allTitles[i][0]);
                     curTitleID = allTitles[i][1];
                     break;
                 }
             } else {
-                if (curLineNumber >= allTitles[i][1] && curLineNumber < fileContentChunks.length) {
+                if (currentLine >= allTitles[i][1] && currentLine < fileContentChunks.length) {
                     // console.log("Current title: ", allTitles[i][0]);
                     curTitleID = allTitles[i][1];
                     break;
@@ -909,7 +915,7 @@ function GetScrollPositions(toSetHistory=true) {
     // let scalePercentage = curItemsPerPage / fileContentChunks.length;
     // let pastPagePercentage = pastPageLines / fileContentChunks.length;
     // let totalPercentage = (curPagePercentage * scalePercentage + pastPagePercentage) * 100;
-    let totalPercentage = curLineNumber / fileContentChunks.length * 100;
+    let totalPercentage = currentLine / fileContentChunks.length * 100;
     // if ((curLineNumber === 0) && (currentPage === 1) && (window.scrollY <= 5)) {
     //     totalPercentage = 0;
     // }
@@ -989,24 +995,24 @@ function setTitleActive(titleID) {
 }
 
 function getTopLineNumber() {
-    let curLineNumber = 0;
+    let lineNum = 0;
     for (i in contentContainer.children) {
         if (isInViewport(contentContainer.children[i])) {
-            curLineNumber = parseInt(contentContainer.children[i].id.replace('line', ''));
+            lineNum = parseInt(contentContainer.children[i].id.replace('line', ''));
             break;
         }
     }
-    return curLineNumber;
+    return lineNum;
 }
 
 function getBottomLineNumber() {
-    let curLineNumber = 0;
+    let lineNum = 0;
     for (i in contentContainer.children) {
         if (isInViewport(contentContainer.children[i])) {
-            curLineNumber = parseInt(contentContainer.children[i].id.replace('line', ''));
+            lineNum = parseInt(contentContainer.children[i].id.replace('line', ''));
         }
     }
-    return curLineNumber;
+    return lineNum;
 }
 
 function freezeContent() {
@@ -1018,27 +1024,27 @@ function unfreezeContent() {
     // $("body").css("overflow-y", "auto");
 }
 
-function preloadContentFlow() {
-    // console.log(`Load page content in flow-mode. target: ${currentPage}, Current preload range: ${preloadPageBegin}~${preloadPageEnd}`);
+function preloadContentFlow(page) {
+    // console.log(`Load page content in flow-mode. target: ${page}, Current preload range: ${preloadPageBegin}~${preloadPageEnd}`);
     let loadRange = null;
     let unloadRange = null;
     let insertBefore = null;
-    if (currentPage < preloadPageBegin || currentPage > preloadPageEnd) { // 不在 preload 范围内，重新加载
+    if (page < preloadPageBegin || page > preloadPageEnd) { // 不在 preload 范围内，重新加载
         // console.log("Not in preload range, reloading.");
-        preloadPageBegin  = currentPage - 1;
-        preloadPageEnd = currentPage + 1;
+        preloadPageBegin  = page - 1;
+        preloadPageEnd = page + 1;
         loadRange = getPagesRange(preloadPageBegin, preloadPageEnd);
         insertBefore = null;
         contentContainer.innerHTML = "";
     }
-    else if (currentPage == preloadPageEnd && preloadPageEnd < totalPages) { // preload 末页，向后加载一页，向前卸载一页
+    else if (page == preloadPageEnd && preloadPageEnd < totalPages) { // preload 末页，向后加载一页，向前卸载一页
         // console.log("In preload range, appending.");
         preloadPageEnd++;
         loadRange = getPagesRange(preloadPageEnd, preloadPageEnd);
         unloadRange = getPagesRange(preloadPageBegin, preloadPageBegin);
         preloadPageBegin++;
         insertBefore = null;
-    } else if (currentPage == preloadPageBegin && preloadPageBegin > 1) { // preload 首页，向前加载一页，向后卸载一页
+    } else if (page == preloadPageBegin && preloadPageBegin > 1) { // preload 首页，向前加载一页，向后卸载一页
         // console.log("In preload range, prepending.");
         preloadPageBegin--;
         loadRange = getPagesRange(preloadPageBegin, preloadPageBegin);
@@ -1066,22 +1072,7 @@ function preloadContentFlow() {
             if (elm) elm.remove();
         }
     }
-    console.log(`preload: cur:${currentPage} range:${preloadPageBegin}-${preloadPageEnd}`, getLoadedLineRange());
-
-    // process 20 line at a time - fast
-    // const line_step = 20;
-    // for (var j = startIndex; j < endIndex && j < fileContentChunks.length; j+=line_step) {
-    //     const preElement = document.createElement("pre");
-    //     preElement.style.whiteSpace = 'pre-wrap'; // Enable word wrapping
-    //     preElement.innerHTML = process_batch(fileContentChunks.slice(j, j+line_step).join('\n'));
-    //     contentContainer.appendChild(preElement);
-    // }
-
-    // process one page at a time - slow
-    // const preElement = document.createElement("pre");
-    // preElement.style.whiteSpace = 'pre-wrap'; // Enable word wrapping
-    // preElement.innerHTML = process_batch(fileContentChunks.join('\n'));
-    // contentContainer.appendChild(preElement);
+    console.log(`preload: target:${page} range:${preloadPageBegin}-${preloadPageEnd}`, getLoadedLineRange());
 
     // set up footnote
     Footnotes.setup();
@@ -1093,4 +1084,26 @@ function processNew(str, lineNumber, to_drop_cap) {
         ret[0].setAttribute("data-line-num", lineNumber);
     }
     return ret;
+}
+
+function setFlowMode(enable = true) {
+    if (flowMode == enable) return;
+    flowMode = enable // && supportScrollEnd;
+    if (flowMode) {
+        $(progressBarContainer).removeClass("page-progress");
+    } else {
+        $(progressBarContainer).addClass("page-progress");
+    }
+    if (isElementVisible(contentLayer)) {
+        updateCurPos();
+        if (flowMode) {
+            preloadContentFlow(currentPage);
+        } else {
+            preloadPageBegin = 0;
+            preloadPageEnd = 0;
+            showPageContent(currentPage);
+        }
+        gotoLine(currentLine, false);
+        generatePagination();
+    }
 }

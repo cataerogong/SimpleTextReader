@@ -89,6 +89,7 @@ function resetVars() {
     fileContentChunks = []; // Clear content chunks when a new file is dropped
     allTitles = []; // Clear titles when a new file is dropped
     currentPage = 1; // Reset current page to 1 when a new file is dropped
+    currentLine = 0;
     totalPages = 0; // Reset total pages to 0 when a new file is dropped
     isEasternLan = true;
     gotoTitle_Clicked = false;
@@ -110,4 +111,9 @@ function resetVars() {
     progressTitle.innerHTML = "";
     progressContent.innerHTML = "";
     footNoteContainer.innerHTML = "";
+}
+
+function showLineNumber(enable = true) {
+    // contentContainer.style.setProperty("--show-line-num", enable ? "1" : "0");
+    contentContainer.setAttribute("data-show-line-num", enable);
 }

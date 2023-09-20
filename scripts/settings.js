@@ -462,10 +462,10 @@ settingMgr.add(new SettingGroupUI());
 class SettingGroupMode extends SettingGroupBase {
     constructor() {
         super("mode", "阅读模式");
-        if (supportScrollEnd) {
-            console.log("Browser supports 'scrollend' event, so 'flow-mode' is available.")
+        // if (supportScrollEnd) {
+            // console.log("Browser supports 'scrollend' event, so 'flow-mode' is available.")
             this.add(new SettingCheckbox("enable-flow-mode", "启用“无限流”阅读模式（取消分页）", true));
-        }
+        // }
         this.add(new SettingCheckbox("show-line-num", "显示行号", false));
     }
 
@@ -479,29 +479,8 @@ class SettingGroupMode extends SettingGroupBase {
     }
 
     apply() {
-        let curLine = getTopLineNumber();
-        currentPage = getPageNum(curLine);
-        let refresh = false;
-        if (supportScrollEnd) {
-            refresh = (flowMode != this.get("enable-flow-mode").value);
-            flowMode = this.get("enable-flow-mode").value;
-            if (flowMode) {
-                $(progressBarContainer).removeClass("page-progress");
-            } else {
-                $(progressBarContainer).addClass("page-progress");
-            }
-            if (isElementVisible(contentLayer)) {
-                generatePagination();
-                if (flowMode) {
-                    preloadContentFlow();
-                } else {
-                    showCurrentPageContent();
-                }
-            }
-        }
-        contentContainer.style.setProperty("--show-line-num", this.get("show-line-num").value ? "1" : "0");
-
-        if (refresh) gotoLine(curLine, false);
+        setFlowMode(this.get("enable-flow-mode").value);
+        showLineNumber(this.get("show-line-num").value);
         return this;
     }
 }

@@ -9,6 +9,7 @@ var encodingLookupByteLength = 1000;
 var isEasternLan = true;
 var itemsPerPage = 200;
 var currentPage = 1;
+var currentLine = 0;
 var totalPages = 0;
 var gotoTitle_Clicked = false;
 var bookAndAuthor = {};

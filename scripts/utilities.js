@@ -222,6 +222,16 @@ function atPageBottom() {
     return (contentContainer.scrollTop + contentContainer.clientHeight == contentContainer.scrollHeight);
 }
 
+function nearPageTop() {
+    console.log(contentContainer.scrollTop, contentContainer.clientHeight * 2);
+    return (contentContainer.scrollTop <= contentContainer.clientHeight * 2);
+}
+
+function nearPageBottom() {
+    console.log(contentContainer.scrollTop, contentContainer.scrollHeight - contentContainer.clientHeight * 2)
+    return (contentContainer.scrollTop >= contentContainer.scrollHeight - contentContainer.clientHeight * 2);
+}
+
 // 获取当前加载的行号范围
 // return {begin: 起始行号 | NaN, end: 结束行号 | NaN}
 function getLoadedLineRange() {
@@ -236,6 +246,10 @@ function getLoadedLineRange() {
 
 function safeLineNum(line) {
     return Math.min(Math.max(line, 0), fileContentChunks.length - 1);
+}
+
+function safePageNum(page) {
+    return Math.min(Math.max(page, 1), totalPages);
 }
 
 function getPagesRange(first, last) {
