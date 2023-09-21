@@ -65,6 +65,44 @@ contentContainer.onscroll = function(event) {
 //     }
 // }
 
+function showSearch() {
+    if ($("#searchDlg").length > 0) {
+        $("#searchDlg").show();
+        return;
+    }
+    let dlg = $(`<div id="searchDlg" class="dialog">
+    <div class="dlg-cap"><div class="dlg-close">&times;</div>
+    全文搜索
+    </div>
+    <div class="dlg-body">
+    <input type="text" class="search-txt" style="width: 10rem;" />
+    <button class="btn-search">搜索</button>
+    </div>
+    </div>`).appendTo("body");
+    dlg.find(".dlg-close").click(() => {
+        $("#searchDlg").remove();
+        unfreezeContent();
+    });
+    dlg.find(".btn-search").click(() => {
+        let s = dlg.find(".search-txt").val();
+        if (s) {
+            const n = getTopLineNumber() + 1;
+            for (let i = 0; i < fileContentChunks.length; i++) {
+                let j = (i + n) % fileContentChunks.length;
+                if (fileContentChunks[j].includes(s)) {
+                    gotoLine(safeLineNum(j), false);
+                    let e = document.getElementById("line" + j);
+                    e.innerHTML = e.innerHTML.replace(s, `<highlight>${s}</highlight>`);
+                    break;
+                }
+            }
+        }
+    });
+    freezeContent();
+
+    // dlg[0].show();
+}
+
 let tocSelItem = -1;
 let tocFocused = false;
 let tocCurItem = -1;
@@ -211,17 +249,18 @@ function onDocKeydown(event) {
                 }
                 break;
             case "f": {
-                let s = prompt(`请输入搜索词:`);
-                if (s) {
-                    const n = getTopLineNumber() + 1;
-                    for (let i = 0; i < fileContentChunks.length; i++) {
-                        let j = (i + n) % fileContentChunks.length;
-                        if (fileContentChunks[j].includes(s)) {
-                            gotoLine(safeLineNum(j), false);
-                            break;
-                        }
-                    }
-                }
+                showSearch();
+                // let s = prompt(`请输入搜索词:`);
+                // if (s) {
+                //     const n = getTopLineNumber() + 1;
+                //     for (let i = 0; i < fileContentChunks.length; i++) {
+                //         let j = (i + n) % fileContentChunks.length;
+                //         if (fileContentChunks[j].includes(s)) {
+                //             gotoLine(safeLineNum(j), false);
+                //             break;
+                //         }
+                //     }
+                // }
                 break;
             }
             case "g": {
