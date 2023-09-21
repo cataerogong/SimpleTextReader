@@ -28,6 +28,7 @@ var preloadPageBegin = 0;
 var preloadPageEnd = 0;
 var readerMode = "auto";
 var logMode = false;
+const LOG_FILENAME_RE = /\.log$|^(.*[^a-zA-Z])?log([^a-zA-Z].*)?.txt$/i;
 
 // document.title = eval(`style.ui_title_${style.ui_LANG}`);
 if (!isVariableDefined(document.title)) {

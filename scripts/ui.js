@@ -523,8 +523,8 @@ function processFileContent(detectedEncoding, buffer) {
         fileContentChunks = contents.split("\n");
         totalPages = Math.ceil(fileContentChunks.length / itemsPerPage);
         style.ui_LANG = "CN";
-        style.fontFamily_title = style.ui_LANG === "CN" ? style.fontFamily_title_CN : style.fontFamily_title_EN;
-        style.fontFamily_body = style.ui_LANG === "CN" ? style.fontFamily_body_CN : style.fontFamily_body_EN;
+        style.fontFamily_title = style.fontFamily_title_CN;
+        style.fontFamily_body = style.fontFamily_body_CN;
         bookAndAuthor = {"bookName": filename, "author": ""};
         fileContentChunks.unshift(`<h2>${filename}</h2>`);
         totalPages += 1;  // 总页数加上单独的扉页
@@ -605,7 +605,7 @@ function showPageContent(page) {
     // process line by line - fast
     for (var j = startIndex; j < endIndex && j < fileContentChunks.length; j++) {
         if (fileContentChunks[j].trim() !== '') {
-            let processedResult = processNew(fileContentChunks[j], j, to_drop_cap);
+            let processedResult = process(fileContentChunks[j], j, to_drop_cap);
             to_drop_cap = processedResult[1] === 'h' ? true : false;
             // contentContainer.innerHTML += processedResult[0];
             contentContainer.appendChild(processedResult[0]);
@@ -774,7 +774,7 @@ function gotoPage(page, scrollto="top") {
         page = currentPage;
     }
     if (flowMode) {
-        console.log("preload in gotoPage")
+        // console.log("preload in gotoPage")
         preloadContentFlow(page);
     } else {
         showPageContent(page);
@@ -902,7 +902,7 @@ function GetScrollPositions(toSetHistory=true) {
     progressTitle.innerText = bookAndAuthor.bookName;
     progressContent.innerText = `${readingProgressText} ${totalPercentage.toFixed(1).replace(".0", "")}%`;
     if (flowMode) {
-        progressBar.value = totalPercentage.toFixed(3);
+        progressBar.value = totalPercentage.toFixed(1);
         // flowProgress.title = totalPercentage.toFixed(1).replace(".0", "") + "%";
         progressBarContainer.style.setProperty("--value", progressBar.value);
         progressBarContainer.style.setProperty("--text-value", `"${progressBar.value}"`);
@@ -1049,7 +1049,7 @@ function preloadContentFlow(page) {
     // process line by line - fast
     for (var j = loadRange.begin; j <= loadRange.end; j++) {
         if (logMode || fileContentChunks[j].trim() !== '') {
-            let processedResult = processNew(fileContentChunks[j], j, to_drop_cap);
+            let processedResult = process(fileContentChunks[j], j, to_drop_cap);
             to_drop_cap = processedResult[1] === 'h' ? true : false;
             contentContainer.insertBefore(processedResult[0], insertBefore);
         }
@@ -1063,39 +1063,26 @@ function preloadContentFlow(page) {
     }
     // 恢复当前位置
     if (lnElm) {
-        console.log("restor pos", lnElm.offsetTop, "-", offset)
+        // console.log("restor pos", lnElm.offsetTop, "-", offset)
         contentContainer.scrollTo({top: lnElm.offsetTop - offset, behavior: "instant"});
     }
-    console.log(`preload: target:${page} range:${preloadPageBegin}-${preloadPageEnd}`, getLoadedLineRange());
+    // console.log(`preload: target:${page} range:${preloadPageBegin}-${preloadPageEnd}`, getLoadedLineRange());
 
     // set up footnote
     Footnotes.setup();
 }
 
-// var LOG_FILENAME_RE = /(^|[^a-zA-Z])log([^a-zA-Z]|$)/i;
-var LOG_FILENAME_RE = /\.log$|^(.*[^a-zA-Z])?log([^a-zA-Z].*)?.txt$/i;
-function setReaderMode(mode) {
-    readerMode = mode;
-    if (filename) calcLogMode(filename);
-    applyLogMode();
-}
-
-function calcLogMode(fname) {
-    if (LOG_FILENAME_RE.test(fname)) {
-        logMode = (readerMode != "book");
-    } else {
-        logMode = (readerMode == "log");
-    }
-    return logMode;
-}
-
-function supportLogFile(file) {
+function beforeLoadLogFile(file) {
     calcLogMode(file.name);
-    if (LOG_FILENAME_RE.test(file.name) && (file.type != "text/plain")) {
+    if (isLogFile(file.name) && (file.type != "text/plain")) {
         return new File([file], file.name, {type: "text/plain"});
     }
     return file;
 }
 
-fileloadCallback.regBefore(supportLogFile);
-fileloadCallback.regAfter(applyLogMode);
+function afterLoadLogFile() {
+    applyLogMode();
+}
+
+fileloadCallback.regBefore(beforeLoadLogFile);
+fileloadCallback.regAfter(afterLoadLogFile);

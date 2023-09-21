@@ -264,3 +264,7 @@ function getPagesRange(first, last) {
 function getPageNum(line = -1) {
     return Math.min(Math.ceil(((line >= 0) ? line : getTopLineNumber()) / itemsPerPage) + 1, totalPages);
 }
+
+function isLogFile(fname) {
+    return LOG_FILENAME_RE.test(fname);
+}

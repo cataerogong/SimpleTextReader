@@ -506,9 +506,11 @@ class SettingGroupMode extends SettingGroupBase {
     }
 
     apply() {
-        setReaderMode(this.get("reader-mode").value);
         setFlowMode(this.get("page-mode").value == "flow");
         showLineNumber(this.get("show-line-num").value);
+        // reader mode 必须在 flow mode 和 show line number 后设置
+        // 因为 log mode 要强制覆盖 flow mode 和 show line number
+        setReaderMode(this.get("reader-mode").value);
         return this;
     }
 }

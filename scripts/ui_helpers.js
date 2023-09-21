@@ -114,7 +114,6 @@ function resetVars() {
 }
 
 function showLineNumber(enable = true) {
-    // contentContainer.style.setProperty("--show-line-num", enable ? "1" : "0");
     contentLayer.setAttribute("data-show-line-num", enable);
 }
 
@@ -122,19 +121,17 @@ function setFlowMode(enable = true) {
     if (flowMode == enable) return;
     flowMode = enable;
     if (flowMode) {
-        $(progressBarContainer).removeClass("page-progress");
+        contentLayer.setAttribute("data-page-mode", "flow");
     } else {
-        $(progressBarContainer).addClass("page-progress");
+        contentLayer.setAttribute("data-page-mode", "page");
     }
     if (isElementVisible(contentLayer)) {
         updateCurPos();
         if (flowMode) {
-            paginationContainer.style.display = "none";
             preloadContentFlow(currentPage);
         } else {
             preloadPageBegin = 0;
             preloadPageEnd = 0;
-            paginationContainer.style.display = "";
             showPageContent(currentPage);
         }
         gotoLine(currentLine, false);
@@ -152,4 +149,18 @@ function applyLogMode() {
         setFlowMode(settingMgr.get("mode").get("page-mode").value == "flow");
         showLineNumber(settingMgr.get("mode").get("show-line-num").value);
     }
+}
+
+function calcLogMode(fname) {
+    if (isLogFile(fname)) {
+        logMode = (readerMode != "book");
+    } else {
+        logMode = (readerMode == "log");
+    }
+}
+
+function setReaderMode(mode) {
+    readerMode = mode;
+    if (filename) calcLogMode(filename);
+    applyLogMode();
 }

@@ -46,7 +46,7 @@ function process_batch(str) {
 }
 
 // Process text content line by line
-function process(str, lineNumber, to_drop_cap) {
+function processBookMode(str, lineNumber, to_drop_cap) {
     if (lineNumber < titlePageLineNumberOffset) {
         current = str.trim();
         if (current.slice(1, 3) === "h1") {
@@ -152,11 +152,11 @@ function process(str, lineNumber, to_drop_cap) {
     }
 }
 
-function processNew(str, lineNumber, to_drop_cap) {
+function process(str, lineNumber, to_drop_cap) {
     if (logMode) {
-        return processLog(str, lineNumber);
+        return processLogMode(str, lineNumber);
     } else {
-        let ret = process(str, lineNumber, to_drop_cap);
+        let ret = processBookMode(str, lineNumber, to_drop_cap);
         if (ret && ret[0]) {
             ret[0].setAttribute("data-line-num", lineNumber);
         }
@@ -164,7 +164,7 @@ function processNew(str, lineNumber, to_drop_cap) {
     }
 }
 
-function processLog(str, lineNumber) {
+function processLogMode(str, lineNumber) {
     let tempP = document.createElement('p');
     tempP.id = `line${lineNumber}`;
     tempP.setAttribute("data-line-num", lineNumber);
