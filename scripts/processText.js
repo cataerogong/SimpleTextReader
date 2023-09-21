@@ -152,6 +152,27 @@ function process(str, lineNumber, to_drop_cap) {
     }
 }
 
+function processNew(str, lineNumber, to_drop_cap) {
+    if (logMode) {
+        return processLog(str, lineNumber);
+    } else {
+        let ret = process(str, lineNumber, to_drop_cap);
+        if (ret && ret[0]) {
+            ret[0].setAttribute("data-line-num", lineNumber);
+        }
+        return ret;
+    }
+}
+
+function processLog(str, lineNumber) {
+    let tempP = document.createElement('p');
+    tempP.id = `line${lineNumber}`;
+    tempP.setAttribute("data-line-num", lineNumber);
+    tempP.innerHTML = str;
+
+    return [tempP, 'p'];
+}
+
 function getLanguage(str) {
     let current = str.trim();
     return regex_isEastern.test(current);

@@ -223,12 +223,12 @@ function atPageBottom() {
 }
 
 function nearPageTop() {
-    console.log(contentContainer.scrollTop, contentContainer.clientHeight * 2);
+    // console.log(contentContainer.scrollTop, contentContainer.clientHeight * 2);
     return (contentContainer.scrollTop <= contentContainer.clientHeight * 2);
 }
 
 function nearPageBottom() {
-    console.log(contentContainer.scrollTop, contentContainer.scrollHeight - contentContainer.clientHeight * 2)
+    // console.log(contentContainer.scrollTop, contentContainer.scrollHeight - contentContainer.clientHeight * 2)
     return (contentContainer.scrollTop >= contentContainer.scrollHeight - contentContainer.clientHeight * 2);
 }
 

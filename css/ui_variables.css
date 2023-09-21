@@ -94,6 +94,7 @@
     --fontFamily_title_EN: ui;
     --fontFamily_body_EN: ui;
     --fontFamily_ui: ui, Arial, Helvetica, sans-serif;
+    --fontFamily_log: Arial, Helvetica, sans-serif;
 
     --fontFamily_title: var(--fontFamily_title_CN);
     --fontFamily_body: var(--fontFamily_body_CN);

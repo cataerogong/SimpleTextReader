@@ -74,6 +74,20 @@ class SettingCheckbox extends SettingBase {
 class SettingSelect extends SettingText {
     type = "select";
 
+    /**
+     * 
+     * @param {string} id 
+     * @param {string} desc 
+     * @param {string|null} defaultValue 
+     * @param {[{value, text}]} options
+     *  ```
+     *  [
+     *      {value: "val-1", text: "text 1"},
+     *      {value: "val-2", text: "text 2"},
+     *      ...
+     *  ]
+     * ```
+     */
     constructor(id, desc, defaultValue, options) {
         super(id, desc, defaultValue);
         this.options = options;
@@ -81,8 +95,8 @@ class SettingSelect extends SettingText {
     genInputElm(attrs = "") {
         if (this.value == null) this.value = this.defaultValue;
         let str = `<select id="${this.full_id}" ${attrs}>`;
-        for (const k in this.options) {
-            str += `<option value="${k}" ${(k == this.value) ? "selected" : ""}>${this.options[k]}<option>`;
+        for (const opt of this.options) {
+            str += `<option value="${opt.value}" ${(opt.value == this.value) ? "selected" : ""}>${opt.text}</option>`;
         }
         str += "</select>";
         return str;
@@ -196,6 +210,11 @@ class SettingGroupBase {
         this.settings[settingInstance.id] = settingInstance;
         return this;
     }
+    /**
+     * 
+     * @param {string} settingId 
+     * @returns {SettingBase | undefined}
+     */
     get(settingId) {
         return this.settings[settingId];
     }
@@ -462,24 +481,33 @@ settingMgr.add(new SettingGroupUI());
 class SettingGroupMode extends SettingGroupBase {
     constructor() {
         super("mode", "阅读模式");
-        // if (supportScrollEnd) {
-            // console.log("Browser supports 'scrollend' event, so 'flow-mode' is available.")
-            this.add(new SettingCheckbox("enable-flow-mode", "启用“无限流”阅读模式（取消分页）", true));
-        // }
+        let options = [
+            { value: "book", text: "书籍模式 - 自动提取目录，替换净化，行首缩进等" },
+            { value: "log", text: "日志模式 - 内容不做任何修改，显示行号，无目录" },
+            { value: "auto", text: "自动识别 - 文件名中有 log 的文件用 日志模式 打开" },
+        ];
+        this.add(new SettingSelect("reader-mode", "阅读模式", "auto", options));
+        options = [
+            { value: "page", text: "分页模式" },
+            { value: "flow", text: "流模式" },
+        ];
+        this.add(new SettingSelect("page-mode", "翻页", "page", options));
         this.add(new SettingCheckbox("show-line-num", "显示行号", false));
     }
 
     genHTML() {
         let html = `<div id="${this.full_id}" class="setting-group"><div class="sub-cap">${this.desc}</div>
         <div class="setting-group-settings">
-        <div class="row">${this.get("enable-flow-mode").genInputElm()} ${this.get("enable-flow-mode").genLabelElm()}</div>
+        ${this.get("reader-mode").genLabelElm()} ${this.get("reader-mode").genInputElm(`style="width:max-content;"`)}
+        ${this.get("page-mode").genLabelElm()} ${this.get("page-mode").genInputElm(`style="width:max-content;"`)}
         <div class="row">${this.get("show-line-num").genInputElm()} ${this.get("show-line-num").genLabelElm()}</div>
         </div></div>`;
         return html;
     }
 
     apply() {
-        setFlowMode(this.get("enable-flow-mode").value);
+        setReaderMode(this.get("reader-mode").value);
+        setFlowMode(this.get("page-mode").value == "flow");
         showLineNumber(this.get("show-line-num").value);
         return this;
     }

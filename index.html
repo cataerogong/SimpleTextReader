@@ -90,7 +90,7 @@
 
             <!-- Vertical progress bar -->
             <div id="progressBarContainer" class="progress-bar range-slider page-progress">
-                <input type="range" id="progressBar" min="0" max="100" step="0.1"
+                <input type="range" id="progressBar" min="0" max="100" step="0.001"
                     oninput="this.parentNode.style.setProperty('--value',this.value); this.parentNode.style.setProperty('--text-value', JSON.stringify(this.value))">
                 <output></output>
                 <div class='range-slider__progress'></div>

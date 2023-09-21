@@ -329,7 +329,7 @@ a.toc-active::before {
     /* ui-range param */
     --min: 0;
     --max: 100;
-    --step: 0.1;
+    --step: 0.001;
     --suffix: "%";
     --prefix: "全书进度";
     --primary-color: var(--mainColor_focused);
@@ -517,17 +517,23 @@ input:invalid {
     grid-template-columns: repeat(2, max-content 1fr);
 }
 
+.setting-group .hint {
+    /* font-size: 0.8em; */
+    color: var(--fontInfoColor);
+    white-space: normal;
+}
+
 /* show line num */
 #content>:is(div, h1, h2, p) {
     box-sizing: border-box;
 }
-#content[data-show-line-num="true"] {
+#contentLayer[data-show-line-num="true"]>#content {
     /* box-sizing: border-box; */
 }
-#content[data-show-line-num="true"]>:is(div, h1, h2, p, span) {
+#contentLayer[data-show-line-num="true"]>#content>:is(div, h1, h2, p, span) {
     /* text-indent: 0; */
 }
-#content[data-show-line-num="true"]>:is(div, h1, h2, p, span)::before {
+:is(#contentLayer[data-show-line-num="true"], #contentLayer[data-reader-mode="log"])>#content>:is(div, h1, h2, p, span)::before {
     content: "<" attr(data-line-num) ">";
     position: absolute;
     left: 0;
@@ -537,4 +543,16 @@ input:invalid {
     font-family: var(--fontFamily_ui);
     font-size: 0.8rem;
     color: var(--fontInfoColor);
+}
+
+/* reader-mode: log */
+#contentLayer[data-reader-mode="log"]>#tocPanel {
+    display: none;
+}
+#contentLayer[data-reader-mode="log"]>#content>p {
+    font-family: var(--fontFamily_log);
+    font-size: 1rem;
+    text-align: left;
+    text-indent: 0;
+    min-height: 0.1rem;
 }

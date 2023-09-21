@@ -17,7 +17,7 @@ function setMainContentUI() {
     }
 }
 
-function updateTOCUI(isIncreasing) {
+function resizePagination(isIncreasing) {
     if (isVariableDefined(paginationContainer)) {
         if (!isIncreasing) {
             if (((paginationContainer.offsetWidth) > (contentContainer.offsetWidth * 0.5)) && (parseInt(style.ui_numPaginationItems) > 5)) {
@@ -115,5 +115,41 @@ function resetVars() {
 
 function showLineNumber(enable = true) {
     // contentContainer.style.setProperty("--show-line-num", enable ? "1" : "0");
-    contentContainer.setAttribute("data-show-line-num", enable);
+    contentLayer.setAttribute("data-show-line-num", enable);
+}
+
+function setFlowMode(enable = true) {
+    if (flowMode == enable) return;
+    flowMode = enable;
+    if (flowMode) {
+        $(progressBarContainer).removeClass("page-progress");
+    } else {
+        $(progressBarContainer).addClass("page-progress");
+    }
+    if (isElementVisible(contentLayer)) {
+        updateCurPos();
+        if (flowMode) {
+            paginationContainer.style.display = "none";
+            preloadContentFlow(currentPage);
+        } else {
+            preloadPageBegin = 0;
+            preloadPageEnd = 0;
+            paginationContainer.style.display = "";
+            showPageContent(currentPage);
+        }
+        gotoLine(currentLine, false);
+        generatePagination();
+    }
+}
+
+function applyLogMode() {
+    if (logMode) {
+        contentLayer.setAttribute("data-reader-mode", "log");
+        setFlowMode(true);
+        showLineNumber(true);
+    } else {
+        contentLayer.setAttribute("data-reader-mode", "book");
+        setFlowMode(settingMgr.get("mode").get("page-mode").value == "flow");
+        showLineNumber(settingMgr.get("mode").get("show-line-num").value);
+    }
 }

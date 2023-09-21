@@ -27,7 +27,7 @@ window.addEventListener('resize', function(event) {
 
     let isIncreasing = (window.innerWidth < storePrevWindowWidth) ? false : true;
     storePrevWindowWidth = window.innerWidth;
-    updateTOCUI(isIncreasing);
+    resizePagination(isIncreasing);
 });
 
 // window.addEventListener('dblclick', function(event) {
@@ -46,24 +46,24 @@ window.addEventListener('dragenter', function(event) {
 });
 
 contentContainer.onscroll = function(event) {
-    event.preventDefault();
+    // event.preventDefault();
     if (!init) {
         GetScrollPositions();
+        // console.log(currentLine)
     }
 };
 
-if (supportScrollEnd) {
-    contentContainer.onscrollend = function(evt) {
-        evt.preventDefault();
-        if (flowMode) {
-            updateCurPos();
-            preloadContentFlow(currentPage);
-        }
-        if (!init) {
-            GetScrollPositions();
-        }
-    }
-}
+// if (supportScrollEnd) {
+//     contentContainer.onscrollend = function(evt) {
+//         evt.preventDefault();
+//         if (!init) {
+//             GetScrollPositions();
+//             if (flowMode) {
+//                 preloadContentFlow(currentPage);
+//             }
+//         }
+//     }
+// }
 
 let tocSelItem = -1;
 let tocFocused = false;
@@ -168,12 +168,13 @@ function onDocKeydown(event) {
         }
     } else { // content
         let lh = (1.5 + 1) * 1.4 * emInPx; // line-height + margin
-        if (isElementVisible(contentContainer)) {
-            let p = contentContainer.getElementsByTagName("p");
-            if (p.length) {
-                lh = parseInt((p[0].currentStyle || window.getComputedStyle(p[0])).lineHeight) || (1.5 * 1.4 * emInPx);
-                lh += parseInt((p[0].currentStyle || window.getComputedStyle(p[0])).marginTop) || (1.4 * emInPx);
-            }
+        let p = contentContainer.getElementsByTagName("p");
+        if (p.length) {
+            lh = parseInt((p[0].currentStyle || window.getComputedStyle(p[0])).lineHeight) || (1.5 * 1.4 * emInPx);
+            lh += parseInt((p[0].currentStyle || window.getComputedStyle(p[0])).marginTop) || (1.4 * emInPx);
+        }
+        if (flowMode && (nearPageBottom() || nearPageTop())) {
+            preloadContentFlow(currentPage);
         }
         handled = true;
         let behavior = event.repeat ? "instant" : "smooth";
@@ -185,38 +186,16 @@ function onDocKeydown(event) {
                 flowMode ? gotoLine(fileContentChunks.length - 1, false) : contentContainer.scrollTo({top: contentContainer.scrollHeight, behavior: "instant"});
                 break;
             case "PageUp":
-                if (flowMode && !supportScrollEnd && nearPageTop()) {
-                    let line = currentLine;
-                    preloadContentFlow(currentPage - 1);
-                    gotoLine(line, false);
-                }
                 contentContainer.scrollBy({top: -contentContainer.clientHeight + lh, behavior: behavior});
                 break;
             case "PageDown":
             case " ":
-                if (flowMode && !supportScrollEnd && nearPageBottom()) {
-                    let line = currentLine;
-                    console.log("preload pagedown")
-                    break
-                    // preloadContentFlow(currentPage + 1);
-                    // gotoLine(line, false);
-                }
                 contentContainer.scrollBy({top: contentContainer.clientHeight - lh, behavior: behavior});
                 break;
             case "ArrowUp":
-                if (flowMode && !supportScrollEnd && nearPageTop()) {
-                    let line = currentLine;
-                    preloadContentFlow(currentPage - 1);
-                    gotoLine(line, false);
-                }
                 contentContainer.scrollBy({top: -lh * 3, behavior: behavior});
                 break;
             case "ArrowDown":
-                if (flowMode && !supportScrollEnd && nearPageBottom()) {
-                    let line = currentLine;
-                    preloadContentFlow(currentPage + 1);
-                    gotoLine(line, false);
-                }
                 contentContainer.scrollBy({top: lh * 3, behavior: behavior});
                 break;
             case 'ArrowLeft':
@@ -286,12 +265,9 @@ function onDocKeyup(event) {
     }
 }
 
-function onDocWheel(event) {
+function onContentWheel(event) {
     if (!isElementVisible(contentContainer)) return;
-    if (flowMode && !supportScrollEnd // 不支持 scrollend event，接近边界时 preload
-        && ((nearPageTop() && (event.deltaY < 0))
-            || (nearPageBottom() && (event.deltaY > 0)))
-    ) {
+    if (flowMode && event.deltaY != 0 && (nearPageBottom() || nearPageTop())) {
         // console.log("preload on wheel")
         // updateCurPos();
         // let line = currentLine;
@@ -303,7 +279,7 @@ function onDocWheel(event) {
     return;
 }
 
-function onFlowProgressChanged(evt) {
+function onProgressBarChanged(evt) {
     let prog = parseFloat(progressBar.value);
     if (!isNaN(prog)) {
         evt.stopPropagation();
@@ -315,13 +291,13 @@ function onFlowProgressChanged(evt) {
     }
 }
 
-progressBar.onmouseup = onFlowProgressChanged;
+progressBar.onmouseup = onProgressBarChanged;
 
 document.onkeyup = onDocKeyup;
 
 document.onkeydown = onDocKeydown;
 
-contentContainer.onwheel = onDocWheel;
+contentContainer.onwheel = onContentWheel;
 
 function openFileSelector(event) {
     event.preventDefault();
@@ -492,76 +468,10 @@ async function handleSelectedFile(fileList) {
             const text = String.fromCharCode.apply(null, tempBuffer);
             const detectedEncoding = jschardet.detect(text).encoding || "utf-8";
             console.log('Encoding:', detectedEncoding);
-    
-            // Get file content
-            const decoderOptions = { stream: true, fatal: true };
-            const decoder = new TextDecoder(detectedEncoding);
-            var contents = decoder.decode(event.target.result, decoderOptions);
-            fileContentChunks = contents.split("\n").filter(Boolean).filter(n => n.trim() !== '');
-            totalPages = Math.ceil(fileContentChunks.length / itemsPerPage);
-            
-            // Detect language
-            isEasternLan = getLanguage(fileContentChunks.slice(0, 50).join("\n"));
-            console.log("isEasternLan: ", isEasternLan);
-            // Change UI language based on detected language
-            if (isEasternLan) {
-                style.ui_LANG = "CN";
-            } else {
-                style.ui_LANG = "EN";
-            }
-            // Set fonts based on detected language
-            // style.fontFamily_title = eval(`style.fontFamily_title_${style.ui_LANG}`);
-            // style.fontFamily_body = eval(`style.fontFamily_body_${style.ui_LANG}`);
-            style.fontFamily_title = style.ui_LANG === "CN" ? style.fontFamily_title_CN : style.fontFamily_title_EN;
-            style.fontFamily_body = style.ui_LANG === "CN" ? style.fontFamily_body_CN : style.fontFamily_body_EN;
 
-            // Get book name and author
             filename = fileList[0].name;
-            bookAndAuthor = getBookNameAndAuthor(filename.replace(/(.txt)$/i, ''));
-            console.log("BookName: ", bookAndAuthor.bookName);
-            console.log("Author: ", bookAndAuthor.author);
-
-            // Get all titles and process all footnotes
-            allTitles.push([((style.ui_LANG === "EN") ? "TITLE PAGE" : "扉页"), 0]);
-            allTitles.push([((style.ui_LANG === "EN") ? "TEXT" : "正文"), 1]);
-            titlePageLineNumberOffset = 1; // (bookAndAuthor.author !== "") ? 3 : 2;
-            for (var i in fileContentChunks) {
-                if (fileContentChunks[i].trim() !== '') {
-                    // get all titles
-                    tempTitle = getTitle(fileContentChunks[i]);
-                    if (tempTitle !== "") {
-                        allTitles.push([tempTitle, (parseInt(i) + titlePageLineNumberOffset)]);
-                    }
-
-                    // process all footnotes
-                    fileContentChunks[i] = makeFootNote(fileContentChunks[i], `images/note_${style.ui_LANG}.png`);
-                }
-            }
-            // console.log(allTitles);
-            // tocContainer.innerHTML = processTOC_bak();
-            processTOC();
-            // setMainContentUI();
-
-            // Add title page
-            let sealRotation = (style.ui_LANG === "EN") ? `transform:rotate(${randomFloatFromInterval(-50, 80)}deg)` : "";
-            // // fileContentChunks.unshift(`<div id=line${(titlePageLineNumberOffset - 1)} class='prevent-select seal'><img id='seal_${style.ui_LANG}' src='images/seal_${style.ui_LANG}.png' style='left:calc(${randomFloatFromInterval(0, 1)} * (100% - ${eval(`style.seal_width_${style.ui_LANG}`)})); ${sealRotation}'/></div>`);
-            // fileContentChunks.unshift(`<div id=line${(titlePageLineNumberOffset - 1)} class='prevent-select seal'><img id='seal_${style.ui_LANG}' src='images/seal_${style.ui_LANG}.png' style='left:calc(${randomFloatFromInterval(0, 1)} * (100% - ${style.ui_LANG === 'CN' ? style.seal_width_CN : style.seal_width_EN})); ${sealRotation}'/></div>`);
-            // if (bookAndAuthor.author !== "") {
-            //     fileContentChunks.unshift(`<h1 id=line1 style='margin-top:0; margin-bottom:${(parseFloat(style.h1_lineHeight)/2)}em'>${bookAndAuthor.author}</h1>`);
-            //     fileContentChunks.unshift(`<h1 id=line0 style='margin-bottom:0'>${bookAndAuthor.bookName}</h1>`);
-            // } else {
-            //     fileContentChunks.unshift(`<h1 id=line0 style='margin-bottom:${(parseFloat(style.h1_lineHeight)/2)}em'>${bookAndAuthor.bookName}</h1>`);
-            // }
-            let titlePage = `<div id="line0">
-            <h1 style='margin-bottom:0'>${bookAndAuthor.bookName}</h1>
-            <h1 style='margin-top:0; margin-bottom:${(parseFloat(style.h1_lineHeight)/2)}em'>${bookAndAuthor.author}</h1>
-            <div class='prevent-select seal'><img id='seal_${style.ui_LANG}' src='images/seal_${style.ui_LANG}.png' style='left:calc(${randomFloatFromInterval(0, 1)} * (100% - ${style.ui_LANG === 'CN' ? style.seal_width_CN : style.seal_width_EN})); ${sealRotation}'/></div>
-            </div>`;
-            fileContentChunks.unshift(titlePage);
-            totalPages += 1;  // 总页数加上单独的扉页
-
-            // Update the title of webpage
-            document.title = bookAndAuthor.bookName;
+            // Get file content
+            processFileContent(detectedEncoding, event.target.result);
 
             // Show content
             init = false;
@@ -571,7 +481,7 @@ async function handleSelectedFile(fileList) {
                 showPageContent(currentPage);
                 generatePagination();
             }
-            updateTOCUI(false);
+            resizePagination(false);
 
             // Retrieve reading history if exists
             // removeAllHistory();    // for debugging
@@ -603,6 +513,85 @@ async function handleSelectedFile(fileList) {
     } else {
         resetUI();
     }
+}
+
+function processFileContent(detectedEncoding, buffer) {
+    const decoderOptions = { stream: true, fatal: true };
+    const decoder = new TextDecoder(detectedEncoding);
+    var contents = decoder.decode(buffer, decoderOptions);
+    if (logMode) {
+        fileContentChunks = contents.split("\n");
+        totalPages = Math.ceil(fileContentChunks.length / itemsPerPage);
+        style.ui_LANG = "CN";
+        style.fontFamily_title = style.ui_LANG === "CN" ? style.fontFamily_title_CN : style.fontFamily_title_EN;
+        style.fontFamily_body = style.ui_LANG === "CN" ? style.fontFamily_body_CN : style.fontFamily_body_EN;
+        bookAndAuthor = {"bookName": filename, "author": ""};
+        fileContentChunks.unshift(`<h2>${filename}</h2>`);
+        totalPages += 1;  // 总页数加上单独的扉页
+    } else {
+        fileContentChunks = contents.split("\n").filter(Boolean).filter(n => n.trim() !== '');
+        totalPages = Math.ceil(fileContentChunks.length / itemsPerPage);
+
+        // Detect language
+        isEasternLan = getLanguage(fileContentChunks.slice(0, 50).join("\n"));
+        console.log("isEasternLan: ", isEasternLan);
+        // Change UI language based on detected language
+        if (isEasternLan) {
+            style.ui_LANG = "CN";
+        } else {
+            style.ui_LANG = "EN";
+        }
+        // Set fonts based on detected language
+        // style.fontFamily_title = eval(`style.fontFamily_title_${style.ui_LANG}`);
+        // style.fontFamily_body = eval(`style.fontFamily_body_${style.ui_LANG}`);
+        style.fontFamily_title = style.ui_LANG === "CN" ? style.fontFamily_title_CN : style.fontFamily_title_EN;
+        style.fontFamily_body = style.ui_LANG === "CN" ? style.fontFamily_body_CN : style.fontFamily_body_EN;
+
+        // Get book name and author
+        bookAndAuthor = getBookNameAndAuthor(filename.replace(/(.txt)$/i, ''));
+        console.log("BookName: ", bookAndAuthor.bookName);
+        console.log("Author: ", bookAndAuthor.author);
+
+        // Get all titles and process all footnotes
+        allTitles.push([((style.ui_LANG === "EN") ? "TITLE PAGE" : "扉页"), 0]);
+        allTitles.push([((style.ui_LANG === "EN") ? "TEXT" : "正文"), 1]);
+        titlePageLineNumberOffset = 1; // (bookAndAuthor.author !== "") ? 3 : 2;
+        for (var i in fileContentChunks) {
+            if (fileContentChunks[i].trim() !== '') {
+                // get all titles
+                tempTitle = getTitle(fileContentChunks[i]);
+                if (tempTitle !== "") {
+                    allTitles.push([tempTitle, (parseInt(i) + titlePageLineNumberOffset)]);
+                }
+
+                // process all footnotes
+                fileContentChunks[i] = makeFootNote(fileContentChunks[i], `images/note_${style.ui_LANG}.png`);
+            }
+        }
+        // console.log(allTitles);
+        // tocContainer.innerHTML = processTOC_bak();
+        processTOC();
+        // setMainContentUI();
+        // Add title page
+        let sealRotation = (style.ui_LANG === "EN") ? `transform:rotate(${randomFloatFromInterval(-50, 80)}deg)` : "";
+        // // fileContentChunks.unshift(`<div id=line${(titlePageLineNumberOffset - 1)} class='prevent-select seal'><img id='seal_${style.ui_LANG}' src='images/seal_${style.ui_LANG}.png' style='left:calc(${randomFloatFromInterval(0, 1)} * (100% - ${eval(`style.seal_width_${style.ui_LANG}`)})); ${sealRotation}'/></div>`);
+        // fileContentChunks.unshift(`<div id=line${(titlePageLineNumberOffset - 1)} class='prevent-select seal'><img id='seal_${style.ui_LANG}' src='images/seal_${style.ui_LANG}.png' style='left:calc(${randomFloatFromInterval(0, 1)} * (100% - ${style.ui_LANG === 'CN' ? style.seal_width_CN : style.seal_width_EN})); ${sealRotation}'/></div>`);
+        // if (bookAndAuthor.author !== "") {
+        //     fileContentChunks.unshift(`<h1 id=line1 style='margin-top:0; margin-bottom:${(parseFloat(style.h1_lineHeight)/2)}em'>${bookAndAuthor.author}</h1>`);
+        //     fileContentChunks.unshift(`<h1 id=line0 style='margin-bottom:0'>${bookAndAuthor.bookName}</h1>`);
+        // } else {
+        //     fileContentChunks.unshift(`<h1 id=line0 style='margin-bottom:${(parseFloat(style.h1_lineHeight)/2)}em'>${bookAndAuthor.bookName}</h1>`);
+        // }
+        let titlePage = `<div id="line0">
+                <h1 style='margin-bottom:0'>${bookAndAuthor.bookName}</h1>
+                <h1 style='margin-top:0; margin-bottom:${(parseFloat(style.h1_lineHeight) / 2)}em'>${bookAndAuthor.author}</h1>
+                <div class='prevent-select seal'><img id='seal_${style.ui_LANG}' src='images/seal_${style.ui_LANG}.png' style='left:calc(${randomFloatFromInterval(0, 1)} * (100% - ${style.ui_LANG === 'CN' ? style.seal_width_CN : style.seal_width_EN})); ${sealRotation}'/></div>
+                </div>`;
+        fileContentChunks.unshift(titlePage);
+        totalPages += 1;  // 总页数加上单独的扉页
+    }
+    // Update the title of webpage
+    document.title = bookAndAuthor.bookName;
 }
 
 function showPageContent(page) {
@@ -643,16 +632,6 @@ function showPageContent(page) {
 }
 
 function generatePagination() {
-    if (flowMode) {
-        paginationContainer.style.display = "none";
-        // progressBarContainer.style.display = "";
-        return;
-    } else {
-        preloadPageBegin = 0;
-        preloadPageEnd = 0;
-        // progressBarContainer.style.display = "none";
-        // paginationContainer.style.display = "";
-    }
     paginationContainer.innerHTML = "";
     const paginationList = document.createElement("div");
     paginationList.classList.add("pagination");
@@ -923,7 +902,7 @@ function GetScrollPositions(toSetHistory=true) {
     progressTitle.innerText = bookAndAuthor.bookName;
     progressContent.innerText = `${readingProgressText} ${totalPercentage.toFixed(1).replace(".0", "")}%`;
     if (flowMode) {
-        progressBar.value = totalPercentage.toFixed(2);
+        progressBar.value = totalPercentage.toFixed(3);
         // flowProgress.title = totalPercentage.toFixed(1).replace(".0", "") + "%";
         progressBarContainer.style.setProperty("--value", progressBar.value);
         progressBarContainer.style.setProperty("--text-value", `"${progressBar.value}"`);
@@ -937,6 +916,7 @@ function GetScrollPositions(toSetHistory=true) {
 }
 
 function setTitleActive(titleID) {
+    if (logMode) return;
     // Remove all active titles
     let allActiveTitles = tocContainer.getElementsByClassName("toc-active");
     while (allActiveTitles.length) {
@@ -1055,11 +1035,20 @@ function preloadContentFlow(page) {
         // console.log("In preload range, skip.");
         return;
     }
+    // 记录当前位置
+    let ln = NaN;
+    let lnElm = null;
+    let offset = 0;
+    if (contentContainer.children.length > 0) {
+        ln = getTopLineNumber();
+        lnElm = document.getElementById("line" + ln);
+        offset = lnElm.getBoundingClientRect().top;
+    }
     // console.log("Loading range", loadRange);
     let to_drop_cap = false;
     // process line by line - fast
     for (var j = loadRange.begin; j <= loadRange.end; j++) {
-        if (fileContentChunks[j].trim() !== '') {
+        if (logMode || fileContentChunks[j].trim() !== '') {
             let processedResult = processNew(fileContentChunks[j], j, to_drop_cap);
             to_drop_cap = processedResult[1] === 'h' ? true : false;
             contentContainer.insertBefore(processedResult[0], insertBefore);
@@ -1072,38 +1061,41 @@ function preloadContentFlow(page) {
             if (elm) elm.remove();
         }
     }
+    // 恢复当前位置
+    if (lnElm) {
+        console.log("restor pos", lnElm.offsetTop, "-", offset)
+        contentContainer.scrollTo({top: lnElm.offsetTop - offset, behavior: "instant"});
+    }
     console.log(`preload: target:${page} range:${preloadPageBegin}-${preloadPageEnd}`, getLoadedLineRange());
 
     // set up footnote
     Footnotes.setup();
 }
 
-function processNew(str, lineNumber, to_drop_cap) {
-    let ret = process(str, lineNumber, to_drop_cap);
-    if (ret && ret[0]) {
-        ret[0].setAttribute("data-line-num", lineNumber);
-    }
-    return ret;
+// var LOG_FILENAME_RE = /(^|[^a-zA-Z])log([^a-zA-Z]|$)/i;
+var LOG_FILENAME_RE = /\.log$|^(.*[^a-zA-Z])?log([^a-zA-Z].*)?.txt$/i;
+function setReaderMode(mode) {
+    readerMode = mode;
+    if (filename) calcLogMode(filename);
+    applyLogMode();
 }
 
-function setFlowMode(enable = true) {
-    if (flowMode == enable) return;
-    flowMode = enable // && supportScrollEnd;
-    if (flowMode) {
-        $(progressBarContainer).removeClass("page-progress");
+function calcLogMode(fname) {
+    if (LOG_FILENAME_RE.test(fname)) {
+        logMode = (readerMode != "book");
     } else {
-        $(progressBarContainer).addClass("page-progress");
+        logMode = (readerMode == "log");
     }
-    if (isElementVisible(contentLayer)) {
-        updateCurPos();
-        if (flowMode) {
-            preloadContentFlow(currentPage);
-        } else {
-            preloadPageBegin = 0;
-            preloadPageEnd = 0;
-            showPageContent(currentPage);
-        }
-        gotoLine(currentLine, false);
-        generatePagination();
-    }
+    return logMode;
 }
+
+function supportLogFile(file) {
+    calcLogMode(file.name);
+    if (LOG_FILENAME_RE.test(file.name) && (file.type != "text/plain")) {
+        return new File([file], file.name, {type: "text/plain"});
+    }
+    return file;
+}
+
+fileloadCallback.regBefore(supportLogFile);
+fileloadCallback.regAfter(applyLogMode);

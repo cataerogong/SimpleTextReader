@@ -21,11 +21,13 @@ var historyLineNumber = 0;
 var storePrevWindowWidth = window.innerWidth;
 var titlePageLineNumberOffset = 0;
 
-var supportScrollEnd = ("onscrollend" in document.documentElement);
+// var supportScrollEnd = ("onscrollend" in document.documentElement);
 
 var flowMode = false;
 var preloadPageBegin = 0;
 var preloadPageEnd = 0;
+var readerMode = "auto";
+var logMode = false;
 
 // document.title = eval(`style.ui_title_${style.ui_LANG}`);
 if (!isVariableDefined(document.title)) {
