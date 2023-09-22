@@ -1,22 +1,24 @@
 function setHistory(filename, lineNumber) {
     let fn = filename + ".progress";
     // console.log("History set to line: ", lineNumber);
-    localStorage.setItem(fn, lineNumber + "/" + fileContentChunks.length);
+    localStorage.setItem(fn, lineNumber + "/" + (fileContentChunks.length - 1));
     if (lineNumber === 0) {
         // Don't save history if line number is 0
         localStorage.removeItem(fn);
     }
 }
 
-function getHistory(filename) {
+function getHistory(filename, goto = true) {
     let fn = filename + ".progress";
     if (localStorage.getItem(fn)) {
         let m = localStorage.getItem(fn).match(/^(\d+)(\/(\d+))?$/i); // 格式：line/total，match() 的结果：[full, line, /total, total]
         let tempLine = (m ? parseInt(m[1]) : 0);
-        console.log("History found! Go to line: ", tempLine);
-        let success = gotoLine(tempLine, false);
-        if (success === -1) {
-            tempLine = 0;
+        if (goto) {
+            console.log("History found! Go to line: ", tempLine);
+            let success = gotoLine(tempLine, false);
+            if (success === -1) {
+                tempLine = 0;
+            }
         }
         return tempLine;
     }
@@ -262,7 +264,7 @@ function getPagesRange(first, last) {
 }
 
 function getPageNum(line = -1) {
-    return Math.min(Math.ceil(((line >= 0) ? line : getTopLineNumber()) / itemsPerPage) + 1, totalPages);
+    return Math.min(Math.ceil(((line >= 0) ? line : getCurLineNumber()) / itemsPerPage) + 1, totalPages);
 }
 
 function isLogFile(fname) {

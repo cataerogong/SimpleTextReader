@@ -246,6 +246,7 @@ var settingMgr = {
             freezeContent();
             dlg.appendTo("body");
             dlg[0].showModal();
+            setEscapeFunc(() => settingMgr.hide());
         }
         return this;
     },
@@ -254,6 +255,7 @@ var settingMgr = {
         if (this.enabled) {
             $("#settingDlg").remove();
             unfreezeContent();
+            setEscapeFunc(null);
         }
         return this;
     },
@@ -488,8 +490,8 @@ class SettingGroupMode extends SettingGroupBase {
         ];
         this.add(new SettingSelect("reader-mode", "阅读模式", "auto", options));
         options = [
-            { value: "page", text: "分页模式" },
-            { value: "flow", text: "流模式" },
+            { value: "page", text: "页模式 - ⇦/⇨翻页" },
+            { value: "flow", text: "流模式 - 无需翻页" },
         ];
         this.add(new SettingSelect("page-mode", "翻页", "page", options));
         this.add(new SettingCheckbox("show-line-num", "显示行号", false));

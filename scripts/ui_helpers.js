@@ -164,3 +164,11 @@ function setReaderMode(mode) {
     if (filename) calcLogMode(filename);
     applyLogMode();
 }
+
+var escapeFunc = null;
+function setEscapeFunc(callback) {
+    escapeFunc = callback;
+}
+function callEscapeFunc() {
+    escapeFunc ? escapeFunc() : resetUI();
+}

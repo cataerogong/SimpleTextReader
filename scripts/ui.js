@@ -66,41 +66,103 @@ contentContainer.onscroll = function(event) {
 // }
 
 function showSearch() {
-    if ($("#searchDlg").length > 0) {
-        $("#searchDlg").show();
-        return;
-    }
-    let dlg = $(`<div id="searchDlg" class="dialog">
-    <div class="dlg-cap"><div class="dlg-close">&times;</div>
-    全文搜索
-    </div>
-    <div class="dlg-body">
-    <input type="text" class="search-txt" style="width: 10rem;" />
-    <button class="btn-search">搜索</button>
-    </div>
-    </div>`).appendTo("body");
-    dlg.find(".dlg-close").click(() => {
-        $("#searchDlg").remove();
+    function close(evt) {
+        setEscapeFunc(null);
         unfreezeContent();
-    });
-    dlg.find(".btn-search").click(() => {
-        let s = dlg.find(".search-txt").val();
+        dlg.slideUp(400, () =>{
+            dlg.remove();
+        });
+    }
+    function search(evt) {
+        let s = dlg.find(".search-txt").focus().val();
         if (s) {
-            const n = getTopLineNumber() + 1;
+            const re = new RegExp(`(${s})`, "gi");
             for (let i = 0; i < fileContentChunks.length; i++) {
-                let j = (i + n) % fileContentChunks.length;
-                if (fileContentChunks[j].includes(s)) {
-                    gotoLine(safeLineNum(j), false);
+                let j = (dlg.searchStartLine + i) % fileContentChunks.length;
+                if (re.test(fileContentChunks[j])) {
+                    gotoLine(j, false);
                     let e = document.getElementById("line" + j);
-                    e.innerHTML = e.innerHTML.replace(s, `<highlight>${s}</highlight>`);
+                    e.innerHTML = e.innerHTML.replaceAll(re, `<mark>$1</mark>`);
+                    dlg.searchStartLine = j + 1;
                     break;
                 }
             }
         }
-    });
-    freezeContent();
+    }
+    let dlg = $("#searchDlg");
+    if (dlg.length <= 0) {
+        dlg = $(`<div id="searchDlg" class="dialog" tabindex="0">
+        <div class="dlg-cap">全文搜索<div class="dlg-close">&times;</div></div>
+        <div class="dlg-body">搜索词（支持正则）
+        <input type="text" class="search-txt" style="width: 10rem;" />
+        <button class="btn-search">下一个</button>
+        </div>
+        </div>`).hide().appendTo(contentLayer);
+        dlg.find(".dlg-close").click(close);
+        dlg.find(".btn-search").click(search);
+        freezeContent();
+        dlg.keydown(evt => {
+            if (evt.key == "Escape") {
+                close();
+            } else if (evt.key == "Enter") {
+                evt.preventDefault();
+                search();
+            } else {
+                dlg.find(".search-txt").focus();
+            }
+            evt.stopPropagation();
+        });
+    }
+    dlg.slideDown();
+    dlg.searchStartLine = getTopLineNumber();
+    dlg.find(".search-txt").focus();
+    setEscapeFunc(close);
+}
 
-    // dlg[0].show();
+function showGoLine() {
+    function close(evt) {
+        setEscapeFunc(null);
+        unfreezeContent();
+        dlg.remove();
+    }
+    function go(evt) {
+        let s = dlg.find(".go-line-txt").val();
+        if (s) {
+            if (/^\d+$/.test(s)) {
+                gotoLine(safeLineNum(parseInt(s)), false);
+            } else if (/^\d+(\.\d*)?%$/.test(s)) {
+                gotoLine(safeLineNum(Math.trunc((fileContentChunks.length * parseFloat(s) / 100))), false);
+            }
+            close();
+        }
+    }
+    let dlg = $("#goLineDlg");
+    if (dlg.length <= 0) {
+        dlg = $(`<div id="goLineDlg" class="dialog" tabindex="0">
+        <div class="dlg-cap">快速跳转<div class="dlg-close">&times;</div></div>
+        <div class="dlg-body">行号或百分数(%)：
+        <input type="text" class="go-line-txt" style="width: 10rem;" />
+        <button class="btn-go">走你</button>
+        </div>
+        </div>`).hide().appendTo(contentLayer);
+        dlg.find(".dlg-close").click(close);
+        dlg.find(".btn-go").click(go);
+        freezeContent();
+        dlg.keydown(evt => {
+            if (evt.key == "Escape") {
+                close();
+            } else if (evt.key == "Enter") {
+                evt.preventDefault();
+                go();
+            } else {
+                dlg.find(".search-txt").focus();
+            }
+            evt.stopPropagation();
+        });
+    }
+    dlg.slideDown();
+    dlg.find(".go-line-txt").focus();
+    setEscapeFunc(close);
 }
 
 let tocSelItem = -1;
@@ -141,6 +203,15 @@ function showTOC(vis) {
 }
 function onDocKeydown(event) {
     if (!isElementVisible(contentLayer)) return;
+    if (event.key == "Escape") {
+        callEscapeFunc();
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+    }
+    if (contentFreezed) {
+        return;
+    }
     let handled = false;
     if (event.key == "Shift") { // activate toc
         if (event.repeat) return;
@@ -242,36 +313,16 @@ function onDocKeydown(event) {
             case 'ArrowRight':
                 if (!flowMode && currentPage < totalPages) gotoPage(currentPage + 1);
                 break;
-            case 'Escape':
-                // console.log("Escape pressed:", no_ui);
-                if (isVariableDefined(dropZone)) {
-                    resetUI();
-                }
-                break;
-            case "f": {
+            // case 'Escape':
+            //     // console.log("Escape pressed:", no_ui);
+            //     callEscapeFunc();
+            //     break;
+            case "f":
                 showSearch();
-                // let s = prompt(`请输入搜索词:`);
-                // if (s) {
-                //     const n = getTopLineNumber() + 1;
-                //     for (let i = 0; i < fileContentChunks.length; i++) {
-                //         let j = (i + n) % fileContentChunks.length;
-                //         if (fileContentChunks[j].includes(s)) {
-                //             gotoLine(safeLineNum(j), false);
-                //             break;
-                //         }
-                //     }
-                // }
                 break;
-            }
-            case "g": {
-                let s = prompt(`请输入要跳转的行号 (0-${fileContentChunks.length - 1}) \n或进度 (0%-100%):`);
-                if (/^\d+$/.test(s)) {
-                    gotoLine(safeLineNum(parseInt(s)), false);
-                } else if (/^\d+(\.\d*)?%$/.test(s)) {
-                    gotoLine(safeLineNum(Math.trunc((fileContentChunks.length * parseFloat(s) / 100))), false);
-                }
+            case "g":
+                showGoLine();
                 break;
-            }
             default:
                 handled = false;
                 break;
@@ -285,6 +336,9 @@ function onDocKeydown(event) {
 
 function onDocKeyup(event) {
     if (!isElementVisible(contentLayer)) return;
+    if (contentFreezed) {
+        return;
+    }
     if (event.key == "Shift") {
         event.preventDefault();
         event.stopPropagation();
@@ -306,6 +360,10 @@ function onDocKeyup(event) {
 
 function onContentWheel(event) {
     if (!isElementVisible(contentContainer)) return;
+    if (contentFreezed) {
+        event.preventDefault();
+        return;
+    }
     if (flowMode && event.deltaY != 0 && (nearPageBottom() || nearPageTop())) {
         // console.log("preload on wheel")
         // updateCurPos();
@@ -643,12 +701,12 @@ function showPageContent(page) {
 
     // process line by line - fast
     for (var j = startIndex; j < endIndex && j < fileContentChunks.length; j++) {
-        if (fileContentChunks[j].trim() !== '') {
+        // if (fileContentChunks[j].trim() !== '') {
             let processedResult = process(fileContentChunks[j], j, to_drop_cap);
             to_drop_cap = processedResult[1] === 'h' ? true : false;
             // contentContainer.innerHTML += processedResult[0];
             contentContainer.appendChild(processedResult[0]);
-        }
+        // }
     }
 
     // process 20 line at a time - fast
@@ -817,7 +875,6 @@ function gotoPage(page, scrollto="top") {
         preloadContentFlow(page);
     } else {
         showPageContent(page);
-        generatePagination();
 
         switch (scrollto) {
             case "top":
@@ -827,6 +884,9 @@ function gotoPage(page, scrollto="top") {
                 contentContainer.scrollTo({top: contentContainer.scrollHeight, behavior: 'instant'});
                 break;
         }
+        updateCurPos();
+        setHistory(filename, currentLine);
+        generatePagination();
     }
     GetScrollPositions(!!scrollto);
 }
@@ -876,7 +936,7 @@ function gotoLine(lineNumber, isTitle=true) {
 }
 
 function updateCurPos() {
-    currentLine = getTopLineNumber();
+    currentLine = getCurLineNumber();
     currentPage = getPageNum(currentLine);
 }
 
@@ -1034,12 +1094,32 @@ function getBottomLineNumber() {
     return lineNum;
 }
 
+// 当前行号：当文件末行可见时取末行，否则取可见首行
+function getCurLineNumber() {
+    let top = NaN;
+    let bottom = NaN;
+    let vis = false;
+    for (i in contentContainer.children) {
+        if (isInViewport(contentContainer.children[i])) {
+            bottom = parseInt(contentContainer.children[i].id.replace('line', ''));
+            if (!vis) top = bottom;
+            vis = true;
+        } else {
+            if (vis) break;
+        }
+    }
+    // console.log(top, bottom, getCurLineNumber.caller)
+    return (bottom >= fileContentChunks.length - 1) ? bottom : top;
+}
+
 function freezeContent() {
-    document.onkeydown = null;
+    contentFreezed = true;
+    // document.onkeydown = null;
     // $("body").css("overflow-y", "hidden");
 }
 function unfreezeContent() {
-    document.onkeydown = onDocKeydown;
+    contentFreezed = false;
+    // document.onkeydown = onDocKeydown;
     // $("body").css("overflow-y", "auto");
 }
 
@@ -1079,7 +1159,7 @@ function preloadContentFlow(page) {
     let lnElm = null;
     let offset = 0;
     if (contentContainer.children.length > 0) {
-        ln = getTopLineNumber();
+        ln = getCurLineNumber();
         lnElm = document.getElementById("line" + ln);
         offset = lnElm.getBoundingClientRect().top;
     }
@@ -1087,11 +1167,11 @@ function preloadContentFlow(page) {
     let to_drop_cap = false;
     // process line by line - fast
     for (var j = loadRange.begin; j <= loadRange.end; j++) {
-        if (logMode || fileContentChunks[j].trim() !== '') {
+        // if (logMode || fileContentChunks[j].trim() !== '') {
             let processedResult = process(fileContentChunks[j], j, to_drop_cap);
             to_drop_cap = processedResult[1] === 'h' ? true : false;
             contentContainer.insertBefore(processedResult[0], insertBefore);
-        }
+        // }
     }
     // console.log("Unloading range", unloadRange);
     if (unloadRange) {

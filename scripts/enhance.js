@@ -197,6 +197,7 @@ var STRe_FilesOnServer = {
 			// document.getElementById("serverFilesDlg").showModal();
 			dlg.appendTo("body");
 			dlg[0].showModal();
+			setEscapeFunc(() => STRe_FilesOnServer.hide());
 
 			await this.lsDir(this.webDAVdir);
 		}
@@ -207,6 +208,7 @@ var STRe_FilesOnServer = {
 		if (this.enabled) {
 			$('#serverFilesDlg').remove();
 			unfreezeContent();
+			setEscapeFunc(null);
 		}
 		return this;
 	},
@@ -302,11 +304,11 @@ var STRe_ProgressOnServer = {
 			if (contentContainer.style.display == "none") { // 阅读区域不可见，说明可能正在drag，getTopLineNumber()会取到错误行数，应该跳过
 				return;
 			}
-			let line = getTopLineNumber(filename);
+			let line = getHistory(filename, false); // getCurLineNumber();
 			if ((filename + ":" + line) != this.STReFileLine) {
 				// console.log("Save progress on server: " + filename + ":" + line + "/" + fileContentChunks.length);
 				try {
-					await this.setProgress(filename, line + "/" + fileContentChunks.length);
+					await this.setProgress(filename, line + "/" + (fileContentChunks.length - 1));
 				} catch (e) {
 					console.log(e);
 				}
@@ -325,11 +327,11 @@ var STRe_ProgressOnServer = {
 				let m = STRe_PROGRESS_RE.exec(progress);
 				if (m) { // 取到服务端进度
 					let line = parseInt(m.groups["line"]);
-					let curLine = getTopLineNumber();
+					let curLine = getCurLineNumber();
 					if (line == curLine) { // 进度一致，无需同步
 						STRe_ProgressOnServer.STReFileLine = filename + ":" + line;
 					} else { // 进度不一致
-						if (confirm(`当前阅读进度：${curLine}/${fileContentChunks.length}\n发现云端进度：${progress}\n是否跳转到云端进度？`)) {
+						if (confirm(`当前阅读进度：${curLine}/${fileContentChunks.length - 1}\n发现云端进度：${progress}\n是否跳转到云端进度？`)) {
 							console.log("Load progress on server: " + filename + ":" + progress);
 							setHistory(filename, line);
 							getHistory(filename);
@@ -451,6 +453,7 @@ var STRe_ProgressOnServer = {
 			freezeContent();
 			dlg.appendTo("body");
 			dlg[0].showModal();
+			setEscapeFunc(() => STRe_ProgressOnServer.hide());
 			await this.refreshProgressList();
 		}
 		return this;
@@ -460,6 +463,7 @@ var STRe_ProgressOnServer = {
 		if (this.enabled) {
 			$("#progressDlg").remove();
 			unfreezeContent();
+			setEscapeFunc(null);
 		}
 		return this;
 	},

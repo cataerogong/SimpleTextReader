@@ -414,7 +414,7 @@ dialog {
 .dialog {
     position: fixed;
     border-radius: 10px;
-    padding: 10px;
+    padding: 0;
     font-family: var(--fontFamily_ui);
     font-size: 1.2rem;
     background-color: var(--bgColor);
@@ -581,11 +581,19 @@ input:invalid {
 
 /* search window */
 #searchDlg {
-    right: 10px;
-    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 0;
 
 }
-#content highlight {
-    display: inline;
+#content mark {
+    /* color: black; */
     background-color: aqua;
+}
+/* go window */
+#goLineDlg {
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 0;
+
 }
