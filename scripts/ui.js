@@ -619,10 +619,13 @@ function processFileContent(detectedEncoding, buffer) {
     if (logMode) {
         fileContentChunks = contents.split("\n");
         totalPages = Math.ceil(fileContentChunks.length / itemsPerPage);
-        style.ui_LANG = "CN";
-        style.fontFamily_title = style.fontFamily_title_CN;
-        style.fontFamily_body = style.fontFamily_body_CN;
-        bookAndAuthor = {"bookName": filename, "author": ""};
+        setDocumentFlag("data-lang", "CN");
+        bookAndAuthor = {
+            bookName: filename,
+            author: "",
+            bookNameRE: safeREStr(filename),
+            authorRE: "",
+        };
         fileContentChunks.unshift(`<h2>${filename}</h2>`);
         totalPages += 1;  // 总页数加上单独的扉页
     } else {
@@ -638,11 +641,12 @@ function processFileContent(detectedEncoding, buffer) {
         } else {
             style.ui_LANG = "EN";
         }
+        setDocumentFlag("data-lang", style.ui_LANG);
         // Set fonts based on detected language
         // style.fontFamily_title = eval(`style.fontFamily_title_${style.ui_LANG}`);
         // style.fontFamily_body = eval(`style.fontFamily_body_${style.ui_LANG}`);
-        style.fontFamily_title = style.ui_LANG === "CN" ? style.fontFamily_title_CN : style.fontFamily_title_EN;
-        style.fontFamily_body = style.ui_LANG === "CN" ? style.fontFamily_body_CN : style.fontFamily_body_EN;
+        // style.fontFamily_title = style.ui_LANG === "CN" ? style.fontFamily_title_CN : style.fontFamily_title_EN;
+        // style.fontFamily_body = style.ui_LANG === "CN" ? style.fontFamily_body_CN : style.fontFamily_body_EN;
 
         // Get book name and author
         bookAndAuthor = getBookNameAndAuthor(filename.replace(/(.txt)$/i, ''));
@@ -650,8 +654,8 @@ function processFileContent(detectedEncoding, buffer) {
         console.log("Author: ", bookAndAuthor.author);
 
         // Get all titles and process all footnotes
-        allTitles.push([((style.ui_LANG === "EN") ? "TITLE PAGE" : "扉页"), 0]);
-        allTitles.push([((style.ui_LANG === "EN") ? "TEXT" : "正文"), 1]);
+        allTitles.push([style.toc_title, 0]);
+        allTitles.push([style.toc_text, 1]);
         titlePageLineNumberOffset = 1; // (bookAndAuthor.author !== "") ? 3 : 2;
         for (var i in fileContentChunks) {
             if (fileContentChunks[i].trim() !== '') {
@@ -670,7 +674,7 @@ function processFileContent(detectedEncoding, buffer) {
         processTOC();
         // setMainContentUI();
         // Add title page
-        let sealRotation = (style.ui_LANG === "EN") ? `transform:rotate(${randomFloatFromInterval(-50, 80)}deg)` : "";
+        let sealRotation = (style.ui_LANG === "EN") ? randomFloatFromInterval(-50, 80).toFixed(0) : randomFloatFromInterval(-10, 10).toFixed(0);
         // // fileContentChunks.unshift(`<div id=line${(titlePageLineNumberOffset - 1)} class='prevent-select seal'><img id='seal_${style.ui_LANG}' src='images/seal_${style.ui_LANG}.png' style='left:calc(${randomFloatFromInterval(0, 1)} * (100% - ${eval(`style.seal_width_${style.ui_LANG}`)})); ${sealRotation}'/></div>`);
         // fileContentChunks.unshift(`<div id=line${(titlePageLineNumberOffset - 1)} class='prevent-select seal'><img id='seal_${style.ui_LANG}' src='images/seal_${style.ui_LANG}.png' style='left:calc(${randomFloatFromInterval(0, 1)} * (100% - ${style.ui_LANG === 'CN' ? style.seal_width_CN : style.seal_width_EN})); ${sealRotation}'/></div>`);
         // if (bookAndAuthor.author !== "") {
@@ -679,14 +683,16 @@ function processFileContent(detectedEncoding, buffer) {
         // } else {
         //     fileContentChunks.unshift(`<h1 id=line0 style='margin-bottom:${(parseFloat(style.h1_lineHeight)/2)}em'>${bookAndAuthor.bookName}</h1>`);
         // }
-        let titlePage = `<div id="line0">
-                <h1 style='margin-bottom:0'>${bookAndAuthor.bookName}</h1>
-                <h1 style='margin-top:0; margin-bottom:${(parseFloat(style.h1_lineHeight) / 2)}em'>${bookAndAuthor.author}</h1>
-                <div class='prevent-select seal'><img id='seal_${style.ui_LANG}' src='images/seal_${style.ui_LANG}.png' style='left:calc(${randomFloatFromInterval(0, 1)} * (100% - ${style.ui_LANG === 'CN' ? style.seal_width_CN : style.seal_width_EN})); ${sealRotation}'/></div>
-                </div>`;
+        let titlePage = `<h1 id="line0">
+            <div>${bookAndAuthor.bookName}</div>
+            <div class="title-page-author">${bookAndAuthor.author}</div>
+            <div class='prevent-select seal'><img id='seal' src='images/seal_${style.ui_LANG}.png' style='--pos-offset:${randomFloatFromInterval(0, 1).toFixed(3)};--rotation:${sealRotation}deg;'/></div>
+            </h1>`;
         fileContentChunks.unshift(titlePage);
         totalPages += 1;  // 总页数加上单独的扉页
     }
+    booknameText.innerText = bookAndAuthor.bookName;
+    authorText.innerText = bookAndAuthor.author;
     // Update the title of webpage
     document.title = bookAndAuthor.bookName;
 }
@@ -983,8 +989,8 @@ function GetScrollPositions(toSetHistory=true) {
     }
 
     // let readingProgressText = eval(`style.ui_readingProgress_${style.ui_LANG}`);
-    let readingProgressText = style.ui_LANG === "CN" ? style.ui_readingProgress_CN : style.ui_readingProgress_EN;
-    readingProgressText = style.ui_LANG === "CN" ? readingProgressText : readingProgressText.replace("：", ":");
+    // let readingProgressText = style.ui_LANG === "CN" ? style.ui_readingProgress_CN : style.ui_readingProgress_EN;
+    // readingProgressText = style.ui_LANG === "CN" ? readingProgressText : readingProgressText.replace("：", ":");
     
     // progressContainer.innerHTML = `<span style='text-decoration:underline'>${bookAndAuthor.bookName}</span><br/>${readingProgressText} ${((curLineNumber + 1) / fileContentChunks.length * 100).toFixed(1)}%`;
     // let pastPageLines = (currentPage - 1) * itemsPerPage;
@@ -998,8 +1004,7 @@ function GetScrollPositions(toSetHistory=true) {
     //     totalPercentage = 0;
     // }
     // progressContainer.innerHTML = `<span style='text-decoration:underline'>${bookAndAuthor.bookName}</span><br/>${readingProgressText} ${totalPercentage.toFixed(1).replace(".0", "")}%`;
-    progressTitle.innerText = bookAndAuthor.bookName;
-    progressContent.innerText = `${readingProgressText} ${totalPercentage.toFixed(1).replace(".0", "")}%`;
+    progressContent.innerText = `${totalPercentage.toFixed(1).replace(".0", "")}%`;
     if (flowMode) {
         progressBar.value = totalPercentage.toFixed(1);
         // flowProgress.title = totalPercentage.toFixed(1).replace(".0", "") + "%";
@@ -1167,11 +1172,14 @@ function preloadContentFlow(page) {
     let to_drop_cap = false;
     // process line by line - fast
     for (var j = loadRange.begin; j <= loadRange.end; j++) {
-        // if (logMode || fileContentChunks[j].trim() !== '') {
+        try {
             let processedResult = process(fileContentChunks[j], j, to_drop_cap);
             to_drop_cap = processedResult[1] === 'h' ? true : false;
             contentContainer.insertBefore(processedResult[0], insertBefore);
-        // }
+        } catch(e) {
+            console.log("Process line", j, "Error! Text:", fileContentChunks[j], "Error:", e);
+            break;
+        }
     }
     // console.log("Unloading range", unloadRange);
     if (unloadRange) {

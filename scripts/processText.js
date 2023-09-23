@@ -49,7 +49,7 @@ function process_batch(str) {
 function processBookMode(str, lineNumber, to_drop_cap) {
     if (lineNumber < titlePageLineNumberOffset) {
         current = str.trim();
-        if (current.slice(1, 3) === "h1") {
+        if (current.slice(1, 3) === "h1" || current.slice(1, 5) === "span") {
             let wrapper= document.createElement('div');
             wrapper.innerHTML = current;
             let tempElement = wrapper.firstElementChild;
@@ -187,51 +187,54 @@ function getTitle(str) {
     }
 }
 
+function safeREStr(str) {
+    return str.replaceAll(/(.)/g, "\\$1");
+}
+
 function getBookNameAndAuthor(str) {
     let current = str.trim();
     // 增加书籍文件命名规则：书名.[作者]
     // current = current.replace("（校对版全本）", "");
-	current = current.replace(/（(校对|精校)[^）]*）/i, "");
+    current = current.replace(/（(校对|精校|实体)[^）]*）/i, "");
+    let bookInfo = {
+        bookName: current,
+        author: "",
+        bookNameRE: current,
+        authorRE: "",
+    };
 	let m = current.match(/^(?<name>.+)\.\[(?<author>.+)\]$/i);
 	if (m) {
-		return {
-			"bookName": m.groups["name"],
-			"author": m.groups["author"]
-		}
+		bookInfo.bookName = m.groups["name"];
+		bookInfo.author = m.groups["author"];
 	}
-    if (regex_isEastern.test(current)) {
-        let pos = current.toLowerCase().indexOf("作者");
-        if (pos !== -1) {
-            return {
-                "bookName": current.slice(0, pos).replace("书名", "").replace("：", "").replace(":", "").replace("《", "").replace("》", "").replace("「", "").replace("」", "").replace("『", "").replace("』", "").replace("﹁", "").replace("﹂", "").replace("﹃", "").replace("﹄", "").trim(),
-                "author": current.slice(pos + 2).replace("：", "").replace("：", "").replace(":", "").replace("《", "").replace("》", "").replace("「", "").replace("」", "").replace("『", "").replace("』", "").replace("﹁", "").replace("﹂", "").replace("﹃", "").replace("﹄", "").trim()
-            };
-        } else {
-            // No complete book name and author info
-            // Treat file name as book name and application name as author
-            return {
-                "bookName": current,
-                // "author": style.ui_title_CN
-                "author": ""
-            };
+    else if (regex_isEastern.test(current)) {
+        let pos = current.toLowerCase().indexOf("作者：");
+        let last_pos = pos;
+        while (pos != -1) {
+            last_pos = pos;
+            pos = current.toLowerCase().indexOf("作者：", pos + 1);
+        }
+        if (last_pos !== -1) {
+            // bookInfo.bookName = current.slice(0, pos).replace("书名", "").replace("：", "").replace(":", "").replace("《", "").replace("》", "").replace("「", "").replace("」", "").replace("『", "").replace("』", "").replace("﹁", "").replace("﹂", "").replace("﹃", "").replace("﹄", "").trim();
+            // bookInfo.author = current.slice(pos + 2).replace("：", "").replace("：", "").replace(":", "").replace("《", "").replace("》", "").replace("「", "").replace("」", "").replace("『", "").replace("』", "").replace("﹁", "").replace("﹂", "").replace("﹃", "").replace("﹄", "").trim();
+            bookInfo.bookName = current.slice(0, last_pos).replaceAll(/(书名|[：:《》「」『』﹁﹂﹃﹄])/gi, "").trim();
+            bookInfo.author = current.slice(last_pos + 3).replaceAll(/[：:《》「」『』﹁﹂﹃﹄]/gi, "").trim();
         }
     } else {
         let pos = current.toLowerCase().indexOf(" by ");
-        if (pos !== -1) {
-            return {
-                "bookName": current.slice(0, pos).trim(),
-                "author": current.slice(pos + 4).trim()
-            };
-        } else {
-            // No complete book name and author info
-            // Treat file name as book name and application name as author
-            return {
-                "bookName": current,
-                // "author": style.ui_title_EN
-                "author": ""
-            };
+        let last_pos = pos;
+        while (pos != -1) {
+            last_pos = pos;
+            pos = current.toLowerCase().indexOf(" by ", pos + 1);
+        }
+        if (last_pos !== -1) {
+            bookInfo.bookName = current.slice(0, last_pos).trim();
+            bookInfo.author = current.slice(last_pos + 4).trim();
         }
     }
+    bookInfo.bookNameRE = safeREStr(bookInfo.bookName);
+    bookInfo.authorRE = safeREStr(bookInfo.author);
+    return bookInfo;
 }
 
 function makeFootNote(str, footNoteImgPath) {

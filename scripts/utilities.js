@@ -146,10 +146,25 @@ function createElementFromHTML(htmlString) {
     return div.firstElementChild;
 }
 
+/**
+ * 在 `<html>` 上设置/删除标志，可用于 css 选择器 [attr=value] 根据标志改变 css
+ * 同时刷新全局 style 变量
+ * @param {string} name 标志名
+ * @param {string} value 标志值，null 表示删除标志
+ */
+function setDocumentFlag(name, value) {
+    if (value === null)
+        document.documentElement.removeAttribute(name);
+    else
+        document.documentElement.setAttribute(name, value);
+    // 刷新全局 style 变量
+    style = new CSSGlobalVariables();
+}
+
 function setUIMode(mode) {
     console.log(`UI mode set to ${(mode ? "light" : "dark")}.`);
     localStorage.setItem("UIMode", mode);
-    document.documentElement.setAttribute("data-theme", (mode ? "light" : "dark"));
+    setDocumentFlag("data-theme", (mode ? "light" : "dark"));
 }
 
 function getUIMode() {

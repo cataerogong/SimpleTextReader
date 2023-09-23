@@ -14,7 +14,6 @@
         <link rel="preload" href="./images/note_EN.png" as="image" type="image/png" />
         <link rel="icon" type="image/png" href="./images/icon.png" />
         <link rel="stylesheet" type="text/css" href="./css/ui-range.css" crossorigin="anonymous" />
-        <link rel="stylesheet" type="text/css" href="./css/darkmode_toggle.css" crossorigin="anonymous" />
         <link rel="stylesheet" type="text/css" href="./css/ui_variables.css" crossorigin="anonymous" />
         <link rel="stylesheet" type="text/css" href="./css/ui.css" crossorigin="anonymous" />
         <link rel="stylesheet" type="text/css" href="./css/reader.css" crossorigin="anonymous" />
@@ -30,12 +29,35 @@
         </div>
 
         <!-- Loading screen -->
-        <div id="loading" class="uifont prevent-select layer" style="visibility: hidden;">
+        <div id="loading" class="uifont prevent-select layer">
             <img src="./images/loading_geometry.gif" />
         </div>
 
         <!-- menu ui -->
         <div id="menuLayer" class="layer menu-layer no-interact">
+            <div class="hotkey-hint no-interact">
+                <div style="text-align: right;">
+                    <div class="hint-title interact btn-icon">
+                        <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M6 7h6v2H8v2h3v2H8v4H6V7m8 0h4v10h-2V9h-2V7Z"/></svg>
+                    </div>
+                </div>
+                <div class="hotkey-list">
+                <span>按住 Shift:</span><span>激活目录操作</span>
+                <span></span><span></span>
+                <span>&nbsp;&nbsp;+ ⇧: </span><span>上一章</span>
+                <span>&nbsp;&nbsp;+ ⇩: </span><span>下一章</span>
+                <span>&nbsp;&nbsp;+ PgUp: </span><span>上十章</span>
+                <span>&nbsp;&nbsp;+ PgDn: </span><span>下十章</span>
+                <span>&nbsp;&nbsp;+ Home: </span><span>扉页</span>
+                <span>&nbsp;&nbsp;+ End: </span><span>末章</span>
+                <span>&nbsp;&nbsp;+ Space: </span><span>选中/取消</span>
+                <span></span><span></span>
+                <span>释放 Shift: </span><span>跳转选中章节</span>
+                <span></span><span></span>
+                <span>f: </span><span>全文搜索</span>
+                <span>g: </span><span>快速跳转</span>
+                </div>
+            </div>
             <div id="menuPanel" class="menu-panel interact">
                 <div id="btnWrapper" class="btn-group">
                     <!-- Dark mode toggle -->
@@ -56,28 +78,16 @@
             </div>
         </div>
 
-        <div id="contentLayer" class="layer content-layer no-scrollbar" style="visibility: hidden;">
+        <div id="contentLayer" class="layer content-layer no-scrollbar">
             <!-- Table of contents -->
             <div id="tocPanel" class="toc-panel">
-                <div class="toc-hint">
-                    <span>按住 Shift:</span><span>激活目录操作</span>
-                    <span></span><span></span>
-                    <span>+ ⇧: </span><span>上一章</span>
-                    <span>+ ⇩: </span><span>下一章</span>
-                    <span>+ PgUp: </span><span>上十章</span>
-                    <span>+ PgDn: </span><span>下十章</span>
-                    <span>+ Home: </span><span>扉页</span>
-                    <span>+ End: </span><span>末章</span>
-                    <span>+ Space: </span><span>选中/取消</span>
-                    <span></span><span></span>
-                    <span>释放 Shift: </span><span>跳转选中章节</span>
+                <div id="toc-bookinfo">
+                    <div id="toc-bookname"></div>
+                    <div id="toc-author"></div>
                 </div>
+                <div class="toc-mask-top"></div>
                 <div id="tocContent" class="no-scrollbar"></div>
-                <div id="progress" class="uifont prevent-select">
-                    <span id="progress-title"></span>
-                    <br />
-                    <span id="progress-content"></span>
-                </div>
+                <div class="toc-mask-bottom"></div>
             </div>
             <!-- Main text -->
             <div id="content" class="no-scrollbar"></div>
@@ -88,12 +98,18 @@
             <!-- Pagination -->
             <div id="pagination" class="uifont prevent-select"></div>
 
-            <!-- Vertical progress bar -->
-            <div id="progressBarContainer" class="progress-bar range-slider">
-                <input type="range" id="progressBar" min="0" max="100" step="0.1"
-                    oninput="this.parentNode.style.setProperty('--value',this.value); this.parentNode.style.setProperty('--text-value', JSON.stringify(this.value))">
-                <output></output>
-                <div class='range-slider__progress'></div>
+            <div id="rightPanel">
+                <!-- progress info -->
+                <div id="progress" class="uifont prevent-select">
+                    <span id="progress-content"></span>
+                </div>
+                <!-- Vertical progress bar -->
+                <div id="progressBarContainer" class="progress-bar range-slider">
+                    <input type="range" id="progressBar" min="0" max="100" step="0.1"
+                        oninput="this.parentNode.style.setProperty('--value',this.value); this.parentNode.style.setProperty('--text-value', JSON.stringify(this.value))">
+                    <output></output>
+                    <div class='range-slider__progress'></div>
+                </div>
             </div>
         </div>
 

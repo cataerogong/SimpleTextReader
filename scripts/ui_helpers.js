@@ -13,7 +13,7 @@ function setMainContentUI() {
 
     // Drop zone
     if (isVariableDefined(dropZoneText)) {
-        dropZoneText.innerText = (style.ui_LANG == "CN" ? style.ui_dropZoneText_CN : style.ui_dropZoneText_EN) || "txt";
+        dropZoneText.innerText = style.ui_dropZoneText || "txt";
     }
 }
 
@@ -38,18 +38,19 @@ function resizePagination(isIncreasing) {
 }
 
 function showLayer(layer) {
-    if (isVariableDefined(dropZone)) {
-        dropZone.style.visibility = (layer == "dropZone") ? "visible" : "hidden";
-        dropZone.style.zIndex = (layer == "dropZone") * 1;
-    }
-    if (isVariableDefined(loadingScreen)) {
-        loadingScreen.style.visibility = (layer == "loading") ? "visible" : "hidden";
-        loadingScreen.style.zIndex = (layer == "loading") * 1;
-    }
-    if (isVariableDefined(contentLayer)) {
-        contentLayer.style.visibility = (layer == "content") ? "visible" : "hidden";
-        contentLayer.style.zIndex = (layer == "content") * 1;
-    }
+    setDocumentFlag("data-layer", layer);
+    // if (isVariableDefined(dropZone)) {
+    //     dropZone.style.visibility = (layer == "dropZone") ? "visible" : "hidden";
+    //     dropZone.style.zIndex = (layer == "dropZone") * 1;
+    // }
+    // if (isVariableDefined(loadingScreen)) {
+    //     loadingScreen.style.visibility = (layer == "loading") ? "visible" : "hidden";
+    //     loadingScreen.style.zIndex = (layer == "loading") * 1;
+    // }
+    // if (isVariableDefined(contentLayer)) {
+    //     contentLayer.style.visibility = (layer == "content") ? "visible" : "hidden";
+    //     contentLayer.style.zIndex = (layer == "content") * 1;
+    // }
 }
 
 function showDropZone(focused=false) {
@@ -105,10 +106,10 @@ function resetVars() {
     preloadPageEnd = 0;
 
     // document.title = eval(`style.ui_title_${style.ui_LANG}`);
-    document.title = style.ui_LANG == "CN" ? style.ui_title_CN : style.ui_title_EN;
+    document.title = style.ui_title;
     contentContainer.innerHTML = "";
     tocContainer.innerHTML = "";
-    progressTitle.innerHTML = "";
+    booknameText.innerHTML = "";
     progressContent.innerHTML = "";
     footNoteContainer.innerHTML = "";
 }

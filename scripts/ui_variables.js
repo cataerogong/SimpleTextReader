@@ -33,7 +33,7 @@ var contentFreezed = false;
 
 // document.title = eval(`style.ui_title_${style.ui_LANG}`);
 if (!isVariableDefined(document.title)) {
-    document.title = (style.ui_LANG === "CN" ? style.ui_title_CN : style.ui_title_EN) || "易笺";
+    document.title = style.ui_title || "易笺";
 }
 var dropZone = document.getElementById('dropZone');
 var loadingScreen = document.getElementById('loading');
@@ -46,7 +46,8 @@ var tocPanel = document.getElementById("tocPanel");
 // var tocWrapper = document.getElementById("tocWrapper");
 var tocContainer = document.getElementById("tocContent");
 var progressContainer = document.getElementById("progress");
-var progressTitle = document.getElementById("progress-title");
+var booknameText = document.getElementById("toc-bookname");
+var authorText = document.getElementById("toc-author");
 var progressContent = document.getElementById("progress-content");
 var paginationContainer = document.getElementById("pagination");
 var footNoteContainer = document.getElementById("footnote-content");
@@ -58,4 +59,4 @@ var contentLayer = document.getElementById("contentLayer");
 let progressBarContainer = document.getElementById("progressBarContainer");
 let progressBar = document.getElementById("progressBar");
 
-const _STRe_VER_ = "1.5.0-wip";
+const _STRe_VER_ = "1.5.0";

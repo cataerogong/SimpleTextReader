@@ -128,7 +128,7 @@
 
 * [*] 缓存书架书籍封面模仿了 henryxrl 的风格和效果（下次把他的抄过来 :-D）
 
-## v1.5.0-wip
+## v1.5.0
 
 * [+] 增加一个阅读翻页模式：流 :-P
 
@@ -156,7 +156,23 @@
 
 * [+] 按文件名自动选择模式：书籍模式，日志模式
 
+* [*] 调整UI：菜单按钮位置、样式，正文框背景色，进度信息位置，快捷键文字位置，默认配色
+
+* [!] bugfix: `regex_rules.js` 中会把 `bookAndAuthor.bookName` 和 `bookAndAuthor.author` 也加入正则中，如果正好包含了不成对的 `()`，会导致正则表达式错误。
+
+  在 `getBookNameAndAuthor()` 返回的 `bookAndAuthor` 中额外提供 `bookNameRE` 和 `authorRE`，在每个字前插一个 `\`，`regex_rules.js` 换用这两个属性。
+
+  举例：Black Coffee (play novelisation by Charles Osborne)(1997) by Agatha Christie.txt
+
+  > 感谢阿婆！随手选了本阿婆的书就发现了一个 bug ^o^y
+
+  > 这样打补丁之后，书名和作者名的识别还是错的，等想想怎么再修正吧。
+
+* [*] 由于上条 bug，顺便把 `getBookNameAndAuthor()` 改成了用最后的 ` by ` 和 `作者：` 来分割书名、作者
+
 
 ## TODO
 
 > Err ... maybe :-P
+
+* 在文件已经显示的情况下（阅读界面），改变排版模式（书籍、日志）时需要重新处理 `fileContentChunks`，生成 `Title Page`、`TOC` 等
