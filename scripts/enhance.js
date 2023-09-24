@@ -650,30 +650,46 @@ var STRe_Bookshelf = {
 	},
 
 	genBookItem(bookInfo) {
-		let book = $(`<div class="book" data-filename="${bookInfo.name}">
+		let book = $(`<div class="book" data-filename="${bookInfo.filename}">
 			<div class="btn-bar"><span class="delete-btn" title="删除">&times;</span></div>
-			<div class="cover">${bookInfo.name}</div>
-			<div>
-			<div class="size">${(bookInfo.size/1000/1000).toFixed(2)} MB</div>
-			<div class="progress"></div></div></div>`);
+			<div class="cover">
+				<div class="bookname">${bookInfo.bookname}</div>
+				<div class="author">${bookInfo.author}</div>
+			</div>
+			<div class="info">
+				<div class="size">${(bookInfo.size/1000/1000).toFixed(2)} MB</div>
+				<div class="progress"></div>
+			</div></div>`);
 		book.find(".cover").click((evt) => {
 			evt.originalEvent.stopPropagation();
-			this.openBook(bookInfo.name);
+			this.openBook(bookInfo.filename);
 		});
 		book.find(".delete-btn").click((evt) => {
 			evt.originalEvent.stopPropagation();
-			this.deleteBook(bookInfo.name, () => {
+			this.deleteBook(bookInfo.filename, () => {
 				// this.refreshBookList()
 				let b = $(evt.currentTarget).parents(".book");
 				// b.fadeOut(500, () => b.remove());
 				b.animate({width: 0, opacity: 0}, 500, () => b.remove());
 			});
 		});
-		this.updateBookProgressInfo(bookInfo.name, book);
+		this.updateBookProgressInfo(bookInfo.filename, book);
 		return book;
 	},
 
 	async refreshBookList() {
+		/**
+		 * 调整封面字体大小
+		 * @param {HTMLElement} bookElm 必须已加入 DOM Tree
+		 */
+		function resizeFont(bookElm) {
+			let b = $(bookElm).find(".cover")[0];
+			let s = parseInt(window.getComputedStyle(b).fontSize.slice(0, -2));
+			while (b.scrollHeight > b.offsetHeight && s > 12) {
+				b.style.setProperty("--cover-font-size", (--s) + "px")
+			}
+		}
+
 		if (this.enabled) {
 			let container = $(".bookshelf .book-list");
 			container.html("");
@@ -686,11 +702,15 @@ var STRe_Bookshelf = {
 			let booklist = [];
 			try {
 				for (const book of await this.db.getAllBooks()) {
-					booklist.push({name: book.name, size: book.data.size});
+					let na = getBookNameAndAuthor(book.name.replace(/(.txt)$/i, ''));
+					booklist.push({filename: book.name, bookname: na.bookName, author: na.author, size: book.data.size});
 				}
-				booklist.sort((a, b) => (a.name.localeCompare(b.name, "zh")));
+				booklist.sort((a, b) => (a.bookname.localeCompare(b.bookname, "zh")));
 				for (const bookInfo of booklist) {
-					container.append(this.genBookItem(bookInfo));
+					let book = this.genBookItem(bookInfo).css("visibility", "hidden");
+					container.append(book);
+					resizeFont(book);
+					book.css("visibility", "visible");
 				}
 			} catch (e) {
 				console.log(e);

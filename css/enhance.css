@@ -78,32 +78,24 @@
     display: flex;
     flex-flow:row wrap;
     align-content: flex-start;
+    gap: 2rem;
 }
 
 .bookshelf .book {
     display: inline-grid;
-    grid-template-rows: max-content 1fr;
-    font-size: 1.2rem;
-    width: 10rem;
-    height: 15rem;
+    grid-template-rows: 1fr max-content;
     color: var(--ui_foreColor);
-    background-color: var(--mainColor_focused);
-    margin: 1vw;
-}
-
-.bookshelf .book:hover .cover {
-    box-shadow: var(--shadowV_args);
-    -webkit-box-shadow: var(--webkit-shadowV_args);
-    -moz-box-shadow: var(--moz-shadowV_args);
-    z-index: 1;
 }
 
 .bookshelf .book .btn-bar {
+    position: absolute;
+    width: 10rem;
     height: 1.5rem;
     line-height: 1.5rem;
     background-color: var(--layerBgColor);
-    opacity: 0.7;
+    opacity: 0.5;
     visibility: hidden;
+    z-index: 2;
 }
 
 .bookshelf .book:hover .btn-bar {
@@ -122,12 +114,42 @@
 }
 
 .bookshelf .book .cover {
-    padding: 5px 10px;
-    font-family: ui;
-    text-align: left;
-    overflow-wrap: anywhere;
-    color: var(--layerBgColor);
+    width: 10rem;
+    height: 15rem;
+    overflow-y: auto;
     cursor: pointer;
+    display: grid;
+    grid-template-rows: auto auto;
+    font-size: var(--cover-font-size, 1.6rem);
+}
+
+.bookshelf .book:hover .cover {
+    box-shadow: var(--shadow_args);
+    -webkit-box-shadow: var(--webkit-shadow_args);
+    -moz-box-shadow: var(--moz-shadow_args);
+    z-index: 1;
+}
+
+.bookshelf .book .cover .bookname {
+    border-radius: 3px 5px 0 0;
+    padding: 1.5rem 10px 0 10px;
+    text-align: center;
+    overflow-wrap: anywhere;
+    font-family: var(--fontFamily_title);
+    color: var(--bgColor);
+    background-color: var(--mainColor_focused);
+    background-image: linear-gradient(to right, rgba(0,0,0,0.5), transparent 2%, transparent 4%, rgba(0,0,0,0.3) 5%, transparent 6%);
+}
+
+.bookshelf .book .cover .author {
+    border-radius: 0 0 5px 3px;
+    padding: 5px 10px;
+    text-align: center;
+    font-family: var(--fontFamily_body);
+    font-size: 0.8em;
+    color: var(--ui_foreColor);
+    background-color: var(--mainColor);
+    background-image: linear-gradient(to right, rgba(0,0,0,0.5), transparent 2%, transparent 4%, rgba(0,0,0,0.3) 5%, transparent 6%);
 }
 
 .bookshelf .book .size {
@@ -143,11 +165,11 @@
     text-align: left;
     font-size: 0.9rem;
     /* margin-top: 1px; */
-    background-color: var(--layerBgColor);
+    background-color: var(--bgColor);
 }
 
 #serverFilesDlg .book.read,
-.bookshelf .book.read .progress {
+.bookshelf .book.read .progress1 {
     background-image: linear-gradient(to right, var(--mainColor) var(--read-progress), transparent 0);
 }
 
