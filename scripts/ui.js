@@ -649,11 +649,13 @@ function processFileContent(detectedEncoding, buffer) {
         totalPages += 1;  // 总页数加上单独的扉页
     } else {
         fileContentChunks = contents.split("\n").filter(Boolean).filter(n => n.trim() !== '');
-        totalPages = Math.ceil(fileContentChunks.length / itemsPerPage);
-
         // Detect language
         isEasternLan = getLanguage(fileContentChunks.slice(0, 50).join("\n"));
         console.log("isEasternLan: ", isEasternLan);
+
+        fileContentChunks.push(isEasternLan? `--【完】--` : "--[ END ]--"); // 末行可能会被优化为空，不显示，导致进度达不到 100%，因此增加一行
+        totalPages = Math.ceil(fileContentChunks.length / itemsPerPage);
+
         // Change UI language based on detected language
         if (isEasternLan) {
             style.ui_LANG = "CN";
@@ -1018,7 +1020,7 @@ function GetScrollPositions(toSetHistory=true) {
     // let scalePercentage = curItemsPerPage / fileContentChunks.length;
     // let pastPagePercentage = pastPageLines / fileContentChunks.length;
     // let totalPercentage = (curPagePercentage * scalePercentage + pastPagePercentage) * 100;
-    let totalPercentage = currentLine / fileContentChunks.length * 100;
+    let totalPercentage = currentLine / (fileContentChunks.length - 1) * 100;
     // if ((curLineNumber === 0) && (currentPage === 1) && (window.scrollY <= 5)) {
     //     totalPercentage = 0;
     // }

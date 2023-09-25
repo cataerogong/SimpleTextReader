@@ -642,7 +642,7 @@ var STRe_Bookshelf = {
 				pct = ((m.groups["line"] / m.groups["total"]) * 100).toFixed(1) + "%";
 			}
 			bookElm.addClass("read").css("--read-progress", pct);
-			bookElm.find(".progress").html(pct).attr("title", progress);
+			bookElm.find(".progress").html(pct).attr("title", pct);
 		} else {
 			bookElm.removeClass("read").css("--read-progress", "");
  			bookElm.find(".progress").html("&nbsp;").attr("title", "");

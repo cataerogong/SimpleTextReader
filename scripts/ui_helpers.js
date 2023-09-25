@@ -86,6 +86,9 @@ function resetUI() {
 }
 
 function resetVars() {
+    style.ui_LANG = "CN";
+    setDocumentFlag("data-lang", "CN");
+
     init = true;
     filename = "";
     fileContentChunks = []; // Clear content chunks when a new file is dropped

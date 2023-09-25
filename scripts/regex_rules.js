@@ -24,7 +24,8 @@ var rules_titles = [
     `^(\\s*(${regex_other_titles})[:：]?\\s*$)|^(\\s*([\\[【])(${regex_other_titles})([\\]】])[:：]?\\s*$)`,
     `^(\\s*(${regex_other_titles})[:：\\s]\\s*.{0,50}?\\s*$)|(\\s*([\\[【])(${regex_other_titles})[:：\\s]\\s*.{0,50}?([\\]】])\\s*$)`,
     `^(\\s*(${regex_titles_english})\\s*$)`,
-    `^(\\s*(${regex_titles_english})[:\\s]?\\s*.{0,50}?$)`
+    `^(\\s*(${regex_titles_english})[:\\s]?\\s*.{0,50}?$)`,
+    `--【完】--|--\\[ END \\]--`,
 ]
 
 
