@@ -73,18 +73,31 @@ function showSearch() {
             dlg.remove();
         });
     }
-    function search(evt) {
+    function search(down = true) {
         let s = dlg.find(".search-txt").focus().val();
         if (s) {
             const re = new RegExp(`(${s})`, "gi");
-            for (let i = 0; i < fileContentChunks.length; i++) {
-                let j = (dlg.searchStartLine + i) % fileContentChunks.length;
-                if (re.test(fileContentChunks[j])) {
-                    gotoLine(j, false);
-                    let e = document.getElementById("line" + j);
-                    e.innerHTML = e.innerHTML.replaceAll(re, `<mark>$1</mark>`);
-                    dlg.searchStartLine = j + 1;
-                    break;
+            if (down) {
+                for (let i = 0; i < fileContentChunks.length; i++) {
+                    let j = (dlg.searchStartLine + i) % fileContentChunks.length;
+                    if (re.test(fileContentChunks[j])) {
+                        gotoLine(j, false);
+                        let e = document.getElementById("line" + j);
+                        e.innerHTML = e.innerHTML.replaceAll(re, `<mark>$1</mark>`);
+                        dlg.searchStartLine = j + 1;
+                        break;
+                    }
+                }
+            } else {
+                for (let i = 0; i < fileContentChunks.length; i++) {
+                    let j = (dlg.searchStartLine - 1 - i + fileContentChunks.length) % fileContentChunks.length;
+                    if (re.test(fileContentChunks[j])) {
+                        gotoLine(j, false);
+                        let e = document.getElementById("line" + j);
+                        e.innerHTML = e.innerHTML.replaceAll(re, `<mark>$1</mark>`);
+                        dlg.searchStartLine = j;
+                        break;
+                    }
                 }
             }
         }
@@ -95,11 +108,13 @@ function showSearch() {
         <div class="dlg-cap">全文搜索<div class="dlg-close">&times;</div></div>
         <div class="dlg-body">搜索词（支持正则）
         <input type="text" class="search-txt" style="width: 10rem;" />
-        <button class="btn-search">下一个</button>
+        <button class="btn-search-next">向后搜索</button>
+        <button class="btn-search-prev">向前搜索</button>
         </div>
         </div>`).hide().appendTo(contentLayer);
         dlg.find(".dlg-close").click(close);
-        dlg.find(".btn-search").click(search);
+        dlg.find(".btn-search-next").click(() => search());
+        dlg.find(".btn-search-prev").click(() => search(false));
         freezeContent();
         dlg.keydown(evt => {
             if (evt.key == "Escape") {

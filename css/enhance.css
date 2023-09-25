@@ -116,7 +116,7 @@
 
 .bookshelf .book .cover {
     width: 10rem;
-    height: 15rem;
+    height: 14rem;
     overflow-y: auto;
     cursor: pointer;
     display: grid;
@@ -137,7 +137,7 @@
     padding: 1.5rem 10px 0 10px;
     text-align: center;
     overflow-wrap: anywhere;
-    font-family: var(--fontFamily_title);
+    font-family: var(--fontFamily_body);
     color: var(--bgColor);
     background-color: var(--mainColor_focused);
     background-image: var(--cover-mask);
@@ -147,7 +147,7 @@
     border-radius: 0 0 5px 3px;
     padding: 5px 10px;
     text-align: center;
-    font-family: var(--fontFamily_body);
+    font-family: var(--fontFamily_ui);
     font-size: 0.8em;
     color: var(--ui_foreColor);
     background-color: var(--mainColor);
