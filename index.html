@@ -35,12 +35,7 @@
 
         <!-- menu ui -->
         <div id="menuLayer" class="layer menu-layer no-interact">
-            <div class="hotkey-hint no-interact">
-                <div style="text-align: right;">
-                    <div class="hint-title interact btn-icon">
-                        <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M6 7h6v2H8v2h3v2H8v4H6V7m8 0h4v10h-2V9h-2V7Z"/></svg>
-                    </div>
-                </div>
+            <div id="hotkeyHint" class="hotkey-hint" style="display: none;">
                 <div class="hotkey-list">
                 <span>按住 Shift:</span><span>激活目录操作</span>
                 <span></span><span></span>
@@ -58,8 +53,13 @@
                 <span>g: </span><span>快速跳转</span>
                 </div>
             </div>
-            <div id="menuPanel" class="menu-panel interact">
-                <div id="btnWrapper" class="btn-group">
+            <div id="menuPanel" class="menu-panel">
+                <div id="menuTop" class="btn-group interact">
+                    <div class="hotkey-hint-btn interact btn-icon" onclick="showHotkeyHint();">
+                        <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M6 7h6v2H8v2h3v2H8v4H6V7m8 0h4v10h-2V9h-2V7Z"/></svg>
+                    </div>
+                </div>
+                <div id="menuMain" class="btn-group interact">
                     <!-- Dark mode toggle -->
                     <input type="checkbox" id="switch" style="display:none;" />
                     <label for="switch">

@@ -64,6 +64,7 @@ function showDropZone(focused=false) {
         dropZone.style.borderColor = c;
         dropZoneText.style.color = c;
         dropZoneImg.style.setProperty("filter", filter);
+        showHotkeyHint(false);
         showLayer("dropZone");
         return 0;
     } else {
@@ -172,4 +173,14 @@ function setEscapeFunc(callback) {
 }
 function callEscapeFunc() {
     escapeFunc ? escapeFunc() : resetUI();
+}
+
+/**
+ * 
+ * @param {Boolean | null} show true: show, false: hide, null: toggle
+ */
+function showHotkeyHint(show = null) {
+    if (show === true) $("#hotkeyHint").show();
+    else if (show === false) $("#hotkeyHint").hide();
+    else $("#hotkeyHint").toggle();
 }

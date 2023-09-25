@@ -43,7 +43,6 @@ var dropZoneText = document.getElementById("dropZoneText");
 var dropZoneImg = document.getElementById("dropZoneImg");
 var contentContainer = document.getElementById("content");
 var tocPanel = document.getElementById("tocPanel");
-// var tocWrapper = document.getElementById("tocWrapper");
 var tocContainer = document.getElementById("tocContent");
 var progressContainer = document.getElementById("progress");
 var booknameText = document.getElementById("toc-bookname");
@@ -52,6 +51,10 @@ var progressContent = document.getElementById("progress-content");
 var paginationContainer = document.getElementById("pagination");
 var footNoteContainer = document.getElementById("footnote-content");
 
+var menuPanel = document.getElementById("menuPanel");
+var menuMain = document.getElementById("menuMain");
+var menuTop = document.getElementById("menuTop");
+
 var darkModeActualButton = document.getElementById("switch-btn");   // just for set visibility
 var darkModeToggle = document.getElementById("switch");
 
@@ -59,4 +62,4 @@ var contentLayer = document.getElementById("contentLayer");
 let progressBarContainer = document.getElementById("progressBarContainer");
 let progressBar = document.getElementById("progressBar");
 
-const _STRe_VER_ = "1.5.1-wip";
+const _STRe_VER_ = "1.5.1";

@@ -331,27 +331,10 @@ a.toc-active::before {
 
 .hotkey-hint {
     position: fixed;
-    top: 1rem;
+    top: 5rem;
     right: calc(50% - var(--ui_contentWidth) / 2 - 4rem);
-    height: fit-content;
     font-family: var(--fontFamily_ui);
     color: var(--ui_foreColor);
-    visibility: hidden;
-    display: none;
-}
-[data-layer="content"] .hotkey-hint {
-    display: block;
-}
-.hotkey-hint:hover {
-    visibility: visible;
-    z-index: 1;
-}
-.hotkey-hint .hint-title {
-    display: inline-flex;
-    cursor: help;
-}
-.hotkey-hint .hint-title {
-    visibility: visible !important;
 }
 .hotkey-hint .hotkey-list {
     display: grid;
@@ -363,8 +346,6 @@ a.toc-active::before {
     padding: 1rem;
     border: 2px solid var(--modeBtn_borderColor);
     font-size: 0.9rem;
-}
-.hotkey-hint:hover .hotkey-list {
     box-shadow:var(--shadow_args);
     -webkit-box-shadow: var(--webkit-shadow_args);
     -moz-box-shadow: var(--moz-shadow_args);
@@ -462,31 +443,58 @@ img#seal {
 }
 .menu-panel {
     position: absolute;
-    width: min-content;
-    height: min-content;
-    right: 10px;
-    bottom: 2rem;
-    /* 垂直居中 */
-    /* bottom: 50%;
-    transform: translateY(50%); */
-    margin: 1rem;
+    width: max-content;
+    height: 100%;
+    /* 100% - margin left&right - width of #menuMain - width of scrollbar */
+    left: calc(100vw - 2rem - 3rem - 10px);
+    margin: 0 1rem;
     transition: all 0.5s;
 }
 
-#btnWrapper label .icons {
+#menuMain {
+    position: absolute;
+    /* 靠近底部 */
+    bottom: 3rem;
+    /* 垂直居中 */
+    /* bottom: 50%;
+    transform: translateY(50%); */
+}
+
+#menuPanel label .icons {
     display: flex;
     align-items: center;
     gap: 1.5rem;
-    transform: translateY(1.5rem) rotate(90deg);
     user-select: none;
     color: var(--mainColor_focused);
     transition: var(--darkMode_animation);
     bottom: 0px;
     right: 0px;
 }
-
-#btnWrapper input[type="checkbox"]:checked+label .icons {
+input[type="checkbox"]#switch+label .icons {
+    transform: translateY(1.5rem) rotate(90deg);
+}
+input[type="checkbox"]#switch:checked+label .icons {
     transform: translateX(-1.5rem);
+}
+
+#menuTop {
+    position: absolute;
+    top: 2rem;
+}
+.hotkey-hint-btn {
+    /*
+     * .btn-icon 也会设置 display，如果用 display 来控制显隐的话需要跟随 display 类型，
+     * 所以利用 position 和 visibility 达到类似效果，单独 visibility: hidden 会占位
+     */
+    /* display: none !important; */
+    position: fixed;
+    visibility: hidden;
+}
+[data-layer="content"] .hotkey-hint-btn {
+    /* display: flex !important; */
+    position: relative;
+    visibility: visible;
+    transition: all 0s !important;
 }
 
 .btn-group {

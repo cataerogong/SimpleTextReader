@@ -213,7 +213,11 @@ function onDocKeydown(event) {
         return;
     }
     let handled = false;
-    if (event.key == "Shift") { // activate toc
+    if (event.key == "F1") { // hotkey help
+        showHotkeyHint();
+        handled = true;
+    }
+    else if (event.key == "Shift") { // activate toc
         if (event.repeat) return;
         showTOC(true);
         const tocItems = tocContainer.getElementsByClassName("toc-text");
@@ -674,7 +678,7 @@ function processFileContent(detectedEncoding, buffer) {
         processTOC();
         // setMainContentUI();
         // Add title page
-        let sealRotation = (style.ui_LANG === "EN") ? randomFloatFromInterval(-50, 80).toFixed(0) : randomFloatFromInterval(-10, 10).toFixed(0);
+        let sealRotation = (style.ui_LANG === "EN") ? randomFloatFromInterval(-50, 80).toFixed(0) : randomFloatFromInterval(-5, 5).toFixed(0);
         // // fileContentChunks.unshift(`<div id=line${(titlePageLineNumberOffset - 1)} class='prevent-select seal'><img id='seal_${style.ui_LANG}' src='images/seal_${style.ui_LANG}.png' style='left:calc(${randomFloatFromInterval(0, 1)} * (100% - ${eval(`style.seal_width_${style.ui_LANG}`)})); ${sealRotation}'/></div>`);
         // fileContentChunks.unshift(`<div id=line${(titlePageLineNumberOffset - 1)} class='prevent-select seal'><img id='seal_${style.ui_LANG}' src='images/seal_${style.ui_LANG}.png' style='left:calc(${randomFloatFromInterval(0, 1)} * (100% - ${style.ui_LANG === 'CN' ? style.seal_width_CN : style.seal_width_EN})); ${sealRotation}'/></div>`);
         // if (bookAndAuthor.author !== "") {

@@ -238,7 +238,7 @@ var STRe_FilesOnServer = {
 			<path stroke="none" d="M15 15H9v-1h6v1m0 1H9v1h6v-1m0 2H9v1h6v-1m8-4.5c0 1.25-.44 2.31-1.31 3.19c-.88.87-1.94 1.31-3.19 1.31H18v4H6v-4.05c-1.3-.1-2.43-.59-3.39-1.52C1.54 15.38 1 14.09 1 12.58c0-1.3.39-2.46 1.17-3.48S4 7.43 5.25 7.15c.42-1.53 1.25-2.77 2.5-3.72S10.42 2 12 2c1.95 0 3.6.68 4.96 2.04C18.32 5.4 19 7.05 19 9c1.15.13 2.1.63 2.86 1.5c.76.85 1.14 1.85 1.14 3M6 15.95V11h11V9c0-1.38-.5-2.56-1.46-3.54C14.56 4.5 13.38 4 12 4s-2.56.5-3.54 1.46C7.5 6.44 7 7.62 7 9h-.5c-.97 0-1.79.34-2.47 1.03c-.69.68-1.03 1.5-1.03 2.47s.34 1.79 1.03 2.5c.56.54 1.22.85 1.97.95M16 13H8v7h8v-7m5 .5c0-.7-.24-1.29-.73-1.77S19.2 11 18.5 11H18v5h.5c.7 0 1.29-.24 1.77-.72S21 14.2 21 13.5Z"/>
 		</svg></div>`)
 			.click(() => this.show())
-			.prependTo($("#btnWrapper"))
+			.prependTo(menuMain)
 			.hide();
 
 		settingMgr.add(new SettingGroupFoS());
@@ -507,7 +507,7 @@ var STRe_ProgressOnServer = {
 			<path stroke="none" d="M13.5 20c.31.75.76 1.42 1.32 2H6c-1.11 0-2-.89-2-2V4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v7.03c-.16-.03-.33-.03-.5-.03c-.5 0-1 .07-1.5.18V4h-5v8l-2.5-2.25L8 12V4H6v16h7.5m5.5 0a2.5 2.5 0 0 1-2.5-2.5c0-.4.09-.78.26-1.12l-1.09-1.09c-.42.63-.67 1.39-.67 2.21c0 2.21 1.79 4 4 4V23l2.25-2.25L19 18.5V20m0-6.5V12l-2.25 2.25L19 16.5V15a2.5 2.5 0 0 1 2.5 2.5c0 .4-.09.78-.26 1.12l1.09 1.09c.42-.63.67-1.39.67-2.21c0-2.21-1.79-4-4-4Z"/>
 		</svg></div>`)
 			.click(() => this.show())
-			.prependTo($("#btnWrapper"))
+			.prependTo(menuMain)
 			.hide();
 
 		settingMgr.add(new SettingGroupPoS());
@@ -645,14 +645,14 @@ var STRe_Bookshelf = {
 			bookElm.find(".progress").html(pct).attr("title", progress);
 		} else {
 			bookElm.removeClass("read").css("--read-progress", "");
-			bookElm.find(".progress").html("&nbsp;");
+ 			bookElm.find(".progress").html("&nbsp;").attr("title", "");
 		}
 	},
 
 	genBookItem(bookInfo) {
 		let book = $(`<div class="book" data-filename="${bookInfo.filename}">
 			<div class="btn-bar"><span class="delete-btn" title="删除">&times;</span></div>
-			<div class="cover">
+			<div class="cover" title="${bookInfo.filename}">
 				<div class="bookname">${bookInfo.bookname}</div>
 				<div class="author">${bookInfo.author}</div>
 			</div>

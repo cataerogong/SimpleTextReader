@@ -82,6 +82,7 @@
 }
 
 .bookshelf .book {
+    position: relative;
     display: inline-grid;
     grid-template-rows: 1fr max-content;
     color: var(--ui_foreColor);
@@ -121,6 +122,7 @@
     display: grid;
     grid-template-rows: auto auto;
     font-size: var(--cover-font-size, 1.6rem);
+    --cover-mask: linear-gradient(to right, rgba(0,0,0,0.5), transparent 2%, transparent 4%, rgba(0,0,0,0.5) 5%, transparent 6%, transparent 99%, rgba(0,0,0,0.5));
 }
 
 .bookshelf .book:hover .cover {
@@ -138,7 +140,7 @@
     font-family: var(--fontFamily_title);
     color: var(--bgColor);
     background-color: var(--mainColor_focused);
-    background-image: linear-gradient(to right, rgba(0,0,0,0.5), transparent 2%, transparent 4%, rgba(0,0,0,0.3) 5%, transparent 6%);
+    background-image: var(--cover-mask);
 }
 
 .bookshelf .book .cover .author {
@@ -149,7 +151,7 @@
     font-size: 0.8em;
     color: var(--ui_foreColor);
     background-color: var(--mainColor);
-    background-image: linear-gradient(to right, rgba(0,0,0,0.5), transparent 2%, transparent 4%, rgba(0,0,0,0.3) 5%, transparent 6%);
+    background-image: var(--cover-mask);
 }
 
 .bookshelf .book .size {
