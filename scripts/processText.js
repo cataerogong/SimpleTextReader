@@ -208,28 +208,18 @@ function getBookNameAndAuthor(str) {
 		bookInfo.author = m.groups["author"];
 	}
     else if (regex_isEastern.test(current)) {
-        let pos = current.toLowerCase().indexOf("作者：");
-        let last_pos = pos;
-        while (pos != -1) {
-            last_pos = pos;
-            pos = current.toLowerCase().indexOf("作者：", pos + 1);
-        }
-        if (last_pos !== -1) {
+        let pos = current.toLowerCase().lastIndexOf("作者：");
+        if (pos !== -1) {
             // bookInfo.bookName = current.slice(0, pos).replace("书名", "").replace("：", "").replace(":", "").replace("《", "").replace("》", "").replace("「", "").replace("」", "").replace("『", "").replace("』", "").replace("﹁", "").replace("﹂", "").replace("﹃", "").replace("﹄", "").trim();
             // bookInfo.author = current.slice(pos + 2).replace("：", "").replace("：", "").replace(":", "").replace("《", "").replace("》", "").replace("「", "").replace("」", "").replace("『", "").replace("』", "").replace("﹁", "").replace("﹂", "").replace("﹃", "").replace("﹄", "").trim();
-            bookInfo.bookName = current.slice(0, last_pos).replaceAll(/(书名|[：:《》「」『』﹁﹂﹃﹄])/gi, "").trim();
-            bookInfo.author = current.slice(last_pos + 3).replaceAll(/[：:《》「」『』﹁﹂﹃﹄]/gi, "").trim();
+            bookInfo.bookName = current.slice(0, pos).replaceAll(/(书名|[：:《》「」『』﹁﹂﹃﹄])/gi, "").trim();
+            bookInfo.author = current.slice(pos + 3).replaceAll(/[：:《》「」『』﹁﹂﹃﹄]/gi, "").trim();
         }
     } else {
-        let pos = current.toLowerCase().indexOf(" by ");
-        let last_pos = pos;
-        while (pos != -1) {
-            last_pos = pos;
-            pos = current.toLowerCase().indexOf(" by ", pos + 1);
-        }
-        if (last_pos !== -1) {
-            bookInfo.bookName = current.slice(0, last_pos).trim();
-            bookInfo.author = current.slice(last_pos + 4).trim();
+        let pos = current.toLowerCase().lastIndexOf(" by ");
+        if (pos !== -1) {
+            bookInfo.bookName = current.slice(0, pos).trim();
+            bookInfo.author = current.slice(pos + 4).trim();
         }
     }
     bookInfo.bookNameRE = safeREStr(bookInfo.bookName);

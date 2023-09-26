@@ -30,6 +30,10 @@
     outline: 2px solid var(--mainColor_focused);
 }
 
+#serverFilesDlg .book.read {
+    background-image: linear-gradient(to right, var(--mainColor) var(--read-progress), transparent 0);
+}
+
 #serverFilesDlg .up-level {
     color: black;
     background-color: darkgray;
@@ -85,39 +89,38 @@
 .bookshelf .book {
     position: relative;
     display: inline-grid;
-    grid-template-rows: 1fr max-content;
+    grid-template-rows: 1fr 1rem;
     color: var(--ui_foreColor);
 }
 
 .bookshelf .book .btn-bar {
     position: absolute;
     width: 10rem;
-    height: 1.5rem;
-    line-height: 1.5rem;
-    background-color: var(--layerBgColor);
-    opacity: 0.5;
-    visibility: hidden;
+    bottom: 0;
+    right: 0;
+    height: 1rem;
+    line-height: 1rem;
+    align-content: center;
     z-index: 2;
-}
-
-.bookshelf .book:hover .btn-bar {
-    visibility: visible;
 }
 
 .bookshelf .book .delete-btn {
     color: var(--fontColor);
-    font-family: title;
+    font-family: var(--fontFamily_title);
     display: block;
     float: right;
     cursor: pointer;
     font-size: 1.5rem;
-    line-height: 1.2rem;
-    margin-right: 3px;
+    line-height: 1rem;
+    padding: 0 3px;
 }
 
 .bookshelf .book .cover {
-    width: 10rem;
-    height: 14rem;
+    --cover-w: 10rem;
+    --cover-h: 14rem;
+    width: var(--cover-w);
+    height: var(--cover-h);
+    overflow-wrap: anywhere;
     overflow: hidden;
     cursor: pointer;
     display: grid;
@@ -127,25 +130,29 @@
     border-radius: 3px 5px 5px 3px;
 }
 
-.bookshelf .book:hover .cover {
+.bookshelf .book .cover:hover {
     box-shadow: var(--shadow_args);
     -webkit-box-shadow: var(--webkit-shadow_args);
     -moz-box-shadow: var(--moz-shadow_args);
 }
 
+.bookshelf .book.completed .cover {
+    opacity: 0.5;
+}
+
 .bookshelf .book .cover .bookname {
-    padding: 1.5rem 10px 0 10px;
+    width: var(--cover-w);
+    padding: 1.5rem 10px 5px;
     text-align: center;
-    overflow-wrap: anywhere;
     font-family: var(--fontFamily_body);
-    color: var(--bgColor);
+    color: var(--ui_bgColor);
     background-color: var(--mainColor_focused);
     background-image: var(--cover-mask);
-    /* writing-mode: vertical-rl; */
 }
 
 .bookshelf .book .cover .author {
-    padding: 5px 10px;
+    width: var(--cover-w);
+    padding: 1.5rem 10px 5px;
     text-align: center;
     font-family: var(--fontFamily_ui);
     font-size: 0.8em;
@@ -155,19 +162,21 @@
 }
 
 .bookshelf .book .size {
-    float: right;
+    /* float: left; */
     color: var(--ui_foreColor);
     font-size: 0.9rem;
-    text-align: right;
-    padding-right: 5px;
+    text-align: left;
+    padding-left: 5px;
 }
 
 .bookshelf .book .progress {
     position: absolute;
     width: 2rem;
-    height: 14rem;
+    /* height: 14rem; */
+    height: 2rem;
     overflow: hidden;
-    top: 0;
+    /* top: 0; */
+    top: calc(var(--read-progress)  * 12 / 15);
     right: -5px;
     /* color: var(--ui_foreColor); */
     color: transparent;
@@ -180,7 +189,6 @@
 
 .bookshelf .book.read .progress {
     background-repeat: no-repeat;
-    background-position-y: var(--read-progress);
     background-size: 2rem;
     background-image: 
         url('data:image/svg+xml;charset=utf-8, <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><g transform="rotate(-90 8 8)"><path fill="rgb(191,173,111)" d="M7.03 1.88c.252-1.01 1.688-1.01 1.94 0l2.905 11.62H14a.5.5 0 0 1 0 1H2a.5.5 0 0 1 0-1h2.125L7.03 1.88z"/></g></svg>')
@@ -195,8 +203,75 @@
         ;
 }
 
-#serverFilesDlg .book.read {
-    background-image: linear-gradient(to right, var(--mainColor) var(--read-progress), transparent 0);
+.bookshelf .book.completed .progress {
+    top: calc(50% - 0.5rem);
+    transform: translateY(-50%);
+    height: 3rem;
+    width: 3rem;
+    right: -9px;
+    background-size: 3rem;
+    background-image:
+        url('data:image/svg+xml;charset=utf-8, <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="rgb(234,199,135)" fill-rule="evenodd" clip-rule="evenodd" d="M8.5 3.5A4.5 4.5 0 0 0 4 8v10h.035A3.5 3.5 0 0 0 7.5 21H19a1 1 0 0 0 1-1V5a1.5 1.5 0 0 0-1.5-1.5h-10Zm-1 12h11v4h-11a2 2 0 1 1 0-4Zm8.02-6.959a.75.75 0 1 0-1.04-1.082L11.876 9.96l-1.357-1.3a.75.75 0 1 0-1.038 1.082l1.875 1.8a.75.75 0 0 0 1.038 0l3.125-3Z"/></svg>')
+        ;
+}
+
+.bookshelf .book.eastern .cover {
+    grid-auto-flow: column;
+    grid-template-columns: 1fr max-content;
+    --cover-mask: linear-gradient(to left, rgba(0,0,0,0.5), transparent 2%, transparent 4%, rgba(0,0,0,0.5) 5%, transparent 6%, transparent 99%, rgba(0,0,0,0.5));
+    background-color: var(--mainColor_focused);
+    background-image: var(--cover-mask);
+    writing-mode:vertical-rl;
+}
+.bookshelf .book.eastern .cover .bookname {
+    margin: 10px 1rem;
+    text-align: left;
+    overflow-wrap: anywhere;
+    font-family: var(--fontFamily_body);
+    color: var(--ui_foreColor);
+    background: var(--mainColor);
+}
+.bookshelf .book.eastern .cover .author {
+    padding: 10px 1rem;
+    text-align: right;
+    font-family: var(--fontFamily_ui);
+    font-size: 0.8em;
+    color: var(--ui_bgColor);
+    background: transparent;
+}
+
+.bookshelf .book.eastern.read .progress {
+    right: unset;
+    left: -5px;
+    background-repeat: no-repeat;
+    /* background-position-y: var(--read-progress); */
+    background-size: 2rem;
+    background-image: 
+        url('data:image/svg+xml;charset=utf-8, <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><g transform="rotate(90 8 8)"><path fill="rgb(191,173,111)" d="M7.03 1.88c.252-1.01 1.688-1.01 1.94 0l2.905 11.62H14a.5.5 0 0 1 0 1H2a.5.5 0 0 1 0-1h2.125L7.03 1.88z"/></g></svg>')
+        /* url('data:image/svg+xml;charset=utf-8, <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><g transform="rotate(-90 12 12)"><path fill="none" stroke="rgb(191,173,111)" stroke-width="3" d="m3.165 19.503l7.362-16.51c.59-1.324 2.355-1.324 2.946 0l7.362 16.51c.667 1.495-.814 3.047-2.202 2.306l-5.904-3.152c-.459-.245-1-.245-1.458 0l-5.904 3.152c-1.388.74-2.87-.81-2.202-2.306Z"/></g></svg>') */
+        /* url('data:image/svg+xml;charset=utf-8, <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><g transform="rotate(-90 12 12)"><g fill="none" stroke="rgb(191,173,111)" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"><path d="m8 7l4-4l4 4"/><path d="M12 3v5.394A6.737 6.737 0 0 1 9 14a6.737 6.737 0 0 0-3 5.606V21"/><path d="M12 3v5.394A6.737 6.737 0 0 0 15 14a6.737 6.737 0 0 1 3 5.606V21"/></g></g></svg>') */
+        /* url('data:image/svg+xml;charset=utf-8, <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><g transform="rotate(-90 8 8)"><path fill="rgb(191,173,111)" d="M7.27 2.047a1 1 0 0 1 1.46 0l6.345 6.77c.6.638.146 1.683-.73 1.683H11.5v3a1 1 0 0 1-1 1h-5a1 1 0 0 1-1-1v-3H1.654C.78 10.5.326 9.455.924 8.816L7.27 2.047zM14.346 9.5L8 2.731L1.654 9.5H4.5a1 1 0 0 1 1 1v3h5v-3a1 1 0 0 1 1-1h2.846z"/></g></svg>') */
+        /* url('data:image/svg+xml;charset=utf-8, <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><g transform="rotate(-90 8 8)"><path fill="rgb(191,173,111)" d="M7.27 2.047a1 1 0 0 1 1.46 0l6.345 6.77c.6.638.146 1.683-.73 1.683H11.5v3a1 1 0 0 1-1 1h-5a1 1 0 0 1-1-1v-3H1.654C.78 10.5.326 9.455.924 8.816L7.27 2.047z"/></g></svg>') */
+        /* url('data:image/svg+xml;charset=utf-8, <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><g transform="rotate(-90 8 8)"><path fill="rgb(191,173,111)" d="M7.184 11.246A3.5 3.5 0 0 1 1 9c0-1.602 1.14-2.633 2.66-4.008C4.986 3.792 6.602 2.33 8 0c1.398 2.33 3.014 3.792 4.34 4.992C13.86 6.367 15 7.398 15 9a3.5 3.5 0 0 1-6.184 2.246a19.92 19.92 0 0 0 1.582 2.907c.231.35-.02.847-.438.847H6.04c-.419 0-.67-.497-.438-.847a19.919 19.919 0 0 0 1.582-2.907z"/></g></svg>') */
+        /* url('data:image/svg+xml;charset=utf-8, <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><g transform="rotate(-90 12 12)"><g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M0 0h24v24H0z"/><path fill="rgb(191,173,111)" d="M10.586 3L4 9.586a2 2 0 0 0-.434 2.18l.068.145A2 2 0 0 0 5.414 13H8v7a2 2 0 0 0 2 2h4l.15-.005A2 2 0 0 0 16 20l-.001-7h2.587A2 2 0 0 0 20 9.586L13.414 3a2 2 0 0 0-2.828 0z"/></g></g></svg>') */
+        /* url('data:image/svg+xml;charset=utf-8, <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256"><g transform="rotate(180 128 128)"><path fill="rgb(191,173,111)" d="M246.66 123.56L201 55.13A15.94 15.94 0 0 0 187.72 48H40a16 16 0 0 0-16 16v128a16 16 0 0 0 16 16h147.72a16 16 0 0 0 13.28-7.12l45.63-68.44a8 8 0 0 0 .03-8.88Z"/></g></svg>') */
+        /* url('data:image/svg+xml;charset=utf-8, <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><g transform="rotate(180 12 12)"><path fill="rgb(191,173,111)" fill-rule="evenodd" d="M12.858 20h-2.637c-3.875 0-5.813 0-7.017-1.172C2 17.657 2 15.771 2 12c0-3.771 0-5.657 1.204-6.828C4.408 4 6.346 4 10.22 4h2.637c2.227 0 3.341 0 4.27.501c.93.502 1.52 1.42 2.701 3.259l.681 1.06C21.503 10.366 22 11.14 22 12c0 .86-.497 1.634-1.49 3.18l-.68 1.06c-1.181 1.838-1.771 2.757-2.701 3.259c-.93.501-2.044.501-4.271.501ZM7 7.054c.414 0 .75.316.75.706v8.475c0 .39-.336.706-.75.706s-.75-.316-.75-.706V7.76c0-.39.336-.706.75-.706Z" clip-rule="evenodd"/></g></svg>') */
+        ;
+}
+
+.bookshelf .book.eastern.completed .progress {
+    /* top: unset;
+    bottom: calc(1rem - 5px); */
+    top: calc(50% - 0.5rem);
+    transform: translateY(-50%);
+    height: 3rem;
+    width: 3rem;
+    right: unset;
+    left: -9px;
+    background-size: 3rem;
+    background-image:
+        url('data:image/svg+xml;charset=utf-8, <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="rgb(234,199,135)" fill-rule="evenodd" clip-rule="evenodd" d="M8.5 3.5A4.5 4.5 0 0 0 4 8v10h.035A3.5 3.5 0 0 0 7.5 21H19a1 1 0 0 0 1-1V5a1.5 1.5 0 0 0-1.5-1.5h-10Zm-1 12h11v4h-11a2 2 0 1 1 0-4Zm8.02-6.959a.75.75 0 1 0-1.04-1.082L11.876 9.96l-1.357-1.3a.75.75 0 1 0-1.038 1.082l1.875 1.8a.75.75 0 0 0 1.038 0l3.125-3Z"/></svg>')
+        ;
 }
 
 #progressDlg {

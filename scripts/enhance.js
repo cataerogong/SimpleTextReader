@@ -523,6 +523,7 @@ class SettingGroupBookshelf extends SettingGroupBase {
 		super("bookshelf", "缓存书架");
 		this.add(new SettingCheckbox("enable", "启用", true));
 		this.add(new SettingCheckbox("reopen", "启动时打开上次阅读书籍", true));
+		this.add(new SettingCheckbox("sortByStatus", "按阅读状态分类排序（在读，未读，读完）", true));
 	}
 
 	genHTML() {
@@ -530,12 +531,17 @@ class SettingGroupBookshelf extends SettingGroupBase {
             <div class="setting-group-settings">
             <div>${this.get("enable").genInputElm()} ${this.get("enable").genLabelElm()}</div>
             <div>${this.get("reopen").genInputElm()} ${this.get("reopen").genLabelElm()}</div>
+            <div class="row">${this.get("sortByStatus").genInputElm()} ${this.get("sortByStatus").genLabelElm()}</div>
             </div></div>`;
 		return html;
 	}
 
-	apply() {
+	async apply() {
 		STRe_Bookshelf.reopenEnabled = this.get("reopen").value;
+		if (STRe_Bookshelf.sortByStatus != this.get("sortByStatus").value) {
+			STRe_Bookshelf.sortByStatus = this.get("sortByStatus").value;
+			await STRe_Bookshelf.refreshBookList();
+		}
 		if (this.get("enable").value) {
 			STRe_Bookshelf.enable();
 		} else {
@@ -550,6 +556,7 @@ var STRe_Bookshelf = {
 
 	enabled: false,
 	reopenEnabled : false,
+	sortByStatus: false,
 	db: null,
 
 	STRe_FILENAME: "STRe-Filename",
@@ -626,31 +633,45 @@ var STRe_Bookshelf = {
 		}
 	},
 
-	// 更新书籍阅读进度
-	updateBookProgressInfo(fname, bookElm = null) {
+	// 更新书籍封面的阅读进度
+	updateBookProgressInfo(bookInfo, bookElm = null) {
 		if (!bookElm) {
-			bookElm = $(`.bookshelf .book[data-filename="${fname}"]`);
+			bookElm = $(`.bookshelf .book[data-filename="${bookInfo.filename}"]`);
 			if (bookElm.length <= 0) {
 				return;
 			}
 		}
-		let progress = STReHelper.getLocalProgress(fname);
-		if (progress) {
-			let pct = "?%";
-			let m = STRe_PROGRESS_RE.exec(progress);
-			if (m && m.groups["total"]) {
-				pct = ((m.groups["line"] / m.groups["total"]) * 100).toFixed(1) + "%";
-			}
-			bookElm.addClass("read").css("--read-progress", pct);
-			bookElm.find(".progress").html(pct).attr("title", pct);
+		if (bookInfo.read) {
+			bookElm.addClass("read").css("--read-progress", bookInfo.pct);
+			bookElm.find(".progress").html(bookInfo.pct).attr("title", `${bookInfo.pct} (${bookInfo.progress})`);
 		} else {
 			bookElm.removeClass("read").css("--read-progress", "");
  			bookElm.find(".progress").html("&nbsp;").attr("title", "");
 		}
+		if (bookInfo.completed) {
+			bookElm.addClass("completed");
+		} else {
+			bookElm.removeClass("completed");
+		}
+	},
+
+	getBookProgress(fname) {
+		let ret = {filename: fname, progress: "", pct: "", read: false, completed: false};
+		ret.progress = STReHelper.getLocalProgress(fname);
+		if (ret.progress) {
+			ret.read = true;
+			ret.pct = "?%";
+			let m = STRe_PROGRESS_RE.exec(ret.progress);
+			if (m && m.groups["total"]) {
+				ret.pct = ((m.groups["line"] / m.groups["total"]) * 100).toFixed(1) + "%";
+				ret.completed = (m.groups["line"] == m.groups["total"]);
+			}
+		}
+		return ret;
 	},
 
 	genBookItem(bookInfo) {
-		let book = $(`<div class="book" data-filename="${bookInfo.filename}">
+		let book = $(`<div class="book ${bookInfo.isEastern ? "eastern" : ""}" data-filename="${bookInfo.filename}">
 			<div class="btn-bar"><span class="delete-btn" title="删除">&times;</span></div>
 			<div class="cover" title="${bookInfo.filename}">
 				<div class="bookname">${bookInfo.bookname}</div>
@@ -673,7 +694,7 @@ var STRe_Bookshelf = {
 				b.animate({width: 0, opacity: 0}, 500, () => b.remove());
 			});
 		});
-		this.updateBookProgressInfo(bookInfo.filename, book);
+		this.updateBookProgressInfo(bookInfo, book);
 		return book;
 	},
 
@@ -685,7 +706,7 @@ var STRe_Bookshelf = {
 		function resizeFont(bookElm) {
 			let b = $(bookElm).find(".cover")[0];
 			let s = parseInt(window.getComputedStyle(b).fontSize.slice(0, -2));
-			while (b.scrollHeight > b.offsetHeight && s > 12) {
+			while ((b.scrollHeight > b.offsetHeight || b.scrollWidth > b.offsetWidth) && s > 12) {
 				b.style.setProperty("--cover-font-size", (--s) + "px")
 			}
 		}
@@ -703,9 +724,22 @@ var STRe_Bookshelf = {
 			try {
 				for (const book of await this.db.getAllBooks()) {
 					let na = getBookNameAndAuthor(book.name.replace(/(.txt)$/i, ''));
-					booklist.push({filename: book.name, bookname: na.bookName, author: na.author, size: book.data.size});
+					// booklist.push({filename: book.name, bookname: na.bookName, author: na.author, size: book.data.size});
+					let info = this.getBookProgress(book.name);
+					info.bookname = na.bookName;
+					info.author = na.author;
+					info.size = book.data.size;
+					// info.isEastern = getLanguage(info.bookname);
+					booklist.push(info);
 				}
-				booklist.sort((a, b) => (a.bookname.localeCompare(b.bookname, "zh")));
+				if (this.sortByStatus)
+					booklist.sort((a, b) => {
+						if (a.completed != b.completed) return (a.completed - b.completed);
+						if (a.read != b.read) return (b.read - a.read);
+						return (a.bookname.localeCompare(b.bookname, "zh"));
+					});
+				else
+					booklist.sort((a, b) => (a.bookname.localeCompare(b.bookname, "zh")));
 				for (const bookInfo of booklist) {
 					let book = this.genBookItem(bookInfo).css("visibility", "hidden");
 					container.append(book);
@@ -735,7 +769,9 @@ var STRe_Bookshelf = {
 	loop() {
 		if (this.enabled) {
 			localStorage.setItem(this.STRe_FILENAME, filename);
-			if (filename) this.updateBookProgressInfo(filename);
+			if (filename) {
+				this.updateBookProgressInfo(this.getBookProgress(filename));
+			}
 			setTimeout(() => this.loop(), 1000);
 		}
 	},
@@ -765,7 +801,7 @@ var STRe_Bookshelf = {
 		return this;
 	},
 
-	init() {
+	async init() {
 		// $(`<div id="STRe-bookshelf-btn" class="btn-icon">
 		// <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
 		// 	<path stroke="none" d="M9 3v15h3V3H9m3 2l4 13l3-1l-4-13l-3 1M5 5v13h3V5H5M3 19v2h18v-2H3Z"/>
@@ -774,13 +810,15 @@ var STRe_Bookshelf = {
 		// 	.prependTo($("#btnWrapper"))
 		// 	.hide();
 
-		settingMgr.add(new SettingGroupBookshelf());
+		await settingMgr.add(new SettingGroupBookshelf());
 	},
 };
 
-STRe_Bookshelf.init();
-STRe_ProgressOnServer.init();
-STRe_FilesOnServer.init();
+(async () => {
+	await STRe_Bookshelf.init();
+	await STRe_ProgressOnServer.init();
+	await STRe_FilesOnServer.init();
 
-// 启动时打开上次阅读书籍
-STRe_Bookshelf.reopenBook();
+	// 启动时打开上次阅读书籍
+	STRe_Bookshelf.reopenBook();
+})();

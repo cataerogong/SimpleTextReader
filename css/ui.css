@@ -20,6 +20,10 @@ body {
     /* transition: var(--darkMode_animation); */
 }
 
+.h1 {
+    overflow-wrap: anywhere;
+}
+
 .layer {
     position: fixed;
     top: 0;

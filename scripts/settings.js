@@ -291,36 +291,17 @@ var settingMgr = {
         return this;
     },
 
-    apply(groupId = "") {
+    async apply(groupId = "") {
         if (this.enabled) {
             if (groupId) {
                 if (groupId in this.groups) {
-                    this.get(groupId).apply();
+                    await this.get(groupId).apply();
                 }
             } else {
                 for (const grp in this.groups) {
-                    this.get(grp).apply();
+                    await this.get(grp).apply();
                 }
             }
-        }
-        return this;
-    },
-
-    enable() {
-        if (!this.enabled) {
-            $("#STRe-setting-btn").show();
-            this.enabled = true;
-            console.log("Module <Settings> enabled.");
-        }
-        return this;
-    },
-
-    disable() {
-        if (this.enabled) {
-            this.hide().reset().load().apply();
-            $("#STRe-setting-btn").hide();
-            this.enabled = false;
-            console.log("Module <Settings> disabled.");
         }
         return this;
     },
@@ -336,18 +317,20 @@ var settingMgr = {
 		</svg></div>`)
             .click(() => this.show())
             .appendTo(menuMain)
-            .hide();
+            .show();
+        this.enabled = true;
+        console.log("Module <Settings> enabled.");
         return this;
     },
 
     /**
      * 
      * @param {SettingGroupBase} groupInstance 
-     * @param {Boolean} loadAfterAdd 
-     * @param {Boolean} applyAfterLoad 
+     * @param {Boolean} loadAfterAdd default: true
+     * @param {Boolean} applyAfterLoad  default: true
      * @returns {ThisObj}
      */
-    add(groupInstance, loadAfterAdd = true, applyAfterLoad = true) {
+    async add(groupInstance, loadAfterAdd = true, applyAfterLoad = true) {
         if (!groupInstance instanceof SettingGroupBase)
             throw new TypeError("Not a SettingGroupBase instance.");
         if (!groupInstance.id)
@@ -359,7 +342,7 @@ var settingMgr = {
         if (loadAfterAdd) {
             this.load(groupInstance.id);
             if (applyAfterLoad)
-                this.apply(groupInstance.id);
+                await this.apply(groupInstance.id);
         }
         return this;
     },
@@ -375,7 +358,7 @@ var settingMgr = {
 }
 
 // 启用参数设置模块
-settingMgr.init().enable();
+settingMgr.init();
 
 // 设置示例
 /*
