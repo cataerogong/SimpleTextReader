@@ -365,10 +365,10 @@ function onDocKeyup(event) {
         const tocItems = tocContainer.getElementsByClassName("toc-text");
         if (tocItems.length) {
             if (tocSelItem >= 0) {
+                focusTocItem(tocItems[tocSelItem], false);
                 if (tocFocused && (tocSelItem != tocCurItem)) {
                     tocItems[tocSelItem].click();
                 }
-                focusTocItem(tocItems[tocSelItem], false);
                 tocSelItem = -1;
                 tocFocused = false;
                 tocCurItem = -1;
@@ -937,13 +937,13 @@ function gotoLine(lineNumber, isTitle=true) {
         contentContainer.scrollTo({top: line.offsetTop, behavior: "instant"});
         // console.log("line.tagName: ", line.tagName);
         // if (line.tagName === "H1" || line.tagName === "H2") {
-            // // scroll back to show the title and margin
-            // let style = line.currentStyle /* for IE */ || window.getComputedStyle(line);
-            // let top_margin = parseFloat(style.marginTop);
-            // contentContainer.scrollBy(0, -top_margin+1);
+        //     // // scroll back to show the title and margin
+        //     // let style = line.currentStyle /* for IE */ || window.getComputedStyle(line);
+        //     // let top_margin = parseFloat(style.marginTop);
+        //     // contentContainer.scrollBy(0, -top_margin+1);
 
-            // Set the title in the TOC as active
-            setTitleActive(lineNumber);
+        //     // Set the title in the TOC as active
+        //     setTitleActive(lineNumber);
         // }
     } catch (error) {
         console.log(`Error: No tag with id 'line${lineNumber}' found.`);
@@ -951,7 +951,7 @@ function gotoLine(lineNumber, isTitle=true) {
     }
     if (isTitle) {
         // Set the current title in the TOC as active
-        // setTitleActive(lineNumber);
+        setTitleActive(lineNumber);
 
         gotoTitle_Clicked = true;
         // console.log("gotoTitle_Clicked: ", gotoTitle_Clicked);
