@@ -85,8 +85,10 @@
     --seal_width-EN: 250px;
     --toc_title-CN: 扉页;
     --toc_title-EN: TITLE PAGE;
-    --toc_text-CN: 文首;
-    --toc_text-EN: FIRST LINE;
+    --toc_text_begin-CN: 【文首】;
+    --toc_text_begin-EN: [ BEGIN ];
+    --toc_text_end-CN: 【文末】;
+    --toc_text_end-EN: [ END ];
 
     /* Font variables */
     --fontFamily_ui: ui, Arial, Helvetica, sans-serif;
@@ -100,7 +102,8 @@
     --fontFamily_body: var(--fontFamily_body-CN);
     --seal_width: var(--seal_width-CN);
     --toc_title: var(--toc_title-CN);
-    --toc_text: var(--toc_text-CN);
+    --toc_text_begin: var(--toc_text_begin-CN);
+    --toc_text_end: var(--toc_text_end-CN);
 
     /* Dark mode variables */
     --darkMode_init_animation: all 0s ease;
@@ -261,5 +264,6 @@
     --fontFamily_body: var(--fontFamily_body-EN);
     --seal_width: var(--seal_width-EN);
     --toc_title: var(--toc_title-EN);
-    --toc_text: var(--toc_text-EN);
+    --toc_text_begin: var(--toc_text_begin-EN);
+    --toc_text_end: var(--toc_text_end-EN);
 }

@@ -38,7 +38,7 @@ class SettingBase {
     genLabelElm(attrs = "") {
         return `<span id="${this.full_id}-lbl" ${attrs}>${this.desc}</span>`;
     }
-    getInputVal() {
+    updateValFromInput() {
         this.value = document.getElementById(this.full_id).value || this.defaultValue;
         return this;
     }
@@ -65,7 +65,7 @@ class SettingCheckbox extends SettingBase {
     genLabelElm(attrs = "") {
         return `<label id="${this.full_id}-lbl" for="${this.full_id}" ${attrs}>${this.desc}</label>`;
     }
-    getInputVal() {
+    updateValFromInput() {
         this.value = document.getElementById(this.full_id).checked;
         return this;
     }
@@ -113,8 +113,8 @@ class SettingNumber extends SettingText {
     genInputElm(attrs = "") {
         return super.genInputElm(`step="any" ` + attrs);
     }
-    getInputVal() {
-        super.getInputVal();
+    updateValFromInput() {
+        super.updateValFromInput();
         this.value = isNaN(this.value) ? this.defaultValue : parseFloat(this.value);
         return this;
     }
@@ -130,8 +130,8 @@ class SettingInt extends SettingText {
     genInputElm(attrs = "") {
         return super.genInputElm(`step="1" ` + attrs);
     }
-    getInputVal() {
-        super.getInputVal();
+    updateValFromInput() {
+        super.updateValFromInput();
         this.value = isNaN(this.value) ? this.defaultValue : Math.trunc(parseFloat(this.value));
         return this;
     }
@@ -167,9 +167,9 @@ class SettingGroupBase {
         return this._id_prefix;
     }
 
-    getInputVals() {
+    updateValsFromInputs() {
         for (const k in this.settings) {
-            this.get(k).getInputVal();
+            this.get(k).updateValFromInput();
         }
         return this;
     }
@@ -190,7 +190,7 @@ class SettingGroupBase {
     genHTML() {
         return `<div>需要重载 ${this.id}(${this.desc}) 参数设置类 getHTML() 函数</div>`;
     }
-    apply() {
+    async apply() {
         throw new Error(`SettingGroup ${this.id}(${this.desc}) apply() not implicated!`);
     }
 
@@ -237,8 +237,22 @@ var settingMgr = {
 				</dialog>`).bind("cancel", () => this.hide());
             dlg.find(".dlg-cap").append($(`<span class="dlg-close">&times;</span>`).click(() => this.hide()));
             dlg.find(".dlg-foot").append(`<span style="font-size:1rem;color:var(--fontInfoColor);">易笺﹒改 v${_STRe_VER_}</span>`);
-            dlg.find(".dlg-foot").append($(`<button style="float:right;margin-left:1rem;">应用</button>`).click(() => this.save().apply().hide()))
-            dlg.find(".dlg-foot").append($(`<button style="float:right;">恢复默认</button>`).click(() => this.reset().apply().hide()));
+            dlg.find(".dlg-foot").append(
+                $(`<button style="float:right;margin-left:1rem;">应用</button>`)
+                    .click(async () => {
+                        this.save();
+                        await this.apply();
+                        this.hide();
+                    })
+            );
+            dlg.find(".dlg-foot").append(
+                $(`<button style="float:right;">恢复默认</button>`)
+                    .click(async () => {
+                        this.reset();
+                        await this.apply();
+                        this.hide();
+                    })
+            );
             let container = dlg.find(".dlg-body");
             for (k in this.groups) {
                 container.append(this.get(k).genHTML());
@@ -248,16 +262,14 @@ var settingMgr = {
             dlg[0].showModal();
             setEscapeFunc(() => settingMgr.hide());
         }
-        return this;
     },
 
     hide() {
         if (this.enabled) {
             $("#settingDlg").remove();
             unfreezeContent();
-            setEscapeFunc(null);
+            // setEscapeFunc(null);
         }
-        return this;
     },
 
     load(groupId = "") {
@@ -271,16 +283,14 @@ var settingMgr = {
                 this.get(grp).importValues(stObj[grp] || {});
             }
         }
-        return this;
     },
 
     save() {
         let stObj = {};
         for (const grp in this.groups) {
-            stObj[grp] = this.get(grp).getInputVals().exportValues();
+            stObj[grp] = this.get(grp).updateValsFromInputs().exportValues();
         }
         localStorage.setItem(this.ITEM_SETTINGS, JSON.stringify(stObj));
-        return this;
     },
 
     reset() {
@@ -288,7 +298,6 @@ var settingMgr = {
             localStorage.removeItem(this.ITEM_SETTINGS);
             this.load();
         }
-        return this;
     },
 
     async apply(groupId = "") {
@@ -303,7 +312,6 @@ var settingMgr = {
                 }
             }
         }
-        return this;
     },
 
     /**
@@ -320,7 +328,6 @@ var settingMgr = {
             .show();
         this.enabled = true;
         console.log("Module <Settings> enabled.");
-        return this;
     },
 
     /**
@@ -328,7 +335,6 @@ var settingMgr = {
      * @param {SettingGroupBase} groupInstance 
      * @param {Boolean} loadAfterAdd default: true
      * @param {Boolean} applyAfterLoad  default: true
-     * @returns {ThisObj}
      */
     async add(groupInstance, loadAfterAdd = true, applyAfterLoad = true) {
         if (!groupInstance instanceof SettingGroupBase)
@@ -344,7 +350,6 @@ var settingMgr = {
             if (applyAfterLoad)
                 await this.apply(groupInstance.id);
         }
-        return this;
     },
 
     /**
@@ -444,7 +449,6 @@ class SettingGroupUI extends SettingGroupBase {
                 style[st.property] = st.value;
         }
         style = new CSSGlobalVariables();
-        return this;
     }
 }
 
@@ -479,13 +483,12 @@ class SettingGroupMode extends SettingGroupBase {
         return html;
     }
 
-    apply() {
+    async apply() {
         setFlowMode(this.get("page-mode").value == "flow");
         showLineNumber(this.get("show-line-num").value);
         // reader mode 必须在 flow mode 和 show line number 后设置
         // 因为 log mode 要强制覆盖 flow mode 和 show line number
         setReaderMode(this.get("reader-mode").value);
-        return this;
     }
 }
 

@@ -166,16 +166,21 @@ function calcLogMode(fname) {
 
 function setReaderMode(mode) {
     readerMode = mode;
-    if (filename) calcLogMode(filename);
+    calcLogMode(filename);
     applyLogMode();
 }
 
 var escapeFunc = null;
+/**
+ * 设置 Escape 触发的执行函数，执行完毕后会置空，即只执行一次
+ * @param {Function|null} callback 
+ */
 function setEscapeFunc(callback) {
     escapeFunc = callback;
 }
 function callEscapeFunc() {
     escapeFunc ? escapeFunc() : resetUI();
+    escapeFunc = null;
 }
 
 /**

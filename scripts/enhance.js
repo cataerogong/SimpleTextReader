@@ -95,7 +95,6 @@ class SettingGroupFoS extends SettingGroupBase {
 		} else {
 			STRe_FilesOnServer.disable();
 		}
-		return this;
 	}
 }
 
@@ -201,25 +200,22 @@ var STRe_FilesOnServer = {
 
 			await this.lsDir(this.webDAVdir);
 		}
-		return this;
 	},
 
 	hide() {
 		if (this.enabled) {
 			$('#serverFilesDlg').remove();
 			unfreezeContent();
-			setEscapeFunc(null);
+			// setEscapeFunc(null);
 		}
-		return this;
 	},
 
-	async enable() {
+	enable() {
 		if (!this.enabled) {
 			$("#STRe-FOS-btn").show();
 			this.enabled = true;
 			console.log("Module <Files on Server> enabled.");
 		}
-		return this;
 	},
 
 	disable() {
@@ -229,7 +225,6 @@ var STRe_FilesOnServer = {
 			this.enabled = false;
 			console.log("Module <Files on Server> disabled.");
 		}
-		return this;
 	},
 
 	init() {
@@ -237,7 +232,7 @@ var STRe_FilesOnServer = {
 		<svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
 			<path stroke="none" d="M15 15H9v-1h6v1m0 1H9v1h6v-1m0 2H9v1h6v-1m8-4.5c0 1.25-.44 2.31-1.31 3.19c-.88.87-1.94 1.31-3.19 1.31H18v4H6v-4.05c-1.3-.1-2.43-.59-3.39-1.52C1.54 15.38 1 14.09 1 12.58c0-1.3.39-2.46 1.17-3.48S4 7.43 5.25 7.15c.42-1.53 1.25-2.77 2.5-3.72S10.42 2 12 2c1.95 0 3.6.68 4.96 2.04C18.32 5.4 19 7.05 19 9c1.15.13 2.1.63 2.86 1.5c.76.85 1.14 1.85 1.14 3M6 15.95V11h11V9c0-1.38-.5-2.56-1.46-3.54C14.56 4.5 13.38 4 12 4s-2.56.5-3.54 1.46C7.5 6.44 7 7.62 7 9h-.5c-.97 0-1.79.34-2.47 1.03c-.69.68-1.03 1.5-1.03 2.47s.34 1.79 1.03 2.5c.56.54 1.22.85 1.97.95M16 13H8v7h8v-7m5 .5c0-.7-.24-1.29-.73-1.77S19.2 11 18.5 11H18v5h.5c.7 0 1.29-.24 1.77-.72S21 14.2 21 13.5Z"/>
 		</svg></div>`)
-			.click(() => this.show())
+			.click(async () => await this.show())
 			.prependTo(menuMain)
 			.hide();
 
@@ -274,7 +269,6 @@ class SettingGroupPoS extends SettingGroupBase {
 		} else {
 			STRe_ProgressOnServer.disable();
 		}
-		return this;
 	}
 }
 
@@ -445,30 +439,28 @@ var STRe_ProgressOnServer = {
 				.append(`<label for="progressDlgChk">显示进度一致的书籍</label>`)
 				.append($(`<span style="float:right"></span>`)
 					.append(`<span>云端&nbsp;</span>`)
-					.append($(`<button> ⇦ </button>`).click(async () => { await this.upload(); this.refreshProgressList(); }))
+					.append($(`<button> ⇦ </button>`).click(async () => { await this.upload(); await this.refreshProgressList(); }))
 					.append(" ")
-					.append($(`<button> ⇨ </button>`).click(async () => { await this.download(); this.refreshProgressList(); STRe_Bookshelf.refreshBookList(); }))
+					.append($(`<button> ⇨ </button>`).click(async () => { await this.download(); await this.refreshProgressList(); await STRe_Bookshelf.refreshBookList(); }))
 					.append(`<span>&nbsp;本地</span>`)
 				);// ＜⇦←⇠◀◁   →⇢＞⇨▶▷
 			freezeContent();
 			dlg.appendTo("body");
 			dlg[0].showModal();
-			setEscapeFunc(() => STRe_ProgressOnServer.hide());
+			setEscapeFunc(() => this.hide());
 			await this.refreshProgressList();
 		}
-		return this;
 	},
 
 	hide() {
 		if (this.enabled) {
 			$("#progressDlg").remove();
 			unfreezeContent();
-			setEscapeFunc(null);
+			// setEscapeFunc(null);
 		}
-		return this;
 	},
 
-	async enable() {
+	enable() {
 		if (!this.enabled) {
 			$("#STRe-POS-btn").show();
 			fileloadCallback.regBefore(this.pauseLoop);
@@ -486,7 +478,6 @@ var STRe_ProgressOnServer = {
 				console.log("Module <Progress on Server> - <Auto Sync> not enabled.");
 			}
 		}
-		return this;
 	},
 
 	disable() {
@@ -498,7 +489,6 @@ var STRe_ProgressOnServer = {
 			this.enabled = false;
 			console.log("Module <Progress on Server> disabled.");
 		}
-		return this;
 	},
 
 	init() {
@@ -543,11 +533,10 @@ class SettingGroupBookshelf extends SettingGroupBase {
 			await STRe_Bookshelf.refreshBookList();
 		}
 		if (this.get("enable").value) {
-			STRe_Bookshelf.enable();
+			await STRe_Bookshelf.enable();
 		} else {
 			STRe_Bookshelf.disable();
 		}
-		return this;
 	}
 
 }
@@ -761,9 +750,8 @@ var STRe_Bookshelf = {
 			</div>
 			<span class="book-list"></span>
 			</div>`).appendTo("#dropZone");
-			this.refreshBookList();
+			await this.refreshBookList();
 		}
-		return this;
 	},
 
 	loop() {
@@ -776,17 +764,16 @@ var STRe_Bookshelf = {
 		}
 	},
 
-	enable() {
+	async enable() {
 		if (!this.enabled) {
 			this.db = new STReLocalDB();
 			fileloadCallback.regBefore(this.saveBook);
 			// $("#STRe-bookshelf-btn").show();
 			this.enabled = true;
-			this.show();
+			await this.show();
 			console.log("Module <Bookshelf> enabled.");
 			setTimeout(() => this.loop(), 1000);
 		}
-		return this;
 	},
 
 	disable() {
@@ -798,7 +785,6 @@ var STRe_Bookshelf = {
 			this.enabled = false;
 			console.log("Module <Bookshelf> disabled.");
 		}
-		return this;
 	},
 
 	async init() {
@@ -816,9 +802,9 @@ var STRe_Bookshelf = {
 
 (async () => {
 	await STRe_Bookshelf.init();
-	await STRe_ProgressOnServer.init();
-	await STRe_FilesOnServer.init();
+	STRe_ProgressOnServer.init();
+	STRe_FilesOnServer.init();
 
 	// 启动时打开上次阅读书籍
-	STRe_Bookshelf.reopenBook();
+	await STRe_Bookshelf.reopenBook();
 })();

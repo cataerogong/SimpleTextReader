@@ -285,3 +285,50 @@ function getPageNum(line = -1) {
 function isLogFile(fname) {
     return LOG_FILENAME_RE.test(fname);
 }
+
+/**
+ * 二分法查找行号所在章节
+ * @param {int} ln Line number
+ * @returns {[string, int]|undefined} [章节名, titleID]，未找到返回 undefined
+ */
+function findTitle(ln) {
+    if (allTitles.length <= 0)
+        return undefined;
+    if (ln < allTitles[0][1])
+        return undefined;
+    if (ln >= allTitles[allTitles.length - 1][1])
+        return allTitles[allTitles.length - 1];
+    let begin = 0;
+    let end = allTitles.length;
+    let loop = 0;
+    while (begin < end - 1 && loop < 20) {
+        let mid = (begin + end) >> 1;
+        if (allTitles[mid][1] <= ln) {
+            begin = mid;
+        } else {
+            end = mid;
+        }
+        // console.log(begin, end)
+        loop++;
+    }
+    // 正常20次循环可以查找的数组长度为 2^20，一般不会有这么大的标题数组吧
+    if (loop >= 20) throw new Error("查找循环超过20次，算法可能有错！");
+    return allTitles[begin];
+}
+
+function findTitle_test(...lnList) {
+    if (lnList.length <= 0) {
+        console.log("default test case");
+        lnList = [-1, 0, 1, 2,
+            allTitles[2][1] - 1, allTitles[2][1], allTitles[2][1] + 1,
+            allTitles[allTitles.length - 2][1] - 1, allTitles[allTitles.length - 2][1], allTitles[allTitles.length - 2][1] + 1,
+            allTitles[allTitles.length - 1][1] - 1, allTitles[allTitles.length - 1][1], allTitles[allTitles.length - 1][1] + 1,
+            fileContentChunks.length >> 1, fileContentChunks.length >> 1 + 1,
+            fileContentChunks.length - 1, fileContentChunks.length,];
+    }
+    for (const ln of lnList) {
+        let t = findTitle(ln);
+        let t2 = allTitles.findLast((e) => e[1] <= ln);
+        console.log((t == t2) ? "-pass-" : "!FAIL!", "IN:", ln, "OUT:", t);
+    }
+}

@@ -67,7 +67,7 @@ contentContainer.onscroll = function(event) {
 
 function showSearch() {
     function close(evt) {
-        setEscapeFunc(null);
+        // setEscapeFunc(null);
         unfreezeContent();
         dlg.slideUp(400, () =>{
             dlg.remove();
@@ -136,7 +136,7 @@ function showSearch() {
 
 function showGoLine() {
     function close(evt) {
-        setEscapeFunc(null);
+        // setEscapeFunc(null);
         unfreezeContent();
         dlg.remove();
     }
@@ -637,7 +637,8 @@ function processFileContent(detectedEncoding, buffer) {
     var contents = decoder.decode(buffer, decoderOptions);
     if (logMode) {
         fileContentChunks = contents.split("\n");
-        totalPages = Math.ceil(fileContentChunks.length / itemsPerPage);
+        fileContentChunks.unshift(`<h2>${filename}</h2>`);
+        totalPages = Math.ceil((fileContentChunks.length - 1) / itemsPerPage) + 1; // 总页数加上单独的扉页
         setDocumentFlag("data-lang", "CN");
         bookAndAuthor = {
             bookName: filename,
@@ -645,16 +646,11 @@ function processFileContent(detectedEncoding, buffer) {
             bookNameRE: safeREStr(filename),
             authorRE: "",
         };
-        fileContentChunks.unshift(`<h2>${filename}</h2>`);
-        totalPages += 1;  // 总页数加上单独的扉页
     } else {
         fileContentChunks = contents.split("\n").filter(Boolean).filter(n => n.trim() !== '');
         // Detect language
         isEasternLan = getLanguage(fileContentChunks.slice(0, 50).join("\n"));
         console.log("isEasternLan: ", isEasternLan);
-
-        fileContentChunks.push(isEasternLan? `--【完】--` : "--[ END ]--"); // 末行可能会被优化为空，不显示，导致进度达不到 100%，因此增加一行
-        totalPages = Math.ceil(fileContentChunks.length / itemsPerPage);
 
         // Change UI language based on detected language
         if (isEasternLan) {
@@ -674,9 +670,12 @@ function processFileContent(detectedEncoding, buffer) {
         console.log("BookName: ", bookAndAuthor.bookName);
         console.log("Author: ", bookAndAuthor.author);
 
+        fileContentChunks.push("&nbsp;"); // 末行可能会被优化为空，不显示，导致进度达不到 100%，因此增加一行
+        totalPages = Math.ceil(fileContentChunks.length / itemsPerPage);
+
         // Get all titles and process all footnotes
         allTitles.push([style.toc_title, 0]);
-        allTitles.push([style.toc_text, 1]);
+        allTitles.push([style.toc_text_begin, 1]);
         titlePageLineNumberOffset = 1; // (bookAndAuthor.author !== "") ? 3 : 2;
         for (var i in fileContentChunks) {
             if (fileContentChunks[i].trim() !== '') {
@@ -690,6 +689,7 @@ function processFileContent(detectedEncoding, buffer) {
                 fileContentChunks[i] = makeFootNote(fileContentChunks[i], `images/note_${style.ui_LANG}.png`);
             }
         }
+        allTitles.push([style.toc_text_end, fileContentChunks.length]);
         // console.log(allTitles);
         // tocContainer.innerHTML = processTOC_bak();
         processTOC();
@@ -936,7 +936,7 @@ function gotoLine(lineNumber, isTitle=true) {
         // console.log(line.offsetTop)
         contentContainer.scrollTo({top: line.offsetTop, behavior: "instant"});
         // console.log("line.tagName: ", line.tagName);
-        if (line.tagName === "H1" || line.tagName === "H2") {
+        // if (line.tagName === "H1" || line.tagName === "H2") {
             // // scroll back to show the title and margin
             // let style = line.currentStyle /* for IE */ || window.getComputedStyle(line);
             // let top_margin = parseFloat(style.marginTop);
@@ -944,7 +944,7 @@ function gotoLine(lineNumber, isTitle=true) {
 
             // Set the title in the TOC as active
             setTitleActive(lineNumber);
-        }
+        // }
     } catch (error) {
         console.log(`Error: No tag with id 'line${lineNumber}' found.`);
         return -1;
@@ -958,7 +958,9 @@ function gotoLine(lineNumber, isTitle=true) {
     }
 
     // Remember the line number in history
-    setHistory(filename, lineNumber);
+    // setHistory(filename, lineNumber);
+    updateCurPos();
+    setHistory(filename, currentLine);
     return 0;
 }
 
@@ -986,27 +988,34 @@ function GetScrollPositions(toSetHistory=true) {
             setHistory(filename, currentLine);
         }
 
-        // Get the title the detectected line belongs to
-        let curTitleID = 0;
-        for (var i = 0; i < allTitles.length; i++) {
-            if (i < allTitles.length - 1) {
-                if (currentLine >= allTitles[i][1] && currentLine < allTitles[i+1][1]) {
-                    // console.log("Current title: ", allTitles[i][0]);
-                    curTitleID = allTitles[i][1];
-                    break;
-                }
-            } else {
-                if (currentLine >= allTitles[i][1] && currentLine < fileContentChunks.length) {
-                    // console.log("Current title: ", allTitles[i][0]);
-                    curTitleID = allTitles[i][1];
-                    break;
-                }
-            }
-        }
+        // Get the title the current line belongs to
+        // let curTitleID = 0;
+        // for (var i = 0; i < allTitles.length; i++) {
+        //     if (i < allTitles.length - 1) {
+        //         if (currentLine >= allTitles[i][1] && currentLine < allTitles[i+1][1]) {
+        //             // console.log("Current title: ", allTitles[i][0]);
+        //             curTitleID = allTitles[i][1];
+        //             break;
+        //         }
+        //     } else {
+        //         if (currentLine >= allTitles[i][1] && currentLine < fileContentChunks.length) {
+        //             // console.log("Current title: ", allTitles[i][0]);
+        //             curTitleID = allTitles[i][1];
+        //             break;
+        //         }
+        //     }
+        // }
         // console.log("Current title ID: ", curTitleID);
-
         // Set the current title in the TOC as active
-        setTitleActive(curTitleID);
+        // setTitleActive(curTitleID);
+
+        // let curTitle = allTitles.findLast((t) => t[1] <= currentLine);
+        // if (curTitle) {
+        //     setTitleActive(curTitle[1]);
+        // }
+        let curTitle = findTitle(currentLine);
+        if (curTitle)
+            setTitleActive(curTitle[1]);
     }
 
     // let readingProgressText = eval(`style.ui_readingProgress_${style.ui_LANG}`);
