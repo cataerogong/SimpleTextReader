@@ -314,17 +314,17 @@ function onDocKeydown(event) {
                 flowMode ? gotoLine(fileContentChunks.length - 1, false) : contentContainer.scrollTo({top: contentContainer.scrollHeight, behavior: "instant"});
                 break;
             case "PageUp":
-                contentContainer.scrollBy({top: -contentContainer.clientHeight + lh, behavior: behavior});
+                (!flowMode && atPageTop() && currentPage > 1) ? gotoPage(currentPage - 1, "bottom") : contentContainer.scrollBy({top: -contentContainer.clientHeight + lh, behavior: behavior});
                 break;
             case "PageDown":
             case " ":
-                contentContainer.scrollBy({top: contentContainer.clientHeight - lh, behavior: behavior});
+                (!flowMode && atPageBottom() && currentPage < totalPages) ? gotoPage(currentPage + 1, "top") : contentContainer.scrollBy({top: contentContainer.clientHeight - lh, behavior: behavior});
                 break;
             case "ArrowUp":
-                contentContainer.scrollBy({top: -lh * 3, behavior: behavior});
+                (!flowMode && atPageTop() && currentPage > 1) ? gotoPage(currentPage - 1, "bottom") : contentContainer.scrollBy({top: -lh * 3, behavior: behavior});
                 break;
             case "ArrowDown":
-                contentContainer.scrollBy({top: lh * 3, behavior: behavior});
+                (!flowMode && atPageBottom() && currentPage < totalPages) ? gotoPage(currentPage + 1, "top") : contentContainer.scrollBy({top: lh * 3, behavior: behavior});
                 break;
             case 'ArrowLeft':
                 if (!flowMode && currentPage > 1) gotoPage(currentPage - 1);
@@ -391,6 +391,12 @@ function onContentWheel(event) {
         // gotoLine(line, false);
         // event.preventDefault();
         // event.stopPropagation();
+    } else if (!flowMode) {
+        if (event.deltaY > 0 && atPageBottom()  && currentPage < totalPages) {
+            gotoPage(currentPage + 1, "top");
+        } else if (event.deltaY < 0 && atPageTop()  && currentPage > 1) {
+            gotoPage(currentPage - 1, "bottom");
+        }
     }
     return;
 }
@@ -919,6 +925,9 @@ function gotoPage(page, scrollto="top") {
 }
 
 function gotoLine(lineNumber, isTitle=true) {
+    if (isTitle) {
+        gotoTitle_Clicked = true;
+    }
     // Find the page number to jump to
     // console.log(`lineNumber: ${lineNumber}, isTitle: ${isTitle}`);
     // let needToGoPage = lineNumber % itemsPerPage === 0 ? (lineNumber / itemsPerPage + 1) : (Math.ceil(lineNumber / itemsPerPage));
@@ -947,13 +956,14 @@ function gotoLine(lineNumber, isTitle=true) {
         // }
     } catch (error) {
         console.log(`Error: No tag with id 'line${lineNumber}' found.`);
+        gotoTitle_Clicked = false;
         return -1;
     }
     if (isTitle) {
         // Set the current title in the TOC as active
         setTitleActive(lineNumber);
 
-        gotoTitle_Clicked = true;
+        // gotoTitle_Clicked = true;
         // console.log("gotoTitle_Clicked: ", gotoTitle_Clicked);
     }
 
@@ -961,6 +971,7 @@ function gotoLine(lineNumber, isTitle=true) {
     // setHistory(filename, lineNumber);
     updateCurPos();
     setHistory(filename, currentLine);
+    gotoTitle_Clicked = false;
     return 0;
 }
 
@@ -1046,7 +1057,7 @@ function GetScrollPositions(toSetHistory=true) {
         progressBarContainer.style.setProperty("--text-value", `"${progressBar.value}"`);
     }
 
-    gotoTitle_Clicked = false;
+    // gotoTitle_Clicked = false;
 }
 
 function setTitleActive(titleID) {
