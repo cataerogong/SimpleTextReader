@@ -703,11 +703,18 @@ var STRe_Bookshelf = {
 		if (this.enabled) {
 			let container = $(".bookshelf .book-list");
 			container.html("");
-			let storageInfo = await navigator.storage.estimate();
-			if (storageInfo) {
-				$("#bookshelfUsagePct").html((storageInfo.usage / storageInfo.quota * 100).toFixed(1));
-				$("#bookshelfUsage").html((storageInfo.usage / 1000 / 1000).toFixed(2));
-				$("#bookshelfQuota").html((storageInfo.quota / 1000 / 1000).toFixed(2));
+			if (navigator.storage) {
+				let storageInfo = await navigator.storage.estimate();
+				if (storageInfo) {
+					$("#bookshelfUsagePct").html((storageInfo.usage / storageInfo.quota * 100).toFixed(1));
+					$("#bookshelfUsage").html((storageInfo.usage / 1000 / 1000).toFixed(2));
+					$("#bookshelfQuota").html((storageInfo.quota / 1000 / 1000).toFixed(2));
+				}
+			} else {
+				// 不是 HTTPS 或者 localhost，不能使用 navigator.storage
+				// 因此不显示存储使用情况
+				// console.log(e);
+				$("#bookshelfStorageInfo").hide();
 			}
 			let booklist = [];
 			try {
@@ -745,8 +752,8 @@ var STRe_Bookshelf = {
 		if (this.enabled) {
 			$(`<div class="bookshelf">
 			<div class="title">缓存书架
-				<div class="sub-title">【提示】书籍保存在浏览器缓存空间内，可能会被系统自动清除。<br />
-				已用空间：<span id="bookshelfUsagePct"></span>% (<span id="bookshelfUsage"></span> MB / <span id="bookshelfQuota"></span> MB)</div>
+				<div class="sub-title">【提示】书籍保存在浏览器缓存空间内，可能会被系统自动清除。
+				<span id="bookshelfStorageInfo"><br />已用空间：<span id="bookshelfUsagePct"></span>% (<span id="bookshelfUsage"></span> MB / <span id="bookshelfQuota"></span> MB)</span></div>
 			</div>
 			<span class="book-list"></span>
 			</div>`).appendTo("#dropZone");
