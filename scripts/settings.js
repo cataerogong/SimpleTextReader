@@ -421,11 +421,12 @@ class SettingGroupUI extends SettingGroupBase {
         this.add(new SettingCSSGlobalVar("p_lineHeight", "行高", "--p_lineHeight"));
         this.add(new SettingCSSGlobalVar("p_fontSize", "字号", "--p_fontSize"));
         this.add(new SettingCSSGlobalVar("fontColor-0", "日间字符色", "--fontColor-0"));
-        this.add(new SettingCSSGlobalVar("bgColor-0", "日间背景色", "--bgColor-0"));
+        this.add(new SettingCSSGlobalVar("contentBgColor-0", "日间背景色", "--contentBgColor-0"));
         this.add(new SettingCSSGlobalVar("fontColor-1", "夜间字符色", "--fontColor-1"));
-        this.add(new SettingCSSGlobalVar("bgColor-1", "夜间背景色", "--bgColor-1"));
+        this.add(new SettingCSSGlobalVar("contentBgColor-1", "夜间背景色", "--contentBgColor-1"));
         this.add(new SettingCSSGlobalVar("pagination_bottom", "分页条与底部距离", "--pagination_bottom"));
         this.add(new SettingCSSGlobalVar("pagination_opacity", "分页条透明度(0.0~1.0)", "--pagination_opacity"));
+        this.add(new SettingCSSGlobalVar("ui_contentWidth", "正文显示宽度", "--ui_contentWidth"));
     }
 
     genHTML() {

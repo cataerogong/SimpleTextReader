@@ -44,10 +44,11 @@
 :root {
     /* UI variables */
     --ui_LANG: CN;
-    --ui_contentWidthMin: 400px;
+    /* --ui_contentWidthMin: 400px;
     --ui_contentWidthMax: 1000px;
     --ui_contentWidthPrefer: 70%;
-    --ui_contentWidth: clamp(var(--ui_contentWidthMin), var(--ui_contentWidthPrefer), var(--ui_contentWidthMax));
+    --ui_contentWidth: clamp(var(--ui_contentWidthMin), var(--ui_contentWidthPrefer), var(--ui_contentWidthMax)); */
+    --ui_contentWidth: 70%;
     --ui_numPaginationItems: 9;
     --ui_tocHeight: 50%;
     --ui_dropZoneImgSize: 13em;
@@ -77,10 +78,10 @@
     --ui_dropZoneText-EN: txt;
     --ui_readingProgress-CN: "阅读进度：";
     --ui_readingProgress-EN: "Progress: ";
-    --fontFamily_title-CN: title, ui;
-    --fontFamily_title-EN: ui;
-    --fontFamily_body-CN: body, ui;
-    --fontFamily_body-EN: ui;
+    --fontFamily_title-CN: title, ui, sans-serif;
+    --fontFamily_title-EN: ui, sans-serif;
+    --fontFamily_body-CN: body, ui, sans-serif;
+    --fontFamily_body-EN: ui, sans-serif;
     --seal_width-CN: 250px;
     --seal_width-EN: 250px;
     --toc_title-CN: 扉页;
@@ -188,12 +189,12 @@
     --fontInfoColor-0: gray;
     --fontInfoColor-1: lightgray;
 
-    --layerBgColor-0: #f1e5c9;
-    --layerBgColor-1: #0a0a0a;
     /* --bgColor-0: #fdf5e8; */
     /* --bgColor-0: #fdf3df; */
-    --bgColor-0: #fdf3df;
-    --bgColor-1: #111111;
+    --bgColor-0: cornsilk;
+    --bgColor-1: #0e0e0e;
+    --contentBgColor-0: antiquewhite;
+    --contentBgColor-1: #111111;
 
     --borderColor-0: lightgray;
     --borderColor-1: gray;
@@ -224,8 +225,8 @@
     --mainColor_focused_filter: var(--mainColor_focused_filter-0);
     --fontColor: var(--fontColor-0);
     --fontInfoColor: var(--fontInfoColor-0);
-    --layerBgColor: var(--layerBgColor-0);
     --bgColor: var(--bgColor-0);
+    --contentBgColor: var(--contentBgColor-0);
     --borderColor: var(--borderColor-0);
     --shadowColor: var(--shadowColor-0);
     --paginationFontColor: var(--paginationFontColor-0);
@@ -246,6 +247,7 @@
     --fontInfoColor: var(--fontInfoColor-1);
     --layerBgColor: var(--layerBgColor-1);
     --bgColor: var(--bgColor-1);
+    --contentBgColor: var(--contentBgColor-1);
     --borderColor: var(--borderColor-1);
     --shadowColor: var(--shadowColor-1);
     --paginationFontColor: var(--paginationFontColor-1);

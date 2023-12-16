@@ -76,7 +76,7 @@ To Offset the anchor link to clear fixed header
     overflow-y: auto;
     scroll-behavior: smooth;
     justify-content: center;
-    background-color: var(--layerBgColor);
+    background-color: var(--bgColor);
 }
 #content {
     /* position: relative;
@@ -86,7 +86,7 @@ To Offset the anchor link to clear fixed header
     width: var(--ui_contentWidth);
     height: 100%;
     overflow-x: hidden;
-    background-color: var(--bgColor);
+    background-color: var(--contentBgColor);
 }
 
 .title-page-author {
@@ -210,7 +210,7 @@ To Offset the anchor link to clear fixed header
     padding: 0 1rem;
     /* display: grid;
     grid-template-rows: max-content 1fr; */
-    background-color: var(--layerBgColor);
+    background-color: var(--bgColor);
     transition: box-shadow 0.5s, -webkit-box-shadow 0.5s, -moz-box-shadow 0.5s;
     --toc-full-vis: hidden;
     --toc-full-opacity: 0;
@@ -316,7 +316,7 @@ a.toc-active::before {
     width: calc(100% - 2rem);
     top: calc(50% - var(--ui_tocHeight) / 2);
     height: 1em;
-    background: linear-gradient(to bottom, var(--layerBgColor), transparent);
+    background: linear-gradient(to bottom, var(--bgColor), transparent);
     z-index: 10;
 }
 .toc-mask-bottom {
@@ -324,7 +324,7 @@ a.toc-active::before {
     width: calc(100% - 2rem);
     top: calc(50% + var(--ui_tocHeight) / 2 - 1em);
     height: 1em;
-    background: linear-gradient(to top, var(--layerBgColor), transparent);
+    background: linear-gradient(to top, var(--bgColor), transparent);
     z-index: 1;
 }
 
@@ -350,7 +350,7 @@ a.toc-active::before {
     grid-gap:  0.3rem 1rem;
     grid-template-columns: repeat(2, max-content);
     align-self: center;
-    background-color: var(--layerBgColor);
+    background-color: var(--bgColor);
     border-radius: 10px;
     padding: 1rem;
     border: 2px solid var(--modeBtn_borderColor);
