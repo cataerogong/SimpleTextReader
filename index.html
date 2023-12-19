@@ -19,8 +19,6 @@
         <link rel="stylesheet" type="text/css" href="./css/reader.css" crossorigin="anonymous" />
         <link rel="stylesheet" type="text/css" href="./css/footnotes.css" crossorigin="anonymous" />
         <link rel="stylesheet" type="text/css" href="./css/enhance.css" crossorigin="anonymous" />
-
-        <link rel="manifest" href="./manifests/PWA/manifest.json" />
     </head>
     <body>
         <div id="dropZone" class="uifont prevent-select layer">
@@ -113,27 +111,24 @@
             </div>
         </div>
 
-        <script type="text/javascript" src="./scripts/jquery.min.js"></script>
-        <script type="text/javascript" src="./scripts/jschardet.min.js"></script>
-        <script type="text/javascript" src="./scripts/css-global-variables.js"></script>
-        <script type="text/javascript" src="./scripts/regex_rules.js"></script>
-        <script type="text/javascript" src="./scripts/utilities.js"></script>
-        <script type="text/javascript" src="./scripts/footnotes.js"></script>
-        <script type="text/javascript" src="./scripts/ui_variables.js"></script>
-        <script type="text/javascript" src="./scripts/processText.js"></script>
-        <script type="text/javascript" src="./scripts/ui_helpers.js"></script>
-        <script type="text/javascript" src="./scripts/ui.js"></script>
-        <script type="text/javascript" src="./scripts/settings.js"></script>
-        <script type="text/javascript" src="./scripts/webdav.js"></script>
-        <script type="text/javascript" src="./scripts/enhance-db.js"></script>
-        <script type="text/javascript" src="./scripts/enhance.js"></script>
-        <!-- <script>
-            if (navigator.serviceWorker != null) {
-                navigator.serviceWorker.register('./scripts/service_worker.js')
-                    .then(function (registration) {
-                        console.log('Registered events at scope: ', registration.scope);
-                    });
-            }
-        </script> -->
+        <script src="./scripts/jquery.min.js"></script>
+        <script src="./scripts/jschardet.min.js"></script>
+        <script src="./scripts/css-global-variables.js"></script>
+        <script src="./scripts/regex_rules.js"></script>
+        <script src="./scripts/utilities.js"></script>
+        <script src="./scripts/footnotes.js"></script>
+        <script src="./scripts/ui_variables.js"></script>
+        <script src="./scripts/processText.js"></script>
+        <script src="./scripts/ui_helpers.js"></script>
+        <script src="./scripts/ui.js"></script>
+        <script src="./scripts/settings.js"></script>
+        <script src="./scripts/webdav.js"></script>
+        <!-- <script src="./scripts/enhance-db.js"></script>
+        <script src="./scripts/enhance.js"></script> -->
+        <script src="./scripts/enh-common.js"></script>
+        <script src="./scripts/enh-db.js"></script>
+        <script src="./scripts/enh-bookshelf.js"></script>
+        <script src="./scripts/enh-webdav.js"></script>
+        <script src="./scripts/enh-readmode.js"></script>
     </body>
 </html>
