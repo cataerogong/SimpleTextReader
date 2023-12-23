@@ -62,4 +62,4 @@ var contentLayer = document.getElementById("contentLayer");
 let progressBarContainer = document.getElementById("progressBarContainer");
 let progressBar = document.getElementById("progressBar");
 
-const _STRe_VER_ = "1.6.0-wip";
+const _STRe_VER_ = "1.6.0";
